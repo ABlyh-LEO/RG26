@@ -86,6 +86,9 @@ RG26/
 
 ## 当前完成状态
 
+**仓库**：<https://github.com/ABlyh-LEO/RG26>（`main` 分支已推送）
+**部署地址**（Pages 启用后）：<https://ablyh-leo.github.io/RG26/>
+
 **已完成并验证：**
 
 - ✅ 完整两日赛程（10 月 3–4 日），含比赛、核分、展示、抽签、开幕式、表演赛
@@ -96,20 +99,27 @@ RG26/
 - ✅ 本地维护工具：录入、校验、预览、确认、导入导出、发布前检查
 - ✅ GitHub Pages 工作流、数据更新提示、读取失败处理
 - ✅ 85 个领域测试 + 66 个端到端测试（3 个项目 × 22）
+- ✅ 维护闭环集成演练（`npm run check:integration`）
+- ✅ **仓库子路径部署验证**（`npm run check:subpath`）
 
-**尚未完成（需要你的输入或线下条件）：**
+**尚未完成（需要你操作或线下条件）：**
 
-- ⏳ **未部署** —— 需要 GitHub 仓库与所有者。
-  已完成可部署工程与工作流；确切剩余步骤见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) §3。
+- ⏳ **Pages 尚未确认启用** —— 需要在仓库
+  Settings → Pages → Source 选择 **GitHub Actions**，
+  然后在 Actions 页面确认部署成功。步骤见
+  [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) §3。
+  **推送成功不等于已上线。**
 - ⏳ **未做实机验证** —— 自动化测试在 Chromium 内核（Edge）上完成，
   WebKit 因浏览器下载受限未运行。iOS Safari / Android Chrome / 现场网络需实测。
-- ⏳ **无 Lighthouse 实测分数** —— 目标为性能 ≥90、可访问性 ≥95，尚未在移动端生产构建上测量。
+- ⏳ **无 Lighthouse 实测分数** —— 目标为性能 ≥90、可访问性 ≥95，尚未测量。
 
 **规则上的已知不确定项**（不阻塞开发，运行前应补齐）：
 见 [`docs/RULES.md`](docs/RULES.md) §8，以及 `data/event.json` 的 `event.openItems`。
 
 **重要：** 数据中的队名有三项标注为「待核对」（`nameVerified: false`），
 场地名称为临时占位（A/B 场地）。这些在界面上都有明确标识，不会冒充官方确认值。
+
+完整验收证据见 [`docs/acceptance/ACCEPTANCE.md`](docs/acceptance/ACCEPTANCE.md)。
 
 ---
 

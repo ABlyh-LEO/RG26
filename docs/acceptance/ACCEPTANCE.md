@@ -75,7 +75,7 @@
 | 5 | 未完成赛事可构建；无效结果被 CI 拒绝；部分完成不误判 | `validate:data` + `validation.test.ts` | ✅ |
 | 6 | 手机停留详情时发布新数据，刷新不跳走且结果更新 | e2e「9. 队伍深链刷新」+ 仅 revision 变化才替换内容 | ✅ |
 | 7 | 不兼容 schema / 损坏 JSON / 404 / 超时 / 无缓存 / localStorage 不可用 | e2e「健壮性」3 项 + `snapshot.ts` 容错 | ✅ |
-| 8 | 根路径与仓库子路径都能读取资源、数据与深链 | 见下「base 路径验证」 | ⚠️ 部分 |
+| 8 | 根路径与仓库子路径都能读取资源、数据与深链 | `npm run check:subpath`（真实构建 + 浏览器验证） | ✅ |
 | 9 | 已公开更正可追溯；回滚后观众可见 | `corrections.test.ts` + 操作手册 §12 | ✅ 逻辑 |
 | 10 | 公开构建不可进入维护模式，不携带写入凭据或草稿 | e2e「公开构建不含…」+「产物界面代码检查」 | ✅ |
 
@@ -83,12 +83,13 @@
 
 | 场景 | 结果 |
 | --- | --- |
-| `/` 根路径构建与预览 | ✅ 已验证（本次全部 e2e 与截图都跑在此配置上） |
-| `/<repo>/` 子路径构建 | ⚠️ **未实测** —— 需要真实仓库名才能有意义地验证 |
-| 深链刷新不 404 | ✅ 已验证（hash 路由，e2e「9. 队伍深链刷新」） |
+| `/` 根路径构建与预览 | ✅ 已验证（全部 e2e 与截图都跑在此配置上） |
+| `/<repo>/` 子路径构建 | ✅ **已验证** —— `npm run check:subpath` |
+| 深链刷新不 404 | ✅ 已验证（hash 路由，e2e「9. 队伍深链刷新」+ 子路径检查） |
 
-> 子路径构建的验证步骤已写在 `docs/DEPLOYMENT.md` §2，
-> 应在确定仓库名后、首次部署前执行。
+> 子路径验证会真实构建、模拟 Pages 目录结构并启动静态服务器
+> （未知路径返回 404，而非 SPA 回退），再用浏览器逐项断言。
+> 详见 §6.5。
 
 ---
 
@@ -166,15 +167,40 @@
 
 **必须诚实记录，不得当作已完成。**
 
-### 6.1 未部署
+### 6.1 已推送，但**尚未确认部署**
 
-- **没有创建 GitHub 远程仓库，没有实际部署。**
-- 已完成：可部署工程、`ci.yml`、`deploy.yml`、构建产物隔离验证。
-- 未验证：真实 Pages 环境下的部署、Actions 实际执行、CDN 行为。
-- **不能说「已上线」，只能说「已写好工作流并可部署」。**
-- 确切剩余步骤见 `docs/DEPLOYMENT.md` §3。
+- **已推送**：`https://github.com/ABlyh-LEO/RG26`，`main` 分支
+  commit `0ddbdc3ca8b0a7a0fc6ac5f8d765d2d61a364811`（已用 `git ls-remote` 核对远端一致）。
+- **未确认**：本次会话中 GitHub Actions 的运行状态**未核实**。
+  GitHub REST API 通过当前网络返回 403，无法读取 run 状态。
+- **未确认**：Pages 是否已启用（Settings → Pages → Source 必须选 **GitHub Actions**）。
+- **因此仍不能说「已上线」**，只能说「已推送，等待你在 Actions 页面确认」。
 
-### 6.2 WebKit / 真实设备未验证
+**你需要做的两件事**（详见 `docs/DEPLOYMENT.md` §3）：
+
+1. 打开 <https://github.com/ABlyh-LEO/RG26/settings/pages>，
+   **Source 选择 `GitHub Actions`**（若还没选）。
+2. 打开 <https://github.com/ABlyh-LEO/RG26/actions>，确认
+   `Deploy to GitHub Pages` 的 build 与 deploy 两个 job 都成功。
+   若首次因未启用 Pages 而失败，启用后点 **Re-run all jobs** 即可。
+
+成功后站点地址应为：<https://ablyh-leo.github.io/RG26/>
+
+### 6.2 本机网络环境（影响推送与部署确认）
+
+| 项目 | 实测情况 |
+| --- | --- |
+| SSH（`git@github.com:22`） | ❌ 连接超时（端口被阻断） |
+| SSH over 443（`ssh.github.com:443`） | ⚠️ 可连通，但**密钥未授权**（`Permission denied (publickey)`） |
+| HTTPS + 代理 `127.0.0.1:7890` | ✅ **可用**（`push` 成功；`ls-remote` 偶发 `SSL_ERROR_SYSCALL`，重试即成功） |
+| GitHub REST API | ❌ 403（无法读取 Actions 状态） |
+
+本仓库已设置 `http.proxy` / `https.proxy` 指向 `127.0.0.1:7890`，
+因此后续 `push` / `pull` 无需额外参数。
+
+> 若换到无代理的网络，可清除：`git config --unset http.proxy && git config --unset https.proxy`
+
+### 6.3 WebKit / 真实设备未验证
 
 - 本次 e2e 与截图全部运行在 **Chromium 内核（Microsoft Edge）**。
 - **未运行 WebKit**：Playwright 浏览器下载受网络限制失败
@@ -191,7 +217,7 @@ npx playwright install chromium webkit
 npm run test:e2e          # 默认包含 mobile-webkit 项目
 ```
 
-### 6.3 Lighthouse 未实测
+### 6.4 Lighthouse 未实测
 
 - 目标：移动端生产构建 性能 ≥90、可访问性 ≥95。
 - **尚未测量**，因此**不能声称达标**。
@@ -199,11 +225,35 @@ npm run test:e2e          # 默认包含 mobile-webkit 项目
 - 测量方法：对 `npm run preview` 的移动端生产构建运行 Lighthouse，
   并注意**单次分数不等于现场速度保证**。
 
-### 6.4 仓库子路径构建未实测
+### 6.5 仓库子路径构建（已验证）
 
-见 §3 的 base 路径验证表。需在确定仓库名后执行。
+**已验证通过**，命令 `npm run check:subpath`（可重复执行，自动清理临时产物）。
 
-### 6.5 数据中的已知不确定项
+该脚本完整复现 GitHub Pages 项目站形态并端到端验证：
+
+1. 用 `VITE_BASE_PATH=/rg26-test-repo/` 真实构建
+2. 把 `dist` 放到临时目录的 `/<repo>/` 下（模拟 Pages 目录结构）
+3. 启动静态服务器（对未知路径**返回 404**，如实模拟 Pages，而非 SPA 回退）
+4. 用真实浏览器验证
+
+| 检查项 | 结果 |
+| --- | --- |
+| 首页在子路径加载、数据就绪 | ✅ |
+| 所有资源与数据请求**走子路径**（非根路径） | ✅ |
+| 队伍深链首次打开 | ✅ |
+| **深链刷新不 404** | ✅ |
+| 全部 7 条路由渲染 | ✅ |
+| 无 4xx/5xx 响应 | ✅ |
+| 无 pageerror / console error | ✅ |
+
+顺带修复了一个真实缺陷：原先缺少 favicon，浏览器会自动请求
+`/favicon.ico` 得到 404。已改为**内联 SVG 图标**，既消除该请求又不依赖外部文件。
+
+实际部署地址将是 `https://ablyh-leo.github.io/RG26/`，
+而 `deploy.yml` 用 `github.event.repository.name` 自动取到 `RG26`，
+因此 base 会是 `/RG26/`，与上述验证的形态一致。
+
+### 6.6 数据中的已知不确定项
 
 这些是**如实标注的不确定**，不是缺陷：
 
@@ -216,7 +266,7 @@ npm run test:e2e          # 默认包含 mobile-webkit 项目
 | 展示组决赛抽签顺序 | 未登记，页面显示「等待抽签」，不推测 |
 | 赛程组共享文档地址 | `officialScheduleUrl: null`，记录在 `openItems` |
 
-### 6.6 规则解释上的待确认点
+### 6.7 规则解释上的待确认点
 
 - 「已登记对阵 `m`」是否含**仅公布但未开赛**的配对：
   本工具采用**不含**（见 `docs/RULES.md` §3.2）。

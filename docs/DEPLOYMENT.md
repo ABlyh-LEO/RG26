@@ -3,6 +3,44 @@
 说明如何把本站部署到 GitHub Pages，以及路径配置、Actions、
 首次上线步骤和常见排错。
 
+- **仓库**：<https://github.com/ABlyh-LEO/RG26>
+- **目标地址**：<https://ablyh-leo.github.io/RG26/>
+- **当前状态**：`main` 已推送（commit `0ddbdc3`）；**Pages 是否启用与部署是否成功尚未确认**
+
+---
+
+## 0 当前网络环境（本机实测）
+
+推送这个仓库时遇到的实际情况，供换机器时参考：
+
+| 方式 | 实测 | 说明 |
+| --- | --- | --- |
+| SSH `git@github.com:22` | ❌ 连接超时 | 端口被网络阻断 |
+| SSH over 443（`ssh.github.com:443`） | ⚠️ 可连通 | 但密钥未授权（`Permission denied (publickey)`） |
+| **HTTPS + 代理** | ✅ **可用** | 本仓库已配置，`push` 成功 |
+| GitHub REST API | ❌ 403 | 无法用 API 读 Actions 状态，需在网页查看 |
+
+本仓库已设置代理，后续 `push` / `pull` **无需额外参数**：
+
+```bash
+git config --get http.proxy      # http://127.0.0.1:7890
+git config --get https.proxy     # http://127.0.0.1:7890
+```
+
+代理偶发 `SSL_ERROR_SYSCALL`，**重试即可成功**。
+
+> 换到无代理网络时清除：`git config --unset http.proxy && git config --unset https.proxy`
+>
+> 若想改用 SSH，先把公钥（`~/.ssh/id_rsa.pub`）加到
+> <https://github.com/settings/keys>，并在 `~/.ssh/config` 里加：
+> ```
+> Host github.com
+>   HostName ssh.github.com
+>   Port 443
+>   User git
+> ```
+> 然后 `git remote set-url origin git@github.com:ABlyh-LEO/RG26.git`
+
 ---
 
 ## 1 前置条件
@@ -10,11 +48,11 @@
 | 项目 | 说明 |
 | --- | --- |
 | Node | 见 `.nvmrc`（当前为 24）。CI 使用同一版本。 |
-| 仓库 | GitHub 仓库（公开仓库可用 GitHub Free；私有仓库需确认账户方案） |
+| 仓库 | <https://github.com/ABlyh-LEO/RG26> —— **已创建，`main` 已推送** |
 | 权限 | 能修改仓库 Settings → Pages |
 
-> **尚未确定**：GitHub 仓库与所有者（记录在 `data/event.json` 的 `openItems`）。
-> 本文档给出完整步骤，但**不代替你创建仓库**。
+> 仓库已就绪，**§3.1 的初始化步骤已经完成**，你只需做 §3.2 起的两件事：
+> 启用 Pages（Source 选 GitHub Actions）并确认部署成功。
 
 ---
 
@@ -54,24 +92,29 @@ VITE_BASE_PATH=/test-repo/ npm run build && npm run preview
 
 ## 3 首次上线步骤
 
-### 3.1 初始化仓库并推送
+### 3.1 初始化仓库并推送 —— ✅ 已完成
 
 ```bash
 git init
 git add .
 git commit -m "初始提交：RoboGame2026 赛程可视化工具"
 git branch -M main
-git remote add origin https://github.com/<owner>/<repo>.git
+git remote add origin https://github.com/ABlyh-LEO/RG26.git
 git push -u origin main
 ```
 
-> 推送前确认 `.gitignore` 已排除 `node_modules/`、`dist/`、`.npm-cache/`。
+**实际结果**：`main` → commit `0ddbdc3ca8b0a7a0fc6ac5f8d765d2d61a364811`，
+已用 `git ls-remote` 核对远端一致。共 87 个文件。
+
+> `.gitignore` 已排除 `node_modules/`、`dist/`、`.npm-cache/`、`test-results/`。
+> `.gitattributes` 统一为 LF，避免 Windows 提交 CRLF 导致 CI 整文件差异。
 > `data/event.json` **必须提交**（它是正式输入）；
-> `public/data/event.json` 是生成产物，可不提交，由构建重新生成。
+> `public/data/event.json` 是生成产物，但也提交了，方便直接查看。
 
-### 3.2 启用 Pages
+### 3.2 启用 Pages —— ⏳ 需要你操作
 
-仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
+打开 <https://github.com/ABlyh-LEO/RG26/settings/pages>，
+**Source 选择 `GitHub Actions`**。
 
 > 不要选「Deploy from a branch」——本项目使用自定义工作流。
 
@@ -81,6 +124,9 @@ git push -u origin main
 （当 `data/event.json`、`src/**`、`public/**` 等路径变化时）。
 
 也可在 **Actions → Deploy to GitHub Pages → Run workflow** 手动触发。
+
+> **若首次运行在你启用 Pages 之前就已经失败**，启用后打开那次失败的 run，
+> 点 **Re-run all jobs** 即可，不必重新提交。
 
 ### 3.4 确认部署成功
 
