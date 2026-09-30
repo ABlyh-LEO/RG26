@@ -1,0 +1,126 @@
+name: Deploy to GitHub Pages
+
+# 在发布分支 push 或手动触发时部署。
+# 只有必需检查通过后才上传并部署。
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'data/event.json'
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+# GitHub Pages 官方要求的权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一站点串行化部署，避免旧版本后完成而覆盖新版本。
+# cancel-in-progress: false 保证正在进行的部署不会被中途取消。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 必需检查与构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: 安装锁定依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: 领域测试
+        run: npm run test
+
+      - name: 数据校验（失败则阻止部署）
+        run: npm run validate:data
+
+      - name: 配置 Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: 构建（base 使用仓库子路径）
+        env:
+          # 项目站是 https://<owner>.github.io/<repo>/，因此用仓库名作为 base。
+          # 若改用用户站或自定义域名，把这里改成 '/'.
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: 校验公开快照可读且版本一致
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const snap = JSON.parse(fs.readFileSync('dist/data/event.json', 'utf8'));
+          if (!snap.revision || !snap.schemaVersion || !snap.data) {
+            console.error('公开快照缺少必要字段');
+            process.exit(1);
+          }
+          console.log('revision =', snap.revision);
+          console.log('schemaVersion =', snap.schemaVersion);
+          console.log('builtAt =', snap.builtAt);
+          console.log('队伍数 =', snap.data.teams.length);
+          "
+
+      - name: 检查产物不含维护模式入口
+        run: |
+          if [ -f dist/operator.html ]; then
+            echo "::error::公开产物中不应包含维护模式入口 operator.html"
+            exit 1
+          fi
+          echo "公开产物未包含维护模式入口。"
+
+      - name: 上传 Pages 产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: 部署
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 部署后检查
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          echo "部署地址：$PAGE_URL"
+          # 检查首页可读
+          curl -fsS --max-time 30 "$PAGE_URL" -o /tmp/index.html
+          grep -q 'RoboGame2026' /tmp/index.html && echo "首页可读"
+          # 检查公开 JSON 可读且可解析
+          curl -fsS --max-time 30 "${PAGE_URL%/}/data/event.json" -o /tmp/event.json
+          node -e "
+          const snap = JSON.parse(require('node:fs').readFileSync('/tmp/event.json','utf8'));
+          console.log('公开数据 revision =', snap.revision);
+          if (snap.schemaVersion !== 1) { console.error('schemaVersion 不一致'); process.exit(1); }
+          "
+          echo "部署后检查通过。注意：CDN 传播可能有延迟。"

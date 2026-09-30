@@ -1,0 +1,3903 @@
+{
+  "schemaVersion": 1,
+  "revision": "adf72722731975dc8197f8d827a194a5",
+  "builtAt": "2026-09-30T15:29:47.307Z",
+  "sourceCommit": null,
+  "data": {
+    "schemaVersion": 1,
+    "event": {
+      "id": "robogame-2026",
+      "name": "RoboGame2026 赛事",
+      "timezone": "Asia/Shanghai",
+      "dates": [
+        "2026-10-03",
+        "2026-10-04"
+      ],
+      "sourceDocumentSha256": "96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47",
+      "officialScheduleUrl": null,
+      "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
+      "contentUpdatedAt": "2026-09-30T14:35:44.094Z",
+      "openItems": [
+        "赛程组共享文档地址（原文声明以其当天安排为准）",
+        "真实场地名称（当前为 A/B 临时名）",
+        "GitHub 仓库与所有者，用于部署",
+        "是否公开原始 DOCX",
+        "展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）",
+        "第 5 名队名首字“沬/沫”与第 14、16 名的 rg 大小写最终写法"
+      ]
+    },
+    "rules": {
+      "version": "1.0.0",
+      "qualificationRankingMode": "official-manual",
+      "swissPairingPolicy": "same-record-adjacent"
+    },
+    "teams": [
+      {
+        "id": "competitive-18",
+        "division": "competitive",
+        "number": 18,
+        "name": "Uniforest队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 1
+      },
+      {
+        "id": "competitive-4",
+        "division": "competitive",
+        "number": 4,
+        "name": "机器曼妙队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 2
+      },
+      {
+        "id": "competitive-5",
+        "division": "competitive",
+        "number": 5,
+        "name": "保卫萝卜队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 3
+      },
+      {
+        "id": "competitive-14",
+        "division": "competitive",
+        "number": 14,
+        "name": "All Last队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 4
+      },
+      {
+        "id": "competitive-35",
+        "division": "competitive",
+        "number": 35,
+        "name": "沬日堡垒队",
+        "nameVerified": false,
+        "nameNote": "首字为“沬”（三点水+未）抑或“沫”，请对照官方名单最终确认",
+        "thirdReviewRank": 5
+      },
+      {
+        "id": "competitive-1",
+        "division": "competitive",
+        "number": 1,
+        "name": "萝卜施工队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 6
+      },
+      {
+        "id": "competitive-10",
+        "division": "competitive",
+        "number": 10,
+        "name": "吃饭要排队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 7
+      },
+      {
+        "id": "competitive-23",
+        "division": "competitive",
+        "number": 23,
+        "name": "组一辈子战队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 8
+      },
+      {
+        "id": "competitive-6",
+        "division": "competitive",
+        "number": 6,
+        "name": "肥西路奶龙拆迁大队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 9
+      },
+      {
+        "id": "competitive-28",
+        "division": "competitive",
+        "number": 28,
+        "name": "拼好队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 10
+      },
+      {
+        "id": "competitive-2",
+        "division": "competitive",
+        "number": 2,
+        "name": "煽风点火队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 11
+      },
+      {
+        "id": "competitive-21",
+        "division": "competitive",
+        "number": 21,
+        "name": "西餐不好吃队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 12
+      },
+      {
+        "id": "competitive-25",
+        "division": "competitive",
+        "number": 25,
+        "name": "黄瓜同好会",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 13
+      },
+      {
+        "id": "competitive-17",
+        "division": "competitive",
+        "number": 17,
+        "name": "我也要打rg吗，队",
+        "nameVerified": false,
+        "nameNote": "拉丁字母为小写 rg，逗号后含一个空格；请确认官方写法",
+        "thirdReviewRank": 14
+      },
+      {
+        "id": "competitive-13",
+        "division": "competitive",
+        "number": 13,
+        "name": "名字够长就一定会有人看队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 15
+      },
+      {
+        "id": "competitive-27",
+        "division": "competitive",
+        "number": 27,
+        "name": "Rg小队",
+        "nameVerified": false,
+        "nameNote": "首字母大写 R；与第 14 名的小写 rg 写法不同，请确认是否统一",
+        "thirdReviewRank": 16
+      },
+      {
+        "id": "competitive-3",
+        "division": "competitive",
+        "number": 3,
+        "name": "少微模个鱼队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 17
+      },
+      {
+        "id": "competitive-9",
+        "division": "competitive",
+        "number": 9,
+        "name": "超时空辉月机队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 18
+      },
+      {
+        "id": "competitive-31",
+        "division": "competitive",
+        "number": 31,
+        "name": "啊对对队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 19
+      },
+      {
+        "id": "competitive-12",
+        "division": "competitive",
+        "number": 12,
+        "name": "萝卜给猫队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 20
+      },
+      {
+        "id": "competitive-29",
+        "division": "competitive",
+        "number": 29,
+        "name": "iRunTV队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 21
+      },
+      {
+        "id": "competitive-8",
+        "division": "competitive",
+        "number": 8,
+        "name": "AAA平地起高楼施工队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": 22
+      },
+      {
+        "id": "showcase-1",
+        "division": "showcase",
+        "number": 1,
+        "name": "晓啸启宇队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": null
+      },
+      {
+        "id": "showcase-2",
+        "division": "showcase",
+        "number": 2,
+        "name": "Aura-Bot",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": null
+      },
+      {
+        "id": "showcase-3",
+        "division": "showcase",
+        "number": 3,
+        "name": "海底小纵队",
+        "nameVerified": true,
+        "nameNote": null,
+        "thirdReviewRank": null
+      }
+    ],
+    "venues": [
+      {
+        "id": "venue-a",
+        "label": "A 场地",
+        "provisionalName": true,
+        "note": "真实场地名称待赛程组提供"
+      },
+      {
+        "id": "venue-b",
+        "label": "B 场地",
+        "provisionalName": true,
+        "note": "真实场地名称待赛程组提供"
+      },
+      {
+        "id": "venue-tbd",
+        "label": "待定场地",
+        "provisionalName": true,
+        "note": "决赛与主席台活动的场地尚未提供"
+      }
+    ],
+    "scheduleItems": [
+      {
+        "id": "sched-showcase-media",
+        "kind": "activity",
+        "stage": "showcase",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:50:00+08:00",
+        "plannedEnd": "2026-10-03T11:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "展示资料对接（PPT、视频、动画等）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-preview-1",
+        "kind": "activity",
+        "stage": "showcase",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T11:10:00+08:00",
+        "plannedEnd": "2026-10-03T11:25:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-1",
+        "title": "展示组预演 · 晓啸启宇队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-preview-2",
+        "kind": "activity",
+        "stage": "showcase",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T11:25:00+08:00",
+        "plannedEnd": "2026-10-03T11:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-2",
+        "title": "展示组预演 · Aura-Bot",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-preview-3",
+        "kind": "activity",
+        "stage": "showcase",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T11:40:00+08:00",
+        "plannedEnd": "2026-10-03T11:55:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-3",
+        "title": "展示组预演 · 海底小纵队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-draw",
+        "kind": "activity",
+        "stage": "showcase",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T12:00:00+08:00",
+        "plannedEnd": null,
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "展示组抽签（主席台前，决定决赛上台次序）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank01",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:00:00+08:00",
+        "plannedEnd": "2026-10-03T09:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank01",
+        "title": "排位赛第 1 轮 · 三审第 1 名 Uniforest队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank02",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:00:00+08:00",
+        "plannedEnd": "2026-10-03T09:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank02",
+        "title": "排位赛第 1 轮 · 三审第 2 名 机器曼妙队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank03",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:10:00+08:00",
+        "plannedEnd": "2026-10-03T09:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank03",
+        "title": "排位赛第 1 轮 · 三审第 3 名 保卫萝卜队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank04",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:10:00+08:00",
+        "plannedEnd": "2026-10-03T09:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank04",
+        "title": "排位赛第 1 轮 · 三审第 4 名 All Last队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank05",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:20:00+08:00",
+        "plannedEnd": "2026-10-03T09:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank05",
+        "title": "排位赛第 1 轮 · 三审第 5 名 沬日堡垒队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank06",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:20:00+08:00",
+        "plannedEnd": "2026-10-03T09:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank06",
+        "title": "排位赛第 1 轮 · 三审第 6 名 萝卜施工队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank07",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:30:00+08:00",
+        "plannedEnd": "2026-10-03T09:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank07",
+        "title": "排位赛第 1 轮 · 三审第 7 名 吃饭要排队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank08",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:30:00+08:00",
+        "plannedEnd": "2026-10-03T09:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank08",
+        "title": "排位赛第 1 轮 · 三审第 8 名 组一辈子战队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank09",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:40:00+08:00",
+        "plannedEnd": "2026-10-03T09:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank09",
+        "title": "排位赛第 1 轮 · 三审第 9 名 肥西路奶龙拆迁大队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank10",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:40:00+08:00",
+        "plannedEnd": "2026-10-03T09:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank10",
+        "title": "排位赛第 1 轮 · 三审第 10 名 拼好队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank11",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:50:00+08:00",
+        "plannedEnd": "2026-10-03T10:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank11",
+        "title": "排位赛第 1 轮 · 三审第 11 名 煽风点火队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank12",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T09:50:00+08:00",
+        "plannedEnd": "2026-10-03T10:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank12",
+        "title": "排位赛第 1 轮 · 三审第 12 名 西餐不好吃队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank13",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:00:00+08:00",
+        "plannedEnd": "2026-10-03T10:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank13",
+        "title": "排位赛第 1 轮 · 三审第 13 名 黄瓜同好会",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank14",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:00:00+08:00",
+        "plannedEnd": "2026-10-03T10:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank14",
+        "title": "排位赛第 1 轮 · 三审第 14 名 我也要打rg吗，队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank15",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:10:00+08:00",
+        "plannedEnd": "2026-10-03T10:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank15",
+        "title": "排位赛第 1 轮 · 三审第 15 名 名字够长就一定会有人看队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank16",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:10:00+08:00",
+        "plannedEnd": "2026-10-03T10:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank16",
+        "title": "排位赛第 1 轮 · 三审第 16 名 Rg小队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank17",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:20:00+08:00",
+        "plannedEnd": "2026-10-03T10:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank17",
+        "title": "排位赛第 1 轮 · 三审第 17 名 少微模个鱼队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank18",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:20:00+08:00",
+        "plannedEnd": "2026-10-03T10:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank18",
+        "title": "排位赛第 1 轮 · 三审第 18 名 超时空辉月机队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank19",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:30:00+08:00",
+        "plannedEnd": "2026-10-03T10:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank19",
+        "title": "排位赛第 1 轮 · 三审第 19 名 啊对对队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank20",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:30:00+08:00",
+        "plannedEnd": "2026-10-03T10:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank20",
+        "title": "排位赛第 1 轮 · 三审第 20 名 萝卜给猫队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank21",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:40:00+08:00",
+        "plannedEnd": "2026-10-03T10:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r1-rank21",
+        "title": "排位赛第 1 轮 · 三审第 21 名 iRunTV队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r1-rank22",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T10:40:00+08:00",
+        "plannedEnd": "2026-10-03T10:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r1-rank22",
+        "title": "排位赛第 1 轮 · 三审第 22 名 AAA平地起高楼施工队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank01",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:30:00+08:00",
+        "plannedEnd": "2026-10-03T13:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank01",
+        "title": "排位赛第 2 轮 · 三审第 1 名 Uniforest队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank02",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:30:00+08:00",
+        "plannedEnd": "2026-10-03T13:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank02",
+        "title": "排位赛第 2 轮 · 三审第 2 名 机器曼妙队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank03",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:40:00+08:00",
+        "plannedEnd": "2026-10-03T13:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank03",
+        "title": "排位赛第 2 轮 · 三审第 3 名 保卫萝卜队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank04",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:40:00+08:00",
+        "plannedEnd": "2026-10-03T13:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank04",
+        "title": "排位赛第 2 轮 · 三审第 4 名 All Last队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank05",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:50:00+08:00",
+        "plannedEnd": "2026-10-03T14:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank05",
+        "title": "排位赛第 2 轮 · 三审第 5 名 沬日堡垒队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank06",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T13:50:00+08:00",
+        "plannedEnd": "2026-10-03T14:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank06",
+        "title": "排位赛第 2 轮 · 三审第 6 名 萝卜施工队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank07",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:00:00+08:00",
+        "plannedEnd": "2026-10-03T14:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank07",
+        "title": "排位赛第 2 轮 · 三审第 7 名 吃饭要排队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank08",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:00:00+08:00",
+        "plannedEnd": "2026-10-03T14:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank08",
+        "title": "排位赛第 2 轮 · 三审第 8 名 组一辈子战队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank09",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:10:00+08:00",
+        "plannedEnd": "2026-10-03T14:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank09",
+        "title": "排位赛第 2 轮 · 三审第 9 名 肥西路奶龙拆迁大队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank10",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:10:00+08:00",
+        "plannedEnd": "2026-10-03T14:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank10",
+        "title": "排位赛第 2 轮 · 三审第 10 名 拼好队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank11",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:20:00+08:00",
+        "plannedEnd": "2026-10-03T14:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank11",
+        "title": "排位赛第 2 轮 · 三审第 11 名 煽风点火队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank12",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:20:00+08:00",
+        "plannedEnd": "2026-10-03T14:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank12",
+        "title": "排位赛第 2 轮 · 三审第 12 名 西餐不好吃队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank13",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:30:00+08:00",
+        "plannedEnd": "2026-10-03T14:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank13",
+        "title": "排位赛第 2 轮 · 三审第 13 名 黄瓜同好会",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank14",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:30:00+08:00",
+        "plannedEnd": "2026-10-03T14:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank14",
+        "title": "排位赛第 2 轮 · 三审第 14 名 我也要打rg吗，队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank15",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:40:00+08:00",
+        "plannedEnd": "2026-10-03T14:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank15",
+        "title": "排位赛第 2 轮 · 三审第 15 名 名字够长就一定会有人看队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank16",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:40:00+08:00",
+        "plannedEnd": "2026-10-03T14:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank16",
+        "title": "排位赛第 2 轮 · 三审第 16 名 Rg小队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank17",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:50:00+08:00",
+        "plannedEnd": "2026-10-03T15:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank17",
+        "title": "排位赛第 2 轮 · 三审第 17 名 少微模个鱼队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank18",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T14:50:00+08:00",
+        "plannedEnd": "2026-10-03T15:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank18",
+        "title": "排位赛第 2 轮 · 三审第 18 名 超时空辉月机队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank19",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T15:00:00+08:00",
+        "plannedEnd": "2026-10-03T15:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank19",
+        "title": "排位赛第 2 轮 · 三审第 19 名 啊对对队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank20",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T15:00:00+08:00",
+        "plannedEnd": "2026-10-03T15:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank20",
+        "title": "排位赛第 2 轮 · 三审第 20 名 萝卜给猫队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank21",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T15:10:00+08:00",
+        "plannedEnd": "2026-10-03T15:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-b",
+        "referenceId": "qual-r2-rank21",
+        "title": "排位赛第 2 轮 · 三审第 21 名 iRunTV队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-r2-rank22",
+        "kind": "run",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T15:10:00+08:00",
+        "plannedEnd": "2026-10-03T15:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-a",
+        "referenceId": "qual-r2-rank22",
+        "title": "排位赛第 2 轮 · 三审第 22 名 AAA平地起高楼施工队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-qual-review",
+        "kind": "activity",
+        "stage": "qualification",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T15:20:00+08:00",
+        "plannedEnd": "2026-10-03T16:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "排位赛核分及准备（公布最终排名与十六强对阵）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:00:00+08:00",
+        "plannedEnd": "2026-10-03T16:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-1",
+        "title": "瑞士轮 R1 · 0-0 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:10:00+08:00",
+        "plannedEnd": "2026-10-03T16:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-2",
+        "title": "瑞士轮 R1 · 0-0 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:20:00+08:00",
+        "plannedEnd": "2026-10-03T16:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-3",
+        "title": "瑞士轮 R1 · 0-0 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-4",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:30:00+08:00",
+        "plannedEnd": "2026-10-03T16:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-4",
+        "title": "瑞士轮 R1 · 0-0 组第 4 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-5",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:40:00+08:00",
+        "plannedEnd": "2026-10-03T16:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-5",
+        "title": "瑞士轮 R1 · 0-0 组第 5 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-6",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T16:50:00+08:00",
+        "plannedEnd": "2026-10-03T17:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-6",
+        "title": "瑞士轮 R1 · 0-0 组第 6 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-7",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T17:00:00+08:00",
+        "plannedEnd": "2026-10-03T17:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-7",
+        "title": "瑞士轮 R1 · 0-0 组第 7 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r1-00-8",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T17:10:00+08:00",
+        "plannedEnd": "2026-10-03T17:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r1-00-8",
+        "title": "瑞士轮 R1 · 0-0 组第 8 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-10-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T18:30:00+08:00",
+        "plannedEnd": "2026-10-03T18:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-10-1",
+        "title": "瑞士轮 R2 · 1-0 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-10-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T18:40:00+08:00",
+        "plannedEnd": "2026-10-03T18:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-10-2",
+        "title": "瑞士轮 R2 · 1-0 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-10-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T18:50:00+08:00",
+        "plannedEnd": "2026-10-03T19:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-10-3",
+        "title": "瑞士轮 R2 · 1-0 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-10-4",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:00:00+08:00",
+        "plannedEnd": "2026-10-03T19:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-10-4",
+        "title": "瑞士轮 R2 · 1-0 组第 4 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-01-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:10:00+08:00",
+        "plannedEnd": "2026-10-03T19:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-01-1",
+        "title": "瑞士轮 R2 · 0-1 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-01-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:20:00+08:00",
+        "plannedEnd": "2026-10-03T19:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-01-2",
+        "title": "瑞士轮 R2 · 0-1 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-01-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:30:00+08:00",
+        "plannedEnd": "2026-10-03T19:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-01-3",
+        "title": "瑞士轮 R2 · 0-1 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r2-01-4",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:40:00+08:00",
+        "plannedEnd": "2026-10-03T19:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r2-01-4",
+        "title": "瑞士轮 R2 · 0-1 组第 4 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-20-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T20:10:00+08:00",
+        "plannedEnd": "2026-10-03T20:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-20-1",
+        "title": "瑞士轮 R3 · 2-0 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-20-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T20:20:00+08:00",
+        "plannedEnd": "2026-10-03T20:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-20-2",
+        "title": "瑞士轮 R3 · 2-0 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-11-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T20:30:00+08:00",
+        "plannedEnd": "2026-10-03T20:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-11-1",
+        "title": "瑞士轮 R3 · 1-1 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-11-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T20:40:00+08:00",
+        "plannedEnd": "2026-10-03T20:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-11-2",
+        "title": "瑞士轮 R3 · 1-1 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-11-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T09:00:00+08:00",
+        "plannedEnd": "2026-10-04T09:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-11-3",
+        "title": "瑞士轮 R3 · 1-1 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-11-4",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T09:10:00+08:00",
+        "plannedEnd": "2026-10-04T09:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-11-4",
+        "title": "瑞士轮 R3 · 1-1 组第 4 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-02-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T09:20:00+08:00",
+        "plannedEnd": "2026-10-04T09:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-02-1",
+        "title": "瑞士轮 R3 · 0-2 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r3-02-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T09:30:00+08:00",
+        "plannedEnd": "2026-10-04T09:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r3-02-2",
+        "title": "瑞士轮 R3 · 0-2 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-21-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:00:00+08:00",
+        "plannedEnd": "2026-10-04T10:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-21-1",
+        "title": "瑞士轮 R4 · 2-1 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-21-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:10:00+08:00",
+        "plannedEnd": "2026-10-04T10:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-21-2",
+        "title": "瑞士轮 R4 · 2-1 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-21-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:20:00+08:00",
+        "plannedEnd": "2026-10-04T10:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-21-3",
+        "title": "瑞士轮 R4 · 2-1 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-12-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:30:00+08:00",
+        "plannedEnd": "2026-10-04T10:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-12-1",
+        "title": "瑞士轮 R4 · 1-2 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-12-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:40:00+08:00",
+        "plannedEnd": "2026-10-04T10:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-12-2",
+        "title": "瑞士轮 R4 · 1-2 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r4-12-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T10:50:00+08:00",
+        "plannedEnd": "2026-10-04T11:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r4-12-3",
+        "title": "瑞士轮 R4 · 1-2 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r5-22-1",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T11:20:00+08:00",
+        "plannedEnd": "2026-10-04T11:30:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r5-22-1",
+        "title": "瑞士轮 R5 · 2-2 组第 1 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r5-22-2",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T11:30:00+08:00",
+        "plannedEnd": "2026-10-04T11:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r5-22-2",
+        "title": "瑞士轮 R5 · 2-2 组第 2 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-r5-22-3",
+        "kind": "match",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T11:40:00+08:00",
+        "plannedEnd": "2026-10-04T11:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "swiss-r5-22-3",
+        "title": "瑞士轮 R5 · 2-2 组第 3 场",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-review-3",
+        "kind": "activity",
+        "stage": "swiss",
+        "date": "2026-10-03",
+        "plannedStart": "2026-10-03T19:50:00+08:00",
+        "plannedEnd": "2026-10-03T20:10:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "核分并一次性公布第三轮全部 8 场对阵及跨日场次",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-review-4",
+        "kind": "activity",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T09:40:00+08:00",
+        "plannedEnd": "2026-10-04T10:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "第三轮核分并公布第四轮对阵",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-review-5",
+        "kind": "activity",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T11:00:00+08:00",
+        "plannedEnd": "2026-10-04T11:20:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "第四轮核分并公布第五轮对阵",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-swiss-final-review",
+        "kind": "activity",
+        "stage": "swiss",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T11:50:00+08:00",
+        "plannedEnd": "2026-10-04T12:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": null,
+        "title": "瑞士轮总核分（统一计算 A、B、P、O、R 与八强种子）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-opening",
+        "kind": "activity",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T14:00:00+08:00",
+        "plannedEnd": null,
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "opening",
+        "title": "决赛开幕式",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-L1A",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T14:30:00+08:00",
+        "plannedEnd": "2026-10-04T14:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-L1A",
+        "title": "八强败者组首轮 A · L1 对 L4",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-L1B",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T14:40:00+08:00",
+        "plannedEnd": "2026-10-04T14:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-L1B",
+        "title": "八强败者组首轮 B · L2 对 L3",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-W1A",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T15:05:00+08:00",
+        "plannedEnd": "2026-10-04T15:15:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-W1A",
+        "title": "八强胜者组 A · W1 对 W4",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-W1B",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T15:15:00+08:00",
+        "plannedEnd": "2026-10-04T15:25:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-W1B",
+        "title": "八强胜者组 B · W2 对 W3",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-L2A",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T15:40:00+08:00",
+        "plannedEnd": "2026-10-04T15:50:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-L2A",
+        "title": "败者组第二轮 A · F-W1A 败者 对 F-L1B 胜者",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-L2B",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T15:50:00+08:00",
+        "plannedEnd": "2026-10-04T16:00:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-L2B",
+        "title": "败者组第二轮 B · F-W1B 败者 对 F-L1A 胜者",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-LSF",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:15:00+08:00",
+        "plannedEnd": "2026-10-04T16:25:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-LSF",
+        "title": "半决赛败者组",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-WSF",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:25:00+08:00",
+        "plannedEnd": "2026-10-04T16:35:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-WSF",
+        "title": "半决赛胜者组",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-QUAL",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:35:00+08:00",
+        "plannedEnd": null,
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "F-QUAL",
+        "title": "总决赛名额争夺战（BO3）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-F-GF",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:35:00+08:00",
+        "plannedEnd": null,
+        "afterSeriesId": "F-QUAL",
+        "venueId": "venue-tbd",
+        "referenceId": "F-GF",
+        "title": "总决赛（BO3）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-final-1",
+        "kind": "match",
+        "stage": "showcase",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T14:50:00+08:00",
+        "plannedEnd": "2026-10-04T15:05:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-final-1",
+        "title": "展示组正式演出 · 抽签第 1 队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-final-2",
+        "kind": "match",
+        "stage": "showcase",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T15:25:00+08:00",
+        "plannedEnd": "2026-10-04T15:40:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-final-2",
+        "title": "展示组正式演出 · 抽签第 2 队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-showcase-final-3",
+        "kind": "match",
+        "stage": "showcase",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:00:00+08:00",
+        "plannedEnd": "2026-10-04T16:15:00+08:00",
+        "afterSeriesId": null,
+        "venueId": "venue-tbd",
+        "referenceId": "showcase-final-3",
+        "title": "展示组正式演出 · 抽签第 3 队",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      },
+      {
+        "id": "sched-exhibition",
+        "kind": "match",
+        "stage": "finals",
+        "date": "2026-10-04",
+        "plannedStart": "2026-10-04T16:35:00+08:00",
+        "plannedEnd": null,
+        "afterSeriesId": "F-GF",
+        "venueId": "venue-tbd",
+        "referenceId": "exhibition",
+        "title": "表演赛（15 分钟 BO2，不计正式排名）",
+        "executionStatus": "scheduled",
+        "adjustmentNote": null,
+        "revisedStart": null
+      }
+    ],
+    "qualification": {
+      "runs": [
+        {
+          "id": "qual-r1-rank01",
+          "teamId": "competitive-18",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank01",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank02",
+          "teamId": "competitive-4",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank02",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank03",
+          "teamId": "competitive-5",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank03",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank04",
+          "teamId": "competitive-14",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank04",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank05",
+          "teamId": "competitive-35",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank05",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank06",
+          "teamId": "competitive-1",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank06",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank07",
+          "teamId": "competitive-10",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank07",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank08",
+          "teamId": "competitive-23",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank08",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank09",
+          "teamId": "competitive-6",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank09",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank10",
+          "teamId": "competitive-28",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank10",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank11",
+          "teamId": "competitive-2",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank11",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank12",
+          "teamId": "competitive-21",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank12",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank13",
+          "teamId": "competitive-25",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank13",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank14",
+          "teamId": "competitive-17",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank14",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank15",
+          "teamId": "competitive-13",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank15",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank16",
+          "teamId": "competitive-27",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank16",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank17",
+          "teamId": "competitive-3",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank17",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank18",
+          "teamId": "competitive-9",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank18",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank19",
+          "teamId": "competitive-31",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank19",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank20",
+          "teamId": "competitive-12",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank20",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank21",
+          "teamId": "competitive-29",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank21",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r1-rank22",
+          "teamId": "competitive-8",
+          "round": 1,
+          "scheduleItemId": "sched-qual-r1-rank22",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank01",
+          "teamId": "competitive-18",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank01",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank02",
+          "teamId": "competitive-4",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank02",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank03",
+          "teamId": "competitive-5",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank03",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank04",
+          "teamId": "competitive-14",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank04",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank05",
+          "teamId": "competitive-35",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank05",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank06",
+          "teamId": "competitive-1",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank06",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank07",
+          "teamId": "competitive-10",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank07",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank08",
+          "teamId": "competitive-23",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank08",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank09",
+          "teamId": "competitive-6",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank09",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank10",
+          "teamId": "competitive-28",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank10",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank11",
+          "teamId": "competitive-2",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank11",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank12",
+          "teamId": "competitive-21",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank12",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank13",
+          "teamId": "competitive-25",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank13",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank14",
+          "teamId": "competitive-17",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank14",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank15",
+          "teamId": "competitive-13",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank15",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank16",
+          "teamId": "competitive-27",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank16",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank17",
+          "teamId": "competitive-3",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank17",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank18",
+          "teamId": "competitive-9",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank18",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank19",
+          "teamId": "competitive-31",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank19",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank20",
+          "teamId": "competitive-12",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank20",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank21",
+          "teamId": "competitive-29",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank21",
+          "venueId": "venue-b",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        },
+        {
+          "id": "qual-r2-rank22",
+          "teamId": "competitive-8",
+          "round": 2,
+          "scheduleItemId": "sched-qual-r2-rank22",
+          "venueId": "venue-a",
+          "executionStatus": "scheduled",
+          "rawResult": null,
+          "score": null,
+          "elapsedSeconds": null,
+          "resultStatus": "none",
+          "judgeNote": null,
+          "confirmedAt": null
+        }
+      ],
+      "ranking": {
+        "orderedTeamIds": [],
+        "bestResultLabels": null,
+        "status": "none",
+        "confirmedAt": null,
+        "sourceNote": null,
+        "publicationStatus": "draft",
+        "publishedAt": null
+      }
+    },
+    "swiss": {
+      "rounds": [
+        {
+          "id": "swiss-round-1",
+          "index": 1,
+          "matchIds": [
+            "swiss-r1-00-1",
+            "swiss-r1-00-2",
+            "swiss-r1-00-3",
+            "swiss-r1-00-4",
+            "swiss-r1-00-5",
+            "swiss-r1-00-6",
+            "swiss-r1-00-7",
+            "swiss-r1-00-8"
+          ],
+          "pairingVersion": 0,
+          "basedOnRound": 0,
+          "basedOnRevision": null,
+          "publicationStatus": "draft",
+          "publishedAt": null,
+          "closedAt": null,
+          "rankingSnapshot": null,
+          "revisionNote": null
+        },
+        {
+          "id": "swiss-round-2",
+          "index": 2,
+          "matchIds": [
+            "swiss-r2-10-1",
+            "swiss-r2-10-2",
+            "swiss-r2-10-3",
+            "swiss-r2-10-4",
+            "swiss-r2-01-1",
+            "swiss-r2-01-2",
+            "swiss-r2-01-3",
+            "swiss-r2-01-4"
+          ],
+          "pairingVersion": 0,
+          "basedOnRound": 1,
+          "basedOnRevision": null,
+          "publicationStatus": "draft",
+          "publishedAt": null,
+          "closedAt": null,
+          "rankingSnapshot": null,
+          "revisionNote": null
+        },
+        {
+          "id": "swiss-round-3",
+          "index": 3,
+          "matchIds": [
+            "swiss-r3-20-1",
+            "swiss-r3-20-2",
+            "swiss-r3-11-1",
+            "swiss-r3-11-2",
+            "swiss-r3-11-3",
+            "swiss-r3-11-4",
+            "swiss-r3-02-1",
+            "swiss-r3-02-2"
+          ],
+          "pairingVersion": 0,
+          "basedOnRound": 2,
+          "basedOnRevision": null,
+          "publicationStatus": "draft",
+          "publishedAt": null,
+          "closedAt": null,
+          "rankingSnapshot": null,
+          "revisionNote": null
+        },
+        {
+          "id": "swiss-round-4",
+          "index": 4,
+          "matchIds": [
+            "swiss-r4-21-1",
+            "swiss-r4-21-2",
+            "swiss-r4-21-3",
+            "swiss-r4-12-1",
+            "swiss-r4-12-2",
+            "swiss-r4-12-3"
+          ],
+          "pairingVersion": 0,
+          "basedOnRound": 3,
+          "basedOnRevision": null,
+          "publicationStatus": "draft",
+          "publishedAt": null,
+          "closedAt": null,
+          "rankingSnapshot": null,
+          "revisionNote": null
+        },
+        {
+          "id": "swiss-round-5",
+          "index": 5,
+          "matchIds": [
+            "swiss-r5-22-1",
+            "swiss-r5-22-2",
+            "swiss-r5-22-3"
+          ],
+          "pairingVersion": 0,
+          "basedOnRound": 4,
+          "basedOnRevision": null,
+          "publicationStatus": "draft",
+          "publishedAt": null,
+          "closedAt": null,
+          "rankingSnapshot": null,
+          "revisionNote": null
+        }
+      ],
+      "matches": [
+        {
+          "id": "swiss-r1-00-1",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-2",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-3",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-3",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-4",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 4,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-4",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-5",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 5,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-5",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-6",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 6,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-6",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-7",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 7,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-7",
+          "note": null
+        },
+        {
+          "id": "swiss-r1-00-8",
+          "roundId": "swiss-round-1",
+          "roundIndex": 1,
+          "groupRecord": "0-0",
+          "orderInGroup": 8,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r1-00-8",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-10-1",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "1-0",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-10-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-10-2",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "1-0",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-10-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-10-3",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "1-0",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-10-3",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-10-4",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "1-0",
+          "orderInGroup": 4,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-10-4",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-01-1",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "0-1",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-01-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-01-2",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "0-1",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-01-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-01-3",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "0-1",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-01-3",
+          "note": null
+        },
+        {
+          "id": "swiss-r2-01-4",
+          "roundId": "swiss-round-2",
+          "roundIndex": 2,
+          "groupRecord": "0-1",
+          "orderInGroup": 4,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r2-01-4",
+          "note": null
+        },
+        {
+          "id": "swiss-r3-20-1",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "2-0",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-20-1",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-20-2",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "2-0",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-20-2",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-11-1",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "1-1",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-11-1",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-11-2",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "1-1",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-11-2",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-11-3",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "1-1",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-11-3",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-11-4",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "1-1",
+          "orderInGroup": 4,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-11-4",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-02-1",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "0-2",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-02-1",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r3-02-2",
+          "roundId": "swiss-round-3",
+          "roundIndex": 3,
+          "groupRecord": "0-2",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r3-02-2",
+          "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        },
+        {
+          "id": "swiss-r4-21-1",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "2-1",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-21-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r4-21-2",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "2-1",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-21-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r4-21-3",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "2-1",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-21-3",
+          "note": null
+        },
+        {
+          "id": "swiss-r4-12-1",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "1-2",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-12-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r4-12-2",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "1-2",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-12-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r4-12-3",
+          "roundId": "swiss-round-4",
+          "roundIndex": 4,
+          "groupRecord": "1-2",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r4-12-3",
+          "note": null
+        },
+        {
+          "id": "swiss-r5-22-1",
+          "roundId": "swiss-round-5",
+          "roundIndex": 5,
+          "groupRecord": "2-2",
+          "orderInGroup": 1,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r5-22-1",
+          "note": null
+        },
+        {
+          "id": "swiss-r5-22-2",
+          "roundId": "swiss-round-5",
+          "roundIndex": 5,
+          "groupRecord": "2-2",
+          "orderInGroup": 2,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r5-22-2",
+          "note": null
+        },
+        {
+          "id": "swiss-r5-22-3",
+          "roundId": "swiss-round-5",
+          "roundIndex": 5,
+          "groupRecord": "2-2",
+          "orderInGroup": 3,
+          "slots": [
+            {
+              "kind": "qualification-rank",
+              "rank": 1
+            },
+            {
+              "kind": "qualification-rank",
+              "rank": 2
+            }
+          ],
+          "participantSnapshot": null,
+          "attempts": [],
+          "effectiveAttemptId": null,
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-swiss-r5-22-3",
+          "note": null
+        }
+      ]
+    },
+    "finals": {
+      "seeding": null,
+      "series": [
+        {
+          "id": "F-L1A",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "finals-seed",
+              "seed": "L1"
+            },
+            {
+              "kind": "finals-seed",
+              "seed": "L4"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-L1A-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-L1A",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-L1B",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "finals-seed",
+              "seed": "L2"
+            },
+            {
+              "kind": "finals-seed",
+              "seed": "L3"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-L1B-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-L1B",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-W1A",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "finals-seed",
+              "seed": "W1"
+            },
+            {
+              "kind": "finals-seed",
+              "seed": "W4"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-W1A-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-W1A",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-W1B",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "finals-seed",
+              "seed": "W2"
+            },
+            {
+              "kind": "finals-seed",
+              "seed": "W3"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-W1B-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-W1B",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-L2A",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "loser",
+              "seriesId": "F-W1A"
+            },
+            {
+              "kind": "winner",
+              "seriesId": "F-L1B"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-L2A-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-L2A",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-L2B",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "loser",
+              "seriesId": "F-W1B"
+            },
+            {
+              "kind": "winner",
+              "seriesId": "F-L1A"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-L2B-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-L2B",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-LSF",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "winner",
+              "seriesId": "F-L2A"
+            },
+            {
+              "kind": "winner",
+              "seriesId": "F-L2B"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-LSF-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-LSF",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-WSF",
+          "format": "BO1",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "winner",
+              "seriesId": "F-W1A"
+            },
+            {
+              "kind": "winner",
+              "seriesId": "F-W1B"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-WSF-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-WSF",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-QUAL",
+          "format": "BO3",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "winner",
+              "seriesId": "F-LSF"
+            },
+            {
+              "kind": "loser",
+              "seriesId": "F-WSF"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-QUAL-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "F-QUAL-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "F-QUAL-g3",
+              "index": 3,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-QUAL",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "F-GF",
+          "format": "BO3",
+          "stage": "finals",
+          "countsForStandings": true,
+          "slots": [
+            {
+              "kind": "winner",
+              "seriesId": "F-WSF"
+            },
+            {
+              "kind": "winner",
+              "seriesId": "F-QUAL"
+            }
+          ],
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "F-GF-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "F-GF-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "F-GF-g3",
+              "index": 3,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-F-GF",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "showcase-final-1",
+          "format": "BO2",
+          "stage": "showcase",
+          "countsForStandings": false,
+          "slots": null,
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "showcase-final-1-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "showcase-final-1-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-showcase-final-1",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "showcase-final-2",
+          "format": "BO2",
+          "stage": "showcase",
+          "countsForStandings": false,
+          "slots": null,
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "showcase-final-2-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "showcase-final-2-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-showcase-final-2",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "showcase-final-3",
+          "format": "BO2",
+          "stage": "showcase",
+          "countsForStandings": false,
+          "slots": null,
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "showcase-final-3-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "showcase-final-3-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-showcase-final-3",
+          "showcaseTeamId": null,
+          "note": null
+        },
+        {
+          "id": "exhibition",
+          "format": "BO2",
+          "stage": "finals",
+          "countsForStandings": false,
+          "slots": null,
+          "participantSnapshot": null,
+          "games": [
+            {
+              "id": "exhibition-g1",
+              "index": 1,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            },
+            {
+              "id": "exhibition-g2",
+              "index": 2,
+              "homeTeamId": null,
+              "awayTeamId": null,
+              "homeScore": null,
+              "awayScore": null,
+              "winnerId": null,
+              "resultKind": "normal",
+              "resultStatus": "none",
+              "confirmedAt": null,
+              "note": null
+            }
+          ],
+          "executionStatus": "scheduled",
+          "scheduleItemId": "sched-exhibition",
+          "showcaseTeamId": null,
+          "note": null
+        }
+      ]
+    },
+    "showcase": {
+      "drawOrder": null,
+      "confirmedAt": null,
+      "note": null
+    },
+    "notices": [
+      {
+        "id": "notice-times-are-reference",
+        "at": "2026-09-30T14:35:44.094Z",
+        "title": "时间仅供参考",
+        "body": "本页时间来自赛前计划表。当天以赛程组共享文档的安排为准，现场调整会在此处公告。",
+        "severity": "info"
+      }
+    ],
+    "corrections": []
+  }
+}

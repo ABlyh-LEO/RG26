@@ -1,0 +1,69 @@
+name: CI
+
+# 在 PR 与主分支 push 上执行必需检查。
+# 数据校验或规则测试失败必须阻止合并。
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: 类型检查 · Lint · 测试 · 数据校验 · 构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: 安装锁定依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: 领域测试（含第 13 节验收用例）
+        run: npm run test
+
+      - name: 数据校验
+        run: npm run validate:data
+
+      - name: 构建（含公开快照生成）
+        run: npm run build
+
+      - name: 安装 Playwright 浏览器
+        run: npx playwright install --with-deps chromium
+
+      - name: 端到端测试
+        run: npm run test:e2e
+
+      - name: 上传 Playwright 报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

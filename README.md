@@ -1,0 +1,147 @@
+# RoboGame2026 赛程可视化工具
+
+RoboGame2026 赛事的赛程与结果网站：读取比赛结果，计算瑞士轮评分、排名、
+后续对阵与决赛晋级，并清楚区分**待确认**与**正式公布**的信息。
+
+- 中文界面，移动优先，纯静态（React + TypeScript + Vite）
+- 托管：GitHub Pages（hash 路由，深链刷新不 404）
+- 数据：单一正式输入 `data/event.json`，本地录入 → Git 提交 → Actions 自动发布
+- 公开站点**只读**，没有结果写入能力
+
+---
+
+## 快速开始
+
+```bash
+npm ci                 # 安装锁定依赖
+npm run data:seed      # 生成初始数据（仓库已含 data/event.json 时可跳过）
+npm run dev            # 启动观众站（http://127.0.0.1:5173）
+```
+
+首次运行前请确认 Node 版本符合 `.nvmrc`（当前为 24）。
+
+---
+
+## 全部命令
+
+| 命令 | 作用 |
+| --- | --- |
+| `npm ci` | 按锁文件安装依赖 |
+| `npm run dev` | 启动观众站开发服务器 |
+| `npm run operator` | 启动**本地维护工具**（127.0.0.1，仅本机） |
+| `npm run typecheck` | TypeScript 类型检查 |
+| `npm run lint` | ESLint |
+| `npm run test` | 领域单元测试（Vitest） |
+| `npm run test:e2e` | 端到端测试（Playwright，跑在生产构建上） |
+| `npm run validate:data` | 校验 `data/event.json` |
+| `npm run data:seed` | 生成初始数据骨架（默认拒绝覆盖已有赛果） |
+| `npm run data:import -- --file <export.json>` | 导入维护工具导出的变更包 |
+| `npm run data:build` | 生成公开快照 `public/data/event.json` |
+| `npm run build` | 校验数据 + 生成快照 + 类型检查 + 生产构建 |
+| `npm run preview` | 本地预览生产构建 |
+
+> `npm run build` **包含**数据校验与公开快照生成，不会忘记更新 public 数据。
+
+---
+
+## 项目结构
+
+```text
+RG26/
+  RoboGame2026赛程安排.docx      # 原始资料（不进入公开产物）
+  data/event.json                # 唯一正式输入文件
+  public/data/event.json         # 构建生成的公开快照（不手工维护）
+  docs/
+    IMPLEMENTATION_PLAN.md       # 实施计划（需求与验收依据）
+    RULES.md                     # 规则、公式、统计口径、未明确项
+    OPERATOR_GUIDE.md            # 维护者操作手册
+    DEPLOYMENT.md                # 部署与排错
+    acceptance/                  # 验收记录与截图
+    reference/                   # 原文提取与名单图片
+  src/
+    app/                         # 路由、布局、hash 查询参数
+    components/                  # 共享展示组件
+    pages/                       # 总览、赛程、晋级、队伍、比赛详情、规则
+    domain/                      # 领域层（纯逻辑，不依赖 React）
+      rational.ts                # BigInt 有理数运算
+      schema.ts                  # Zod 严格 schema
+      scores.ts                  # 评分公式与统计口径
+      standings.ts               # 排序与排名
+      swiss.ts                   # 配对与轮次门禁
+      finals.ts                  # 固定决赛图、BO3、奖项
+      corrections.ts             # 更正影响面与处置
+      validation.ts              # 结构化校验
+    data/                        # 数据读取、缓存、派生视图模型
+    operator/                    # 本地维护模式（不进入公开构建）
+    styles/                      # 设计 token 与共享样式
+  scripts/                       # seed / validate / import / build / 截图
+  tests/
+    domain/                      # 领域验收用例（D01–D18 等）
+    fixtures/                    # 合成测试数据（绝不进入正式数据）
+    e2e/                         # 端到端与设备矩阵
+  .github/workflows/             # ci.yml、deploy.yml
+```
+
+---
+
+## 当前完成状态
+
+**已完成并验证：**
+
+- ✅ 完整两日赛程（10 月 3–4 日），含比赛、核分、展示、抽签、开幕式、表演赛
+- ✅ 22 队两轮排位赛（44 次跑图）与正式排名录入
+- ✅ 16 队瑞士轮：战绩分组、评分、轮次确认、对阵公布、**R3 跨日锁定**
+- ✅ 八强决赛固定对阵图、胜败流转、两组 BO3、名次结算
+- ✅ 队伍搜索、详情、本机关注、复制链接
+- ✅ 本地维护工具：录入、校验、预览、确认、导入导出、发布前检查
+- ✅ GitHub Pages 工作流、数据更新提示、读取失败处理
+- ✅ 85 个领域测试 + 66 个端到端测试（3 个项目 × 22）
+
+**尚未完成（需要你的输入或线下条件）：**
+
+- ⏳ **未部署** —— 需要 GitHub 仓库与所有者。
+  已完成可部署工程与工作流；确切剩余步骤见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) §3。
+- ⏳ **未做实机验证** —— 自动化测试在 Chromium 内核（Edge）上完成，
+  WebKit 因浏览器下载受限未运行。iOS Safari / Android Chrome / 现场网络需实测。
+- ⏳ **无 Lighthouse 实测分数** —— 目标为性能 ≥90、可访问性 ≥95，尚未在移动端生产构建上测量。
+
+**规则上的已知不确定项**（不阻塞开发，运行前应补齐）：
+见 [`docs/RULES.md`](docs/RULES.md) §8，以及 `data/event.json` 的 `event.openItems`。
+
+**重要：** 数据中的队名有三项标注为「待核对」（`nameVerified: false`），
+场地名称为临时占位（A/B 场地）。这些在界面上都有明确标识，不会冒充官方确认值。
+
+---
+
+## 文档索引
+
+| 文档 | 内容 |
+| --- | --- |
+| [`docs/RULES.md`](docs/RULES.md) | 公式、赛制、统计口径、异常处理、原文未明确项 |
+| [`docs/OPERATOR_GUIDE.md`](docs/OPERATOR_GUIDE.md) | 录入、确认、公布、抽签、更正、发布、回滚 |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 仓库、Pages 设置、base 配置、Actions、排错、现场验证 |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | 完整实施计划与验收条件 |
+| [`docs/acceptance/`](docs/acceptance/) | 验收记录与截图 |
+
+---
+
+## 关键约束（改代码前请先读）
+
+1. **领域层是纯逻辑** —— `src/domain/` 不 import React，不读当前时间，
+   不使用随机数（由 ESLint 强制）。当前时间一律由调用方传入。
+2. **排序用原始精度** —— 页面显示两位小数，但比较必须用有理数原始值。
+   绝不用 epsilon 把不等值视为相等。
+3. **缺分不是 0** —— 不得用假 0 分填补缺失数据。
+4. **不发明规则** —— 排位赛同分规则未提供，因此采用人工录入的裁判排名。
+   瑞士轮不实现避重、随机或轮空。
+5. **不静默改写历史** —— 更正通过新版本整体保存，旧记录保留并标记。
+6. **公开产物必须干净** —— 维护模式代码不得进入公开构建。
+
+---
+
+## 许可与资料来源
+
+原始赛程文档 `RoboGame2026赛程安排.docx`
+（SHA256 `96C9C6B67CBD7E75E127D4126B36D166B583CB4F3DE6FD98AC532BD80BB18A47`）
+的权威性见 [`docs/RULES.md`](docs/RULES.md) §1：
+**所有时间仅供参考，具体情况以赛程组共享文档当天安排为准。**

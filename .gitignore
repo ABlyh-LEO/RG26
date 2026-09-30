@@ -1,0 +1,39 @@
+# 依赖与构建产物
+node_modules/
+dist/
+dist-operator/
+dist-testrepo/
+*.tsbuildinfo
+
+# 本地缓存
+.npm-cache/
+.vite/
+
+# 集成检查与子路径验证用的临时目录（脚本会自行清理，异常中断时可能残留）
+.tmp-integration-*/
+.tmp-subpath/
+
+# 测试产物
+playwright-report/
+test-results/
+coverage/
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# 日志
+*.log
+npm-debug.log*
+
+# 本地环境
+.env
+.env.local
+
+# 注意：以下文件必须提交，不要忽略
+#   data/event.json          正式输入数据
+#   public/data/event.json   构建产物，但保留可让 Pages 直接查看（由 CI 重新生成）
+#   docs/acceptance/         验收记录与截图

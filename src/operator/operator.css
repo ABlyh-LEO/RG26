@@ -1,0 +1,131 @@
+/* 维护模式专用样式：明显标记“未发布”，避免与正式站点混淆。 */
+
+.operator-banner {
+  background: #7a3d00;
+  color: #fff;
+  padding: var(--sp-2) var(--gutter);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.operator-banner__tag {
+  background: #fff;
+  color: #7a3d00;
+  border-radius: 999px;
+  padding: 1px var(--sp-2);
+  font-size: var(--text-xs);
+}
+
+.operator-draft {
+  border-left: 4px solid #d98b00;
+  padding-left: var(--sp-3);
+}
+
+.operator-grid {
+  display: grid;
+  gap: var(--sp-3);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1000px) {
+  .operator-grid {
+    grid-template-columns: 320px 1fr;
+    align-items: start;
+  }
+}
+
+.operator-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+
+.operator-field > label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.operator-field__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.operator-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.operator-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  margin-bottom: var(--sp-1);
+}
+
+.operator-item:hover {
+  border-color: var(--accent);
+}
+
+.operator-item[aria-current='true'] {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+}
+
+.operator-summary {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  font-size: var(--text-sm);
+}
+
+.operator-errors {
+  background: var(--danger-bg);
+  border: 1px solid #f2c3bf;
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  font-size: var(--text-sm);
+}
+
+.operator-warnings {
+  background: var(--pending-bg);
+  border: 1px solid #f0d9a8;
+  color: var(--pending);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  font-size: var(--text-sm);
+}
+
+.operator-ok {
+  background: var(--advanced-bg);
+  border: 1px solid #b9e0c9;
+  color: var(--advanced);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  font-size: var(--text-sm);
+}
+
+.operator-inline {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.operator-inline > .operator-field {
+  flex: 1;
+  min-width: 120px;
+  margin-bottom: 0;
+}

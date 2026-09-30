@@ -1,0 +1,51 @@
+{
+  "name": "robogame2026-schedule",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RoboGame2026 赛程可视化工具：读取比赛结果，计算瑞士轮评分、排名、后续对阵与决赛晋级。",
+  "engines": {
+    "node": ">=22.12 <25"
+  },
+  "scripts": {
+    "dev": "vite",
+    "operator": "vite --mode operator",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate:data": "tsx scripts/validate-data.ts",
+    "data:seed": "tsx scripts/seed-event.ts",
+    "data:import": "tsx scripts/import-event.ts",
+    "data:build": "tsx scripts/build-public-data.ts",
+    "check:integration": "tsx scripts/integration-check.ts",
+    "check:subpath": "tsx scripts/subpath-check.ts",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "build": "npm run validate:data && npm run data:build && tsc -b --pretty false && vite build",
+    "build:only": "tsc -b --pretty false && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.11.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.11.0",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.3"
+  }
+}
