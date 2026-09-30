@@ -19,6 +19,7 @@
     "data:seed": "tsx scripts/seed-event.ts",
     "data:import": "tsx scripts/import-event.ts",
     "data:build": "tsx scripts/build-public-data.ts",
+    "publish": "tsx scripts/publish.ts",
     "check:integration": "tsx scripts/integration-check.ts",
     "check:subpath": "tsx scripts/subpath-check.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",

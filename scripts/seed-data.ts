@@ -110,15 +110,36 @@ export function buildTeams(): Team[] {
  * 场地
  * ------------------------------------------------------------------ */
 
+/**
+ * 场地结构（据用户说明）：
+ * - **主舞台**：所有两两对抗都在这里 —— 瑞士轮 33 场、决赛全部 BO1/BO3。
+ * - **A / B 副场地**：仅排位赛使用，两块并行跑图；
+ *   每队两轮各用一个不同的场地（第 1 轮奇数名→A、偶数名→B，第 2 轮互换）。
+ */
+export const VENUE_MAIN = 'venue-main';
 export const VENUE_A = 'venue-a';
 export const VENUE_B = 'venue-b';
-export const VENUE_TBD = 'venue-tbd';
 
 export function buildVenues(): Venue[] {
   return [
-    { id: VENUE_A, label: 'A 场地', provisionalName: true, note: '真实场地名称待赛程组提供' },
-    { id: VENUE_B, label: 'B 场地', provisionalName: true, note: '真实场地名称待赛程组提供' },
-    { id: VENUE_TBD, label: '待定场地', provisionalName: true, note: '决赛与主席台活动的场地尚未提供' },
+    {
+      id: VENUE_MAIN,
+      label: '主舞台',
+      provisionalName: true,
+      note: '对抗类比赛（瑞士轮、决赛）场地；真实名称待赛程组提供',
+    },
+    {
+      id: VENUE_A,
+      label: 'A 副场地',
+      provisionalName: true,
+      note: '仅排位赛跑图使用；真实名称待赛程组提供',
+    },
+    {
+      id: VENUE_B,
+      label: 'B 副场地',
+      provisionalName: true,
+      note: '仅排位赛跑图使用；真实名称待赛程组提供',
+    },
   ];
 }
 
@@ -338,7 +359,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY1, '10:50'),
     plannedEnd: at(DAY1, '11:10'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '展示资料对接（PPT、视频、动画等）',
     executionStatus: 'scheduled',
@@ -355,7 +376,7 @@ export function buildSeedEvent(now: string): EventFile {
       plannedStart: at(DAY1, '11:10', index * 15),
       plannedEnd: at(DAY1, '11:10', (index + 1) * 15),
       afterSeriesId: null,
-      venueId: VENUE_TBD,
+      venueId: VENUE_MAIN,
       referenceId: showcaseTeamId(entry.number),
       title: `展示组预演 · ${entry.name}`,
       executionStatus: 'scheduled',
@@ -373,7 +394,7 @@ export function buildSeedEvent(now: string): EventFile {
     // 原文未给出结束时间。
     plannedEnd: null,
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '展示组抽签（主席台前，决定决赛上台次序）',
     executionStatus: 'scheduled',
@@ -445,7 +466,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY1, '15:20'),
     plannedEnd: at(DAY1, '16:00'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '排位赛核分及准备（公布最终排名与十六强对阵）',
     executionStatus: 'scheduled',
@@ -499,7 +520,7 @@ export function buildSeedEvent(now: string): EventFile {
           plannedStart: at(date, start),
           plannedEnd: at(date, start, 10),
           afterSeriesId: null,
-          venueId: VENUE_TBD,
+          venueId: VENUE_MAIN,
           referenceId: matchId,
           title: `瑞士轮 R${index} · ${groupRecord} 组第 ${order} 场`,
           executionStatus: 'scheduled',
@@ -552,7 +573,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY1, '19:50'),
     plannedEnd: at(DAY1, '20:10'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '核分并一次性公布第三轮全部 8 场对阵及跨日场次',
     executionStatus: 'scheduled',
@@ -567,7 +588,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY2, '09:40'),
     plannedEnd: at(DAY2, '10:00'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '第三轮核分并公布第四轮对阵',
     executionStatus: 'scheduled',
@@ -582,7 +603,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY2, '11:00'),
     plannedEnd: at(DAY2, '11:20'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '第四轮核分并公布第五轮对阵',
     executionStatus: 'scheduled',
@@ -597,7 +618,7 @@ export function buildSeedEvent(now: string): EventFile {
     plannedStart: at(DAY2, '11:50'),
     plannedEnd: at(DAY2, '12:00'),
     afterSeriesId: null,
-    venueId: VENUE_TBD,
+    venueId: VENUE_MAIN,
     referenceId: null,
     title: '瑞士轮总核分（统一计算 A、B、P、O、R 与八强种子）',
     executionStatus: 'scheduled',
@@ -621,7 +642,7 @@ export function buildSeedEvent(now: string): EventFile {
       plannedStart: at(slot.date, slot.start),
       plannedEnd: slot.end === null ? null : at(slot.date, slot.end),
       afterSeriesId: slot.afterSeriesId,
-      venueId: VENUE_TBD,
+      venueId: VENUE_MAIN,
       referenceId: node.id,
       title: node.title,
       executionStatus: 'scheduled',

@@ -18,6 +18,9 @@ import {
   applyBo3Game,
   adjustSchedule,
   applyQualificationRanking,
+  applyQualificationRun,
+  confirmQualificationRuns,
+  qualificationProgress,
   applyShowcaseDraw,
   buildChangePackage,
   confirmRound,
@@ -31,11 +34,12 @@ import {
 import type { ResultKind, Series, SwissMatch } from '../domain/schema';
 import { generateSwissPairings } from '../domain/swiss';
 
-type Tab = 'matches' | 'bo3' | 'qualification' | 'rounds' | 'seeds' | 'showcase' | 'notices' | 'export';
+type Tab = 'matches' | 'bo3' | 'qualification' | 'qualRuns' | 'rounds' | 'seeds' | 'showcase' | 'notices' | 'export';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'matches', label: '录入比赛' },
   { key: 'bo3', label: 'BO3 小局' },
+  { key: 'qualRuns', label: '排位赛成绩' },
   { key: 'qualification', label: '排位赛排名' },
   { key: 'rounds', label: '轮次与配对' },
   { key: 'seeds', label: '八强种子' },
@@ -187,6 +191,7 @@ export function OperatorApp() {
 
         {tab === 'matches' ? <MatchEntry draft={draft} onApply={applyResult} /> : null}
         {tab === 'bo3' ? <Bo3Entry draft={draft} onApply={applyResult} /> : null}
+        {tab === 'qualRuns' ? <QualRunsEntry draft={draft} onApply={applyResult} /> : null}
         {tab === 'qualification' ? <QualificationEntry draft={draft} onApply={applyResult} /> : null}
         {tab === 'rounds' ? <RoundsEntry draft={draft} onApply={applyResult} /> : null}
         {tab === 'seeds' ? <SeedsEntry draft={draft} onApply={applyResult} /> : null}
@@ -657,6 +662,235 @@ function Bo3Form({
           双方不能是同一支队伍。
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 排位赛跑图成绩
+ * ------------------------------------------------------------------ */
+
+function QualRunsEntry({
+  draft,
+  onApply,
+}: {
+  draft: EventFile;
+  onApply: (r: { event: EventFile; ok: boolean; messages: string[] }) => void;
+}) {
+  const [roundFilter, setRoundFilter] = useState<'all' | '1' | '2'>('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const progress = qualificationProgress(draft);
+
+  const runs = useMemo(() => {
+    return draft.qualification.runs
+      .filter((r) => roundFilter === 'all' || String(r.round) === roundFilter)
+      .sort((a, b) => {
+        if (a.round !== b.round) return a.round - b.round;
+        const ia = draft.scheduleItems.find((s) => s.id === a.scheduleItemId);
+        const ib = draft.scheduleItems.find((s) => s.id === b.scheduleItemId);
+        return (ia?.plannedStart ?? '').localeCompare(ib?.plannedStart ?? '');
+      });
+  }, [draft, roundFilter]);
+
+  const selected = selectedId ? draft.qualification.runs.find((r) => r.id === selectedId) ?? null : null;
+
+  return (
+    <div className="operator-grid">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__title">跑图进度</span>
+        </div>
+        <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }}>
+          <div>
+            已确认 <strong>{progress.confirmed}</strong> / {progress.total}
+          </div>
+          <div className="xsmall muted">
+            待确认 {progress.provisional} · 未录入 {progress.pending}
+          </div>
+        </div>
+
+        <div className="segmented" role="group" aria-label="选择轮次" style={{ marginBottom: 'var(--sp-2)' }}>
+          {(
+            [
+              ['all', '两轮'],
+              ['1', '第一轮'],
+              ['2', '第二轮'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className="segmented__item"
+              aria-pressed={roundFilter === key}
+              onClick={() => setRoundFilter(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="row" style={{ marginBottom: 'var(--sp-2)' }}>
+          <button
+            type="button"
+            className="btn btn--small"
+            disabled={progress.provisional === 0}
+            onClick={() => onApply(confirmQualificationRuns(draft))}
+          >
+            全部确认（{progress.provisional}）
+          </button>
+        </div>
+
+        <div className="operator-list">
+          {runs.map((run) => {
+            const team = draft.teams.find((t) => t.id === run.teamId);
+            const item = draft.scheduleItems.find((s) => s.id === run.scheduleItemId);
+            return (
+              <button
+                key={run.id}
+                type="button"
+                className="operator-item"
+                aria-current={selectedId === run.id}
+                onClick={() => setSelectedId(run.id)}
+              >
+                <div className="row" style={{ justifyContent: 'space-between' }}>
+                  <strong className="small">
+                    R{run.round} · {team?.name ?? run.teamId}
+                  </strong>
+                  <span className="xsmall muted tabular">
+                    {item ? formatTime(item.plannedStart) : '—'}
+                  </span>
+                </div>
+                <div className="row" style={{ gap: 'var(--sp-1)', marginTop: 2 }}>
+                  <span className="xsmall muted">{draft.venues.find((v) => v.id === run.venueId)?.label ?? run.venueId}</span>
+                  {run.resultStatus === 'confirmed' ? (
+                    <span className="badge badge--advanced">已确认</span>
+                  ) : run.resultStatus === 'provisional' ? (
+                    <span className="badge badge--pending">待确认</span>
+                  ) : (
+                    <span className="badge badge--neutral">未录入</span>
+                  )}
+                  {run.rawResult || run.score ? (
+                    <span className="xsmall">{run.rawResult ?? run.score}</span>
+                  ) : null}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        {selected ? (
+          <QualRunForm run={selected} draft={draft} onApply={onApply} />
+        ) : (
+          <div className="empty">从左侧选择一条跑图记录开始录入。</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QualRunForm({
+  run,
+  draft,
+  onApply,
+}: {
+  run: EventFile['qualification']['runs'][number];
+  draft: EventFile;
+  onApply: (r: { event: EventFile; ok: boolean; messages: string[] }) => void;
+}) {
+  const team = draft.teams.find((t) => t.id === run.teamId);
+  const item = draft.scheduleItems.find((s) => s.id === run.scheduleItemId);
+
+  const [rawResult, setRawResult] = useState(run.rawResult ?? '');
+  const [score, setScore] = useState(run.score ?? '');
+  const [elapsed, setElapsed] = useState(run.elapsedSeconds ?? '');
+  const [judgeNote, setJudgeNote] = useState(run.judgeNote ?? '');
+
+  const submit = (confirm: boolean) =>
+    onApply(
+      applyQualificationRun(draft, {
+        runId: run.id,
+        rawResult,
+        score: score.trim() === '' ? null : score,
+        elapsedSeconds: elapsed.trim() === '' ? null : elapsed,
+        judgeNote: judgeNote.trim() === '' ? null : judgeNote.trim(),
+        confirm,
+      }),
+    );
+
+  return (
+    <div className="card operator-draft">
+      <div className="card__head">
+        <span className="card__title">
+          录入跑图成绩 · {team?.name ?? run.teamId}
+        </span>
+        <span className="badge badge--neutral">
+          第 {run.round} 轮 · {draft.venues.find((v) => v.id === run.venueId)?.label ?? run.venueId}
+        </span>
+      </div>
+
+      {item ? (
+        <p className="xsmall muted">
+          计划时间：{item.date} {formatTime(item.plannedStart)}
+          {item.revisedStart ? `（已调整为 ${formatTime(item.revisedStart)}）` : ''}
+        </p>
+      ) : null}
+
+      <div className="operator-field">
+        <label htmlFor="q-raw">成绩文字</label>
+        <input
+          id="q-raw"
+          className="input"
+          value={rawResult}
+          onChange={(e) => setRawResult(e.target.value)}
+          placeholder="例如：2.35 米 / 完成 / 超时"
+        />
+        <span className="operator-field__hint">原文未规定成绩结构，因此允许自由文本。</span>
+      </div>
+
+      <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
+        <div className="operator-field">
+          <label htmlFor="q-score">积分（可选）</label>
+          <input id="q-score" className="input" value={score} onChange={(e) => setScore(e.target.value)} inputMode="decimal" />
+        </div>
+        <div className="operator-field">
+          <label htmlFor="q-elapsed">用时秒（可选）</label>
+          <input id="q-elapsed" className="input" value={elapsed} onChange={(e) => setElapsed(e.target.value)} inputMode="decimal" />
+        </div>
+      </div>
+
+      <div className="operator-field">
+        <label htmlFor="q-note">裁判备注（可选）</label>
+        <input id="q-note" className="input" value={judgeNote} onChange={(e) => setJudgeNote(e.target.value)} />
+      </div>
+
+      <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
+        <strong>重要：</strong>这两项只作记录，<strong>不参与自动排名</strong>。
+        原文未规定「两轮最优」的比较与同分规则，因此正式名次请在
+        「排位赛排名」页签人工录入裁判确认的 1–22 名。
+      </div>
+
+      <div className="row">
+        <button type="button" className="btn btn--primary" onClick={() => submit(true)}>
+          保存并确认
+        </button>
+        <button type="button" className="btn" onClick={() => submit(false)}>
+          仅保存（待确认）
+        </button>
+        {run.resultStatus !== 'none' ? (
+          <button
+            type="button"
+            className="btn"
+            onClick={() =>
+              onApply({ event: draft, ok: false, messages: [`当前状态：${run.resultStatus}，确认时间 ${run.confirmedAt ?? '—'}`] })
+            }
+          >
+            查看状态
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@
  * - 瑞士轮按轮次显示战绩分组，默认只显示名次/队伍/战绩/R，展开看 A/B/P/O/T。
  * - 决赛桌面用固定流向图，手机按实际比赛顺序纵向卡片。
  */
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryParams } from '../app/useQueryParams';
 import { useData } from '../data/DataProvider';
@@ -19,6 +20,7 @@ import { toSeriesView } from '../data/view-model';
 import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
 import { FINALS_MATCH_ORDER } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
+import type { EventFile } from '../domain/schema';
 
 type View = 'qualification' | 'swiss' | 'finals';
 
@@ -71,16 +73,55 @@ export function ProgressPage() {
 
 function QualificationView() {
   const { derived } = useData();
+
+  /**
+   * 按批次组织出场安排，直接读跑图与日程数据。
+   *
+   * 一个批次同时上场**两支**队伍（三审第 2b-1、2b 名），
+   * 因此每个批次每轮要保留两条记录，而不是一条。
+   *
+   * 这里刻意不用硬编码的字符串拼时间 —— 那种写法会在分钟溢出时
+   * 产生 Invalid Date，也无法反映真实场地。
+   *
+   * hook 必须在提前 return 之前调用。
+   */
+  const batches = useMemo(() => {
+    if (!derived) return [];
+    const { event, teamMap } = derived;
+    type Run = (typeof event.qualification.runs)[number];
+    const slots = new Map<number, { round1: Run[]; round2: Run[] }>();
+
+    for (const run of event.qualification.runs) {
+      const rank = teamMap.get(run.teamId)?.team?.thirdReviewRank;
+      if (rank === undefined || rank === null) continue;
+      const batch = Math.ceil(rank / 2);
+      const slot = slots.get(batch) ?? { round1: [], round2: [] };
+      if (run.round === 1) slot.round1.push(run);
+      else slot.round2.push(run);
+      slots.set(batch, slot);
+    }
+
+    // 批内按三审排名排序，保证第 1 名在第 2 名之前
+    const byRank = (a: Run, b: Run) => {
+      const ra = teamMap.get(a.teamId)?.team?.thirdReviewRank ?? 99;
+      const rb = teamMap.get(b.teamId)?.team?.thirdReviewRank ?? 99;
+      return ra - rb;
+    };
+
+    return [...slots.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([batch, slot]) => ({
+        batch,
+        round1: [...slot.round1].sort(byRank),
+        round2: [...slot.round2].sort(byRank),
+      }));
+  }, [derived]);
+
   if (!derived) return null;
   const { event, qualification, teamMap } = derived;
 
   const status = qualification.status;
   const confirmed = status === 'confirmed';
-
-  // 出场安排用三审顺序；正式排名用裁判确认的名次。两者绝不混用。
-  const thirdReviewOrder = [...event.teams]
-    .filter((t) => t.division === 'competitive')
-    .sort((a, b) => (a.thirdReviewRank ?? 99) - (b.thirdReviewRank ?? 99));
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-4)' }}>
@@ -165,37 +206,25 @@ function QualificationView() {
             <thead>
               <tr>
                 <th className="num">批次</th>
-                <th className="table__team">第一轮（09:00 起）</th>
-                <th className="table__team">第二轮（13:30 起）</th>
+                <th className="table__team">第一轮</th>
+                <th className="table__team">第二轮</th>
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: 11 }, (_, b) => {
-                const first = thirdReviewOrder[2 * b];
-                const second = thirdReviewOrder[2 * b + 1];
-                const startR1 = formatTime(`2026-10-03T09:${String(b * 10).padStart(2, '0')}:00+08:00`);
-                const startR2 = formatTime(`2026-10-03T13:${String(30 + b * 10).padStart(2, '0')}:00+08:00`);
-                return (
-                  <tr key={b}>
-                    <td className="num tabular">{b + 1}</td>
-                    <td className="table__team">
-                      <span className="xsmall muted tabular">{startR1} </span>
-                      <TeamName team={first ?? null} fallback="—" />
-                      <span className="xsmall muted">（A 场地）</span>
-                    </td>
-                    <td className="table__team">
-                      <span className="xsmall muted tabular">{startR2} </span>
-                      <TeamName team={second ?? null} fallback="—" />
-                      <span className="xsmall muted">（A 场地）</span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {batches.map(({ batch, round1, round2 }) => (
+                <tr key={batch}>
+                  <td className="num tabular">{batch}</td>
+                  <RunCell runs={round1} />
+                  <RunCell runs={round2} />
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
         <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
-          每批 10 分钟（含上场准备、跑图与场地复位）。同批另一队使用 B 场地；两轮互换。
+          每批 10 分钟（含上场准备、跑图与场地复位）。同一批的两支队伍在 A、B 两个副场地并行跑图；
+          每队两轮各用一个不同场地（第 1 轮奇数名→A、偶数名→B，第 2 轮互换）。
+          对抗类比赛（瑞士轮、决赛）均在主舞台进行。
         </p>
       </div>
 
@@ -250,6 +279,44 @@ function QualificationView() {
         )}
       </div>
     </div>
+  );
+}
+
+/** 出场安排表中的一个单元格：一个批次在同一轮的两支队伍（一个场地各一支）。 */
+function RunCell({ runs }: { runs: EventFile['qualification']['runs'] }) {
+  const { derived } = useData();
+  if (!derived || runs.length === 0) return <td className="table__team muted">—</td>;
+
+  return (
+    <td className="table__team">
+      <div className="stack" style={{ gap: 2 }}>
+        {runs.map((run) => {
+          const item = derived.event.scheduleItems.find((s) => s.id === run.scheduleItemId);
+          const team = derived.teamMap.get(run.teamId)?.team ?? null;
+          const venueLabel = derived.venueLabels.get(run.venueId) ?? run.venueId;
+          // 修订后的时间优先显示
+          const startIso = item?.revisedStart ?? item?.plannedStart;
+          return (
+            <div key={run.id}>
+              {startIso ? <span className="xsmall muted tabular">{formatTime(startIso)} </span> : null}
+              <TeamName team={team} fallback={run.teamId} />
+              <span className="xsmall muted">（{venueLabel}）</span>
+              {run.resultStatus === 'confirmed' ? (
+                <span className="xsmall" style={{ color: 'var(--advanced)' }}>
+                  {' '}
+                  {run.rawResult ?? run.score ?? '已确认'}
+                </span>
+              ) : run.resultStatus === 'provisional' ? (
+                <span className="xsmall" style={{ color: 'var(--pending)' }}>
+                  {' '}
+                  待确认
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </td>
   );
 }
 

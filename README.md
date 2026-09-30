@@ -35,12 +35,31 @@ npm run dev            # 启动观众站（http://127.0.0.1:5173）
 | `npm run test:e2e` | 端到端测试（Playwright，跑在生产构建上） |
 | `npm run validate:data` | 校验 `data/event.json` |
 | `npm run data:seed` | 生成初始数据骨架（默认拒绝覆盖已有赛果） |
-| `npm run data:import -- --file <export.json>` | 导入维护工具导出的变更包 |
+| `npm run data:import -- --file <export.json>` | 只导入变更包（不提交） |
 | `npm run data:build` | 生成公开快照 `public/data/event.json` |
+| **`npm run publish -- --file <export.json> -m "说明"`** | **一条命令完成发布**（导入+校验+构建+提交+推送） |
 | `npm run build` | 校验数据 + 生成快照 + 类型检查 + 生产构建 |
 | `npm run preview` | 本地预览生产构建 |
 
 > `npm run build` **包含**数据校验与公开快照生成，不会忘记更新 public 数据。
+
+---
+
+## 日常更新流程（3 步）
+
+```bash
+git pull                                   # 1. 先同步
+npm run operator                           # 2. 打开维护工具录入，导出变更包
+npm run publish -- --file <导出文件> -m "说明"   # 3. 发布
+```
+
+`publish` 会自动完成 **导入 → 校验 → 生成快照 → 提交 → 推送（失败自动重试）**，
+任一步失败都会**回滚** `data/event.json`，不会留下半成品。
+
+想先看看效果再加 `--dry-run`（只导入校验，不提交）。
+
+发布后仍需**手动确认观众已看到**：等 Actions 变绿 → 打开站点看「数据更新时间」。
+详见 [`docs/OPERATOR_GUIDE.md`](docs/OPERATOR_GUIDE.md) §9。
 
 ---
 

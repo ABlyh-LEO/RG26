@@ -218,6 +218,139 @@ export function seriesWins(series: Series): { home: number; away: number; need: 
 }
 
 /* ------------------------------------------------------------------ *
+ * 排位赛跑图成绩
+ * ------------------------------------------------------------------ */
+
+export interface QualificationRunEntry {
+  runId: string;
+  /** 成绩文字（例如「2.35 米」）。规则未规定结构，因此允许自由文本。 */
+  rawResult: string;
+  /** 可选积分。不参与自动确定排位名次。 */
+  score: string | null;
+  /** 可选用时（秒）。 */
+  elapsedSeconds: string | null;
+  judgeNote: string | null;
+  /** 是否标记为已确认。 */
+  confirm: boolean;
+}
+
+const NON_NEGATIVE_DECIMAL = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
+
+/**
+ * 录入一次排位赛跑图成绩。
+ *
+ * 注意（原文未规定）：
+ * - 原始成绩结构与"两轮最优"的比较规则原文未给出，因此这些字段**只作记录**，
+ *   不参与自动确定排位名次。正式名次由 applyQualificationRanking 人工录入。
+ * - 因此这里不做任何"取两轮最优"的计算，避免发明规则。
+ */
+export function applyQualificationRun(event: EventFile, entry: QualificationRunEntry): ApplyResult {
+  const run = event.qualification.runs.find((r) => r.id === entry.runId);
+  if (!run) return { event, ok: false, messages: [`找不到跑图记录 ${entry.runId}`] };
+
+  if (entry.score !== null && entry.score.trim() !== '' && !NON_NEGATIVE_DECIMAL.test(entry.score.trim())) {
+    return { event, ok: false, messages: ['积分必须是非负十进制数值（可留空）'] };
+  }
+  if (
+    entry.elapsedSeconds !== null &&
+    entry.elapsedSeconds.trim() !== '' &&
+    !NON_NEGATIVE_DECIMAL.test(entry.elapsedSeconds.trim())
+  ) {
+    return { event, ok: false, messages: ['用时必须是非负十进制数值（秒）'] };
+  }
+  if (entry.confirm && entry.rawResult.trim() === '' && (entry.score === null || entry.score.trim() === '')) {
+    return { event, ok: false, messages: ['标记为已确认时，至少要填写成绩文字或积分'] };
+  }
+
+  const now = new Date().toISOString();
+  const nextStatus = entry.confirm ? ('confirmed' as const) : ('provisional' as const);
+
+  return {
+    event: {
+      ...event,
+      qualification: {
+        ...event.qualification,
+        runs: event.qualification.runs.map((r) =>
+          r.id === entry.runId
+            ? {
+                ...r,
+                rawResult: entry.rawResult.trim() === '' ? null : entry.rawResult.trim(),
+                score: entry.score === null || entry.score.trim() === '' ? null : entry.score.trim(),
+                elapsedSeconds:
+                  entry.elapsedSeconds === null || entry.elapsedSeconds.trim() === ''
+                    ? null
+                    : entry.elapsedSeconds.trim(),
+                judgeNote: entry.judgeNote,
+                resultStatus: nextStatus,
+                executionStatus: entry.confirm ? ('finished' as const) : r.executionStatus,
+                confirmedAt: entry.confirm ? now : null,
+              }
+            : r,
+        ),
+      },
+      event: { ...event.event, contentUpdatedAt: now },
+    },
+    ok: true,
+    messages: entry.confirm ? [] : ['已保存为「待确认」，确认后才会出现在跑图记录中。'],
+  };
+}
+
+/**
+ * 批量确认某队（或全部）待确认的跑图成绩。
+ * 排位赛核分时段一次性确认是常见操作，因此提供批量入口。
+ */
+export function confirmQualificationRuns(
+  event: EventFile,
+  options: { teamId?: string; round?: 1 | 2 } = {},
+): ApplyResult {
+  const now = new Date().toISOString();
+  const targets = event.qualification.runs.filter(
+    (r) =>
+      r.resultStatus === 'provisional' &&
+      (options.teamId === undefined || r.teamId === options.teamId) &&
+      (options.round === undefined || r.round === options.round),
+  );
+
+  if (targets.length === 0) {
+    return { event, ok: false, messages: ['没有待确认的跑图成绩。'] };
+  }
+
+  const targetIds = new Set(targets.map((r) => r.id));
+  return {
+    event: {
+      ...event,
+      qualification: {
+        ...event.qualification,
+        runs: event.qualification.runs.map((r) =>
+          targetIds.has(r.id)
+            ? { ...r, resultStatus: 'confirmed' as const, confirmedAt: now, executionStatus: 'finished' as const }
+            : r,
+        ),
+      },
+      event: { ...event.event, contentUpdatedAt: now },
+    },
+    ok: true,
+    messages: [`已确认 ${targets.length} 条跑图成绩。`],
+  };
+}
+
+/** 排位赛进度概览，供维护工具与页面显示。 */
+export function qualificationProgress(event: EventFile): {
+  total: number;
+  confirmed: number;
+  provisional: number;
+  pending: number;
+} {
+  const runs = event.qualification.runs;
+  return {
+    total: runs.length,
+    confirmed: runs.filter((r) => r.resultStatus === 'confirmed').length,
+    provisional: runs.filter((r) => r.resultStatus === 'provisional').length,
+    pending: runs.filter((r) => r.resultStatus === 'none').length,
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * 排位赛
  * ------------------------------------------------------------------ */
 
