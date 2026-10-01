@@ -65,10 +65,17 @@
   background: #b08900;
 }
 
-/* 横向滚动容器：窄屏可左右滑动 */
+/*
+  横向滚动容器：窄屏可左右滑动。
+
+  `overflow-y` 必须是 visible，不能是 hidden：
+  卡片高度由 JS 实测后写入 board 的 minHeight，若有任何一列比它更高
+  （字体加载、队名换行、测量时序），多出来的部分会被 hidden **直接裁掉，
+  而且没有任何办法滚到它**。visible 让内容自然撑开，最下方的比赛始终可见。
+*/
 .bracket__scroller {
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   padding-bottom: var(--sp-2);
   /* 触控用户可以横向拖动 */
@@ -99,21 +106,45 @@
   overflow: visible;
 }
 
+/*
+  连线。两种颜色（胜者实线 / 败者虚线）会在通道里交叉，
+  因此线要够细、且带一圈背景色描边当"外衣"：
+  交叉处后画的那条会把先画的盖住一小段，视觉上就能看出是两条线
+  而不是糊成一团。
+*/
 .bracket__link {
-  stroke: rgba(36, 87, 231, 0.35);
+  stroke: rgba(36, 87, 231, 0.55);
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
+  fill: none;
+}
+
+/* 背景外衣：让交叉处的下层线"断开"，避免两种颜色混在一起 */
+.bracket__link-casing {
+  stroke: var(--bg);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
 
 .bracket__link--loser {
-  stroke: rgba(176, 137, 0, 0.45);
-  stroke-dasharray: 4 3;
+  stroke: rgba(176, 120, 0, 0.75);
+  stroke-dasharray: 5 4;
 }
 
+/*
+  高分辨率下不再加粗：2px 的线在 44px 通道里彼此只隔几像素，
+  加粗后两种颜色会贴合到一起，反而更难分辨。
+*/
 @media (min-width: 900px) {
   .bracket__link {
-    stroke-width: 2;
+    stroke-width: 1.75;
+  }
+
+  .bracket__link-casing {
+    stroke-width: 5;
   }
 }
 

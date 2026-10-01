@@ -59,9 +59,9 @@ export interface BracketChartProps {
 /**
  * 列间距。连线走的是列与列之间的**通道**，因此这个值不能太小：
  * 12px 时折线的竖直段几乎贴在卡片边缘，上下相邻的线会挤在一起，
- * 看起来像一团乱麻。44px 让拐点通道足够宽，连线清晰可读。
+ * 看起来像一团乱麻。64px 让同一通道里的多条线有足够间距并排。
  */
-const GAP = 44;
+const GAP = 64;
 const SECTION_GAP = 20;
 const FALLBACK_HEIGHT = 84;
 
@@ -79,13 +79,24 @@ export function BracketChart({
   const [heights, setHeights] = useState<Record<string, number>>({});
   const [viewportWidth, setViewportWidth] = useState(0);
   const [visibleColumns, setVisibleColumns] = useState(columns.length);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+
+  /**
+   * 列宽。首次渲染 viewportWidth 还是 0，用 minColumnWidth 兜底，
+   * 测量后再收敛。
+   *
+   * 注意可用宽度取的是**滚动容器**宽度（外部给的），不是 board 宽度。
+   * 用 board 宽度会形成"测量→改宽→再测量"的自反馈，宽度会一轮轮
+   * 放大到几百万像素。
+   */
+  const columnWidth =
+    viewportWidth > 0
+      ? Math.max(minColumnWidth, Math.floor(viewportWidth / visibleColumns) - GAP)
+      : minColumnWidth;
+  const totalWidth = columns.length * (columnWidth + GAP) - GAP;
 
   /**
    * 实测每个节点高度，再交给纯函数布局。队名换行时高度会变，必须实测。
-   *
-   * 可用宽度取**滚动容器**的宽度，绝不能取 board 自己的宽度：
-   * board 的宽度是由 columnWidth 算出来的，用它会形成自反馈，
-   * 宽度会一轮轮放大到几百万像素。
    */
   const measure = useCallback(() => {
     const board = boardRef.current;
@@ -106,6 +117,14 @@ export function BracketChart({
       return same ? prev : next;
     });
 
+    // 画布真实高度：最高的那一列（含列标题）延伸到哪里
+    let bottom = 0;
+    board.querySelectorAll<HTMLElement>('.bracket__column').forEach((col) => {
+      const b = col.offsetTop + col.offsetHeight;
+      if (b > bottom) bottom = b;
+    });
+    setMeasuredHeight((prev) => (prev === bottom ? prev : bottom));
+
     const scroller = scrollerRef.current;
     if (scroller) {
       const w = scroller.clientWidth;
@@ -113,10 +132,14 @@ export function BracketChart({
     }
   }, []);
 
-  // 首帧与数据变化后测量
+  // 首帧、数据变化、以及**列宽变化**后都要重测。
+  //
+  // 列宽变化必须重测：窄屏下 columnWidth 收敛到 minColumnWidth，
+  // 卡片变窄会让队名多换一行，节点高度随之变大。不重测就会一直
+  // 用旧的偏小高度，最下面一场被裁掉。
   useLayoutEffect(() => {
     measure();
-  }, [measure, columns, connections]);
+  }, [measure, columns, connections, columnWidth]);
 
   /**
    * 容器尺寸变化（旋转、窗口缩放）后重测。
@@ -172,13 +195,6 @@ export function BracketChart({
 
   const density = resolveDensity(visibleColumns);
   const showSecondary = showsSecondaryInfo(density);
-
-  // 首次渲染 viewportWidth 还是 0，用 minColumnWidth 兜底，测量后再收敛
-  const columnWidth =
-    viewportWidth > 0
-      ? Math.max(minColumnWidth, Math.floor(viewportWidth / visibleColumns) - GAP)
-      : minColumnWidth;
-  const totalWidth = columns.length * (columnWidth + GAP) - GAP;
 
   /** 连线端点坐标：基于实测 DOM 位置，而不是自己算。 */
   const paths = useMemo(() => {
@@ -255,10 +271,23 @@ export function BracketChart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connections, heights, columnWidth, columns]);
 
-  const maxHeight = Math.max(
-    ...columns.map((c) => (layout.columnOffsets[c.key] ?? 0) + (layout.columnHeights[c.key] ?? 0)),
-    FALLBACK_HEIGHT,
-  );
+  /**
+   * 画布高度。
+   *
+   * 关键：这里**不能只看实测高度**。`heights` 状态永远是上一帧的，
+   * 而列宽又会随视口变化（窄屏 `minColumnWidth` 兜底 → 卡片更窄 →
+   * 队名多换一行 → 真实高度比上一帧记录的大）。只看实测值就会把
+   * 最下面那场比赛裁掉，而且因为 `overflow-x: auto` 会把 `overflow-y`
+   * 提升成 `auto`，被裁掉的部分**滚都滚不到**。
+   *
+   * 因此取三条线的最大值，保证只会偏高、永不低于真实内容：
+   * 1. `layout.totalHeight` —— 按**当前** heights 算出的内容底边；
+   * 2. `measuredHeight` —— DOM 实测底边（含列标题），兜住换行/字体晚加载；
+   * 3. `FALLBACK_HEIGHT` —— 首帧兜底。
+   *
+   * 多出来的几像素是透明的，不影响观感；少一像素就是一场比赛看不见。
+   */
+  const maxHeight = Math.max(layout.totalHeight, measuredHeight, FALLBACK_HEIGHT);
 
   return (
     <div className="bracket">
@@ -277,7 +306,13 @@ export function BracketChart({
           data-density={density}
           style={{ width: totalWidth, minHeight: maxHeight }}
         >
-          {/* 连线层：绝对定位、不接收指针事件 */}
+          {/*
+            连线层：绝对定位、不接收指针事件。
+
+            先画一遍"背景外衣"再画线：两种颜色（胜者实线／败者虚线）
+            在通道里交叉时，外衣会把下层线切断一小段，
+            视觉上能看清是两条线，而不是混成一色。
+          */}
           <svg
             className="bracket__connectors"
             width={totalWidth}
@@ -285,7 +320,10 @@ export function BracketChart({
             aria-hidden="true"
           >
             {paths.map((p) => (
-              <path key={p.key} className={`bracket__link bracket__link--${p.via}`} d={p.d} fill="none" />
+              <path key={`c-${p.key}`} className="bracket__link-casing" d={p.d} />
+            ))}
+            {paths.map((p) => (
+              <path key={p.key} className={`bracket__link bracket__link--${p.via}`} d={p.d} />
             ))}
           </svg>
 

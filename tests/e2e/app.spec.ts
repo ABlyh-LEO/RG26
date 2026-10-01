@@ -494,6 +494,72 @@ test.describe('13.4 列式赛程图', () => {
     expect(m.scrollH - m.boardH).toBeLessThan(120);
   });
 
+  /*
+    最下方一场比赛必须可见。
+
+    这里断言的是**真实内容底边**，不是 scrollHeight 与 clientHeight 的差：
+    窄屏下 columnWidth 收敛到 minColumnWidth，卡片变窄、队名多换一行，
+    节点会比宽屏更高。如果画布高度只认上一帧的实测值，多出来的部分
+    会被 overflow-y 直接裁掉（overflow-x: auto 会把 overflow-y 提升成 auto，
+    裁掉就再也滚不到），而 scrollHeight 差值恰好也会跟着变大，
+    用差值判断会漏掉这条错误。必须逐个节点比对它的底边与画布底边。
+  */
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+    [768, 1024],
+  ] as const) {
+    test(`最下方比赛不被裁掉（${width}x${height}）`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await goto(page, '/progress?view=journey');
+      await waitForData(page);
+      await expect(page.locator('.bracket')).toBeVisible();
+
+      const m = await page.evaluate(() => {
+        const board = document.querySelector('.bracket__board') as HTMLElement | null;
+        const scroller = document.querySelector('.bracket__scroller') as HTMLElement | null;
+        if (!board || !scroller) return null;
+        const boardRect = board.getBoundingClientRect();
+        const boardBottom = boardRect.top + board.clientHeight;
+
+        // 有任何节点越过画布底边就是被裁了
+        const clipped = [...document.querySelectorAll<HTMLElement>('.bracket__node')]
+          .map((n) => ({
+            id: n.dataset.nodeId ?? '',
+            overflow: Math.round(n.getBoundingClientRect().bottom - boardBottom),
+          }))
+          .filter((x) => x.overflow > 1);
+
+        const svg = document.querySelector('.bracket__connectors');
+        return {
+          clipped,
+          boardH: board.clientHeight,
+          scrollerClientH: scroller.clientHeight,
+          scrollerScrollH: scroller.scrollHeight,
+          // 连线层必须覆盖整个画布，否则最下面的连线会被 SVG 高度切掉
+          svgHeight: svg ? Number(svg.getAttribute('height')) : 0,
+        };
+      });
+
+      expect(m, '赛程图未渲染').not.toBeNull();
+      expect(
+        m!.clipped.map((c) => `${c.id}(+${c.overflow}px)`),
+        `${width}px 下有比赛被画布裁掉`,
+      ).toEqual([]);
+
+      // 画布高度必须容得下连线层
+      expect(m!.svgHeight, '连线层矮于画布，底部连线会被切掉').toBeGreaterThanOrEqual(
+        m!.boardH,
+      );
+
+      // 纵向不应出现"裁掉且滚不到"的情况
+      expect(
+        m!.scrollerScrollH - m!.scrollerClientH,
+        `${width}px 下滚动区与可视区不一致，说明有内容被裁`,
+      ).toBeLessThanOrEqual(1);
+    });
+  }
+
   test('对阵未确定时说明在等什么，不编造名次', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=journey');
