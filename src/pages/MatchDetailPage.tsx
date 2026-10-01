@@ -14,6 +14,7 @@ import {
   toSwissMatchView,
   type MatchView,
 } from '../data/view-model';
+import { finalsMatchNoLabel } from '../domain/finals';
 import {
   CopyLinkButton,
   EmptyState,
@@ -294,12 +295,16 @@ function RelatedMatches({ matchId }: { matchId: string }) {
   const upstream: string[] = [];
   const downstream: string[] = [];
   for (const ref of series.slots ?? []) {
-    if (ref.kind === 'winner' || ref.kind === 'loser') upstream.push(`${ref.seriesId}（${ref.kind === 'winner' ? '胜者' : '败者'}）`);
+    if (ref.kind === 'winner' || ref.kind === 'loser') {
+      const no = finalsMatchNoLabel(ref.seriesId);
+      upstream.push(`${no ?? ref.seriesId}（${ref.kind === 'winner' ? '胜者' : '败者'}）`);
+    }
   }
   for (const other of event.finals.series) {
     for (const ref of other.slots ?? []) {
       if ((ref.kind === 'winner' || ref.kind === 'loser') && ref.seriesId === matchId) {
-        downstream.push(`${other.id}（${ref.kind === 'winner' ? '胜者进入' : '败者进入'}）`);
+        const no = finalsMatchNoLabel(other.id);
+        downstream.push(`${no ?? other.id}（${ref.kind === 'winner' ? '胜者进入' : '败者进入'}）`);
       }
     }
   }

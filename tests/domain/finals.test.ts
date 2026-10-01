@@ -8,6 +8,7 @@ import {
   computeAwards,
   FINALS_MATCH_ORDER,
   FINALS_NODES,
+  finalsMatchNoLabel,
   requiredWins,
   resolveFinals,
   resolveSeriesGames,
@@ -165,9 +166,19 @@ describe('D12 决赛按映射推进', () => {
       expect(slot.state).toBe('pending');
       return slot.state === 'pending' ? slot.label : '';
     };
-    expect(pendingLabel('F-LSF', 0)).toBe('F-L2A 胜者');
-    expect(pendingLabel('F-QUAL', 0)).toBe('F-LSF 胜者');
-    expect(pendingLabel('F-GF', 0)).toBe('F-WSF 胜者');
+    // 下游尚未决定时保持 pending，并给出可读的来源说明。
+    // **用场次序号，不用内部 ID** —— 观众在赛程表上找不到 "F-L2A"。
+    expect(pendingLabel('F-LSF', 0)).toBe('第 5 场胜者');
+    expect(pendingLabel('F-QUAL', 0)).toBe('第 7 场胜者');
+    expect(pendingLabel('F-GF', 0)).toBe('第 8 场胜者');
+
+    // 任何未确定席位的文案都不应出现 F-XXXX 内部 ID
+    for (const [id, res] of r1.series) {
+      for (const slot of res.slots) {
+        if (slot.state !== 'pending') continue;
+        expect(slot.label, `${id} 的待定文案泄漏了内部 ID`).not.toMatch(/F-[A-Z0-9]+/);
+      }
+    }
   });
 
   it('完整结算出冠军、亚军与季军', () => {
@@ -460,7 +471,7 @@ describe('D15 更正前置胜者且下游已开赛', () => {
     // 依赖现在解析为 w1，但快照记录的是 w4 → 冲突，且保持快照
     expect(resolved.slots[0]).toEqual({
       state: 'conflict',
-      label: 'F-W1A 败者',
+      label: '第 3 场败者',
       reason: expect.stringContaining('保持已发生的比赛记录'),
     });
     // 已开赛比赛的记录没有被抹掉
@@ -507,3 +518,49 @@ describe('决赛比赛顺序', () => {
 
 void makeAttempt;
 void makeMatch;
+
+describe('决赛场次序号（替代内部 ID 的对外文案）', () => {
+  it('10 场竞技组决赛按比赛顺序编号 1–10，无重复无缺号', () => {
+    const nos = FINALS_NODES.filter((n) => n.countsForStandings).map((n) => n.matchNo);
+    expect(nos).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(new Set(nos).size).toBe(nos.length);
+  });
+
+  it('展示演出与表演赛不参与编号', () => {
+    for (const n of FINALS_NODES) {
+      if (n.countsForStandings) continue;
+      expect(n.matchNo, `${n.id} 不应有场次序号`).toBeNull();
+    }
+  });
+
+  it('编号顺序与实际比赛顺序一致（八强败者组先打，总决赛最后）', () => {
+    expect(finalsMatchNoLabel('F-L1A')).toBe('第 1 场');
+    expect(finalsMatchNoLabel('F-L1B')).toBe('第 2 场');
+    expect(finalsMatchNoLabel('F-W1A')).toBe('第 3 场');
+    expect(finalsMatchNoLabel('F-W1B')).toBe('第 4 场');
+    expect(finalsMatchNoLabel('F-L2A')).toBe('第 5 场');
+    expect(finalsMatchNoLabel('F-L2B')).toBe('第 6 场');
+    expect(finalsMatchNoLabel('F-LSF')).toBe('第 7 场');
+    expect(finalsMatchNoLabel('F-WSF')).toBe('第 8 场');
+    expect(finalsMatchNoLabel('F-QUAL')).toBe('第 9 场');
+    expect(finalsMatchNoLabel('F-GF')).toBe('第 10 场');
+  });
+
+  it('未知 ID 返回 null，而不是把 ID 当标签', () => {
+    expect(finalsMatchNoLabel('F-NOPE')).toBeNull();
+    expect(finalsMatchNoLabel('exhibition')).toBeNull();
+    expect(finalsMatchNoLabel('showcase-final-1')).toBeNull();
+  });
+
+  it('每场比赛的胜者/败者来源文案都能被解析（下游标签不会退化成兜底值）', () => {
+    for (const node of FINALS_NODES) {
+      for (const ref of node.slots ?? []) {
+        if (ref.kind !== 'winner' && ref.kind !== 'loser') continue;
+        expect(
+          finalsMatchNoLabel(ref.seriesId),
+          `${node.id} 引用的 ${ref.seriesId} 没有场次序号`,
+        ).not.toBeNull();
+      }
+    }
+  });
+});

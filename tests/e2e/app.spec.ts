@@ -362,6 +362,45 @@ test.describe('13.4 列式赛程图', () => {
     ).toHaveLength(0);
   });
 
+  test('对外文案用场次序号，绝不出现内部 ID', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    const routes = [
+      '/progress?view=finals&mode=bracket',
+      '/progress?view=finals&mode=list',
+      '/progress?view=journey',
+      '/matches/F-L2A',
+      '/schedule',
+      '/',
+    ];
+
+    for (const route of routes) {
+      await goto(page, route);
+      await waitForData(page);
+      const body = await page.locator('body').innerText();
+      const leaked = [...new Set(body.match(/F-[A-Z0-9]+/g) ?? [])];
+      expect(leaked, `${route} 泄漏了内部系列赛 ID：${leaked.join(', ')}`).toHaveLength(0);
+    }
+  });
+
+  test('未决出名额显示为「第 N 场胜者/败者」，可与卡片上的场次号对上', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=finals&mode=bracket');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const text = await page.locator('.bracket').innerText();
+
+    // 每张竞技组卡片标题都带场次序号
+    for (const no of [1, 5, 10]) {
+      expect(text, `缺少第 ${no} 场的标题`).toContain(`第 ${no} 场·`);
+    }
+
+    // 未决出的名额用场次序号表述
+    expect(text).toMatch(/第 \d+ 场(胜者|败者)/);
+    expect(text).not.toMatch(/F-[A-Z0-9]+\s*(胜者|败者)/);
+  });
+
   test('完整晋级图是瑞士轮→决赛一条线', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=journey');

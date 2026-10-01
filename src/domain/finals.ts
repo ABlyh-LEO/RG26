@@ -24,6 +24,14 @@ export interface FinalsNodeSpec {
   slots: [SlotRef, SlotRef] | null;
   /** UI 使用的中文简明名称。 */
   label: string;
+  /**
+   * 决赛场次序号（1 起，按**实际比赛顺序**）。
+   *
+   * 这是给观众看的编号，用来替代 `F-W1B 败者` 这类内部 ID 写法：
+   * 「第 5 场败者」比「F-W1B 败者」好读得多，而且在赛程表上能对得上。
+   * 展示演出与表演赛不属于竞技赛程，为 null。
+   */
+  matchNo: number | null;
   /** 展示组演出对应的编号（竞技组为 null）。 */
   showcaseOrder: number | null;
 }
@@ -39,6 +47,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'finals-seed', seed: 'L4' },
     ],
     label: '八强败者组首轮 A',
+    matchNo: 1,
     showcaseOrder: null,
   },
   {
@@ -51,6 +60,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'finals-seed', seed: 'L3' },
     ],
     label: '八强败者组首轮 B',
+    matchNo: 2,
     showcaseOrder: null,
   },
   {
@@ -63,6 +73,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'finals-seed', seed: 'W4' },
     ],
     label: '八强胜者组 A',
+    matchNo: 3,
     showcaseOrder: null,
   },
   {
@@ -75,6 +86,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'finals-seed', seed: 'W3' },
     ],
     label: '八强胜者组 B',
+    matchNo: 4,
     showcaseOrder: null,
   },
   {
@@ -87,6 +99,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1B' },
     ],
     label: '败者组第二轮 A',
+    matchNo: 5,
     showcaseOrder: null,
   },
   {
@@ -99,6 +112,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1A' },
     ],
     label: '败者组第二轮 B',
+    matchNo: 6,
     showcaseOrder: null,
   },
   {
@@ -111,6 +125,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L2B' },
     ],
     label: '半决赛败者组',
+    matchNo: 7,
     showcaseOrder: null,
   },
   {
@@ -123,6 +138,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-W1B' },
     ],
     label: '半决赛胜者组',
+    matchNo: 8,
     showcaseOrder: null,
   },
   {
@@ -135,6 +151,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'loser', seriesId: 'F-WSF' },
     ],
     label: '总决赛名额争夺战',
+    matchNo: 9,
     showcaseOrder: null,
   },
   {
@@ -147,6 +164,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-QUAL' },
     ],
     label: '总决赛',
+    matchNo: 10,
     showcaseOrder: null,
   },
   {
@@ -156,6 +174,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     countsForStandings: false,
     slots: null,
     label: '展示组正式演出（抽签第 1 队）',
+    matchNo: null,
     showcaseOrder: 1,
   },
   {
@@ -165,6 +184,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     countsForStandings: false,
     slots: null,
     label: '展示组正式演出（抽签第 2 队）',
+    matchNo: null,
     showcaseOrder: 2,
   },
   {
@@ -174,6 +194,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     countsForStandings: false,
     slots: null,
     label: '展示组正式演出（抽签第 3 队）',
+    matchNo: null,
     showcaseOrder: 3,
   },
   {
@@ -183,6 +204,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     countsForStandings: false,
     slots: null,
     label: '表演赛',
+    matchNo: null,
     showcaseOrder: null,
   },
 ] as const;
@@ -317,6 +339,24 @@ const EMPTY_AWARDS: Awards = {
   honorableMention: [],
 };
 
+/**
+ * 决赛场次序号 → 「第 N 场」的显示文本。
+ *
+ * 对观众只说"第 5 场败者"，不说 `F-L2A 败者`：后者是内部 ID，
+ * 在赛程表上也找不到对应。
+ */
+export function finalsMatchNoLabel(seriesId: string): string | null {
+  const node = FINALS_NODES.find((n) => n.id === seriesId);
+  return node?.matchNo ? `第 ${node.matchNo} 场` : null;
+}
+
+/**
+ * 未确定席位的显示文本。
+ *
+ * **绝不出现内部 ID。** `winner`/`loser` 一律翻译成「第 N 场胜者／败者」；
+ * 万一查不到序号（数据异常），退回中性的「上一场胜者／败者」，
+ * 也不把 `F-XXXX` 漏给观众。
+ */
 function placeholderLabel(ref: SlotRef): string {
   switch (ref.kind) {
     case 'team':
@@ -325,10 +365,14 @@ function placeholderLabel(ref: SlotRef): string {
       return `排位赛第 ${ref.rank} 名`;
     case 'finals-seed':
       return ref.seed;
-    case 'winner':
-      return `${ref.seriesId} 胜者`;
-    case 'loser':
-      return `${ref.seriesId} 败者`;
+    case 'winner': {
+      const no = finalsMatchNoLabel(ref.seriesId);
+      return no ? `${no}胜者` : '上一场胜者';
+    }
+    case 'loser': {
+      const no = finalsMatchNoLabel(ref.seriesId);
+      return no ? `${no}败者` : '上一场败者';
+    }
     case 'pending':
       return ref.reason;
   }

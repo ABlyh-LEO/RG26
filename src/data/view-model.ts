@@ -24,6 +24,7 @@ import {
   type Awards,
   type FinalsResolution,
   deriveExtras,
+  finalsMatchNoLabel,
   resolveFinals,
   seedingToMap,
 } from '../domain/finals';
@@ -193,10 +194,15 @@ function slotSourceLabel(
       return ref.reason;
     case 'finals-seed':
       return ref.seed;
-    case 'winner':
-      return `${ref.seriesId} 胜者`;
-    case 'loser':
-      return `${ref.seriesId} 败者`;
+    // 一律用场次序号，不把内部 ID（F-L2A 之类）露给观众
+    case 'winner': {
+      const no = finalsMatchNoLabel(ref.seriesId);
+      return no ? `${no}胜者` : '上一场胜者';
+    }
+    case 'loser': {
+      const no = finalsMatchNoLabel(ref.seriesId);
+      return no ? `${no}败者` : '上一场败者';
+    }
   }
 }
 
@@ -372,10 +378,13 @@ export function toSeriesView(
       ]
     : null;
 
+  const matchNo = finalsMatchNoLabel(series.id);
+
   return {
     id: series.id,
     kind: 'series',
-    title: res?.label ?? series.id,
+    // 标题带场次序号，让"第 5 场败者"这类来源说明能对上号
+    title: matchNo ? `${matchNo}·${res?.label ?? series.id}` : (res?.label ?? series.id),
     stage: series.stage,
     groupRecord: null,
     groupDescription: null,
