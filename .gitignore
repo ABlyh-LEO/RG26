@@ -39,3 +39,7 @@ npm-debug.log*
 #   docs/acceptance/         验收记录与截图
 # 临时文件
 .tmp*
+
+# 提交信息临时文件
+commit-msg.txt
+.commitmsg
