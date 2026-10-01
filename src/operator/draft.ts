@@ -201,9 +201,94 @@ export function applyBo3Game(event: EventFile, entry: Bo3GameEntry): ApplyResult
   };
 }
 
+/**
+ * 录入一场**决赛 BO1**（八强赛 / 败者组第二轮 / 半决赛，共 8 场）。
+ *
+ * 为什么需要单独的入口：
+ * 决赛系列赛分两类 —— 第 1–8 场是 **BO1**，第 9–10 场是 **BO3**。
+ * `applyBo1Entry` 只查 `event.swiss.matches`（瑞士轮），
+ * `applyBo3Game` 明确拒绝非 BO3/BO2 的系列赛，
+ * 于是这 8 场 BO1 一度**完全没有录入入口** —— 决赛根本推不下去。
+ *
+ * BO1 只打一局，因此直接写 `games[0]`，与 BO3 共用同一套
+ * `participantSnapshot` / `resultStatus` 语义，保证下游解析一致。
+ */
+export function applyFinalsBo1(event: EventFile, entry: Bo3GameEntry): ApplyResult {
+  const series = event.finals.series.find((s) => s.id === entry.seriesId);
+  if (!series) return { event, ok: false, messages: [`找不到系列赛 ${entry.seriesId}`] };
+
+  if (series.format !== 'BO1') {
+    return { event, ok: false, messages: [`${series.id} 不是 BO1 系列赛，请用逐局录入`] };
+  }
+  if (!series.countsForStandings) {
+    return { event, ok: false, messages: [`${series.id} 不计入排名，不应录入正式结果`] };
+  }
+
+  const decided = seriesWins(series);
+  if (decided.winnerId !== null) {
+    return {
+      event,
+      ok: false,
+      messages: [`该场比赛已由 ${decided.winnerId} 获胜并结束，如需更正请重新录入（会作为新记录追加）。`],
+    };
+  }
+
+  if (entry.winnerId === null) {
+    return { event, ok: false, messages: ['必须指定胜者：淘汰赛不允许平局，胜者由裁判确认'] };
+  }
+  if (entry.homeTeamId === entry.awayTeamId) {
+    return { event, ok: false, messages: ['双方不能是同一支队伍'] };
+  }
+  if (entry.winnerId !== entry.homeTeamId && entry.winnerId !== entry.awayTeamId) {
+    return { event, ok: false, messages: ['胜者必须是参赛双方之一'] };
+  }
+
+  const performanceKinds: ResultKind[] = ['normal', 'early-end'];
+  if (performanceKinds.includes(entry.resultKind)) {
+    if (entry.homeScore.trim() === '' || entry.awayScore.trim() === '') {
+      return { event, ok: false, messages: ['有效比赛必须填写双方积分（缺分不等于 0，不能用假 0 分填补）'] };
+    }
+  }
+
+  return {
+    event: {
+      ...event,
+      finals: {
+        ...event.finals,
+        series: event.finals.series.map((s) =>
+          s.id === entry.seriesId
+            ? {
+                ...s,
+                participantSnapshot: [entry.homeTeamId, entry.awayTeamId] as [string, string],
+                executionStatus: 'finished' as const,
+                games: s.games.map((g) =>
+                  g.index === (s.games[0]?.index ?? 1)
+                    ? {
+                        ...g,
+                        homeTeamId: entry.homeTeamId,
+                        awayTeamId: entry.awayTeamId,
+                        homeScore: entry.homeScore.trim() === '' ? null : entry.homeScore.trim(),
+                        awayScore: entry.awayScore.trim() === '' ? null : entry.awayScore.trim(),
+                        winnerId: entry.winnerId,
+                        resultKind: entry.resultKind,
+                        resultStatus: 'confirmed' as const,
+                        confirmedAt: new Date().toISOString(),
+                      }
+                    : g,
+                ),
+              }
+            : s,
+        ),
+      },
+      event: { ...event.event, contentUpdatedAt: new Date().toISOString() },
+    },
+    ok: true,
+    messages: [],
+  };
+}
+
 /** 计算系列赛当前比分与所需胜局数。 */
-export function seriesWins(series: Series): { home: number; away: number; need: number; winnerId: string | null } {
-  const need = series.format === 'BO1' ? 1 : 2;
+export function seriesWins(series: Series): { home: number; away: number; need: number; winnerId: string | null } {  const need = series.format === 'BO1' ? 1 : 2;
   let home = 0;
   let away = 0;
   let winnerId: string | null = null;

@@ -21,6 +21,7 @@
     "data:build": "tsx scripts/build-public-data.ts",
     "publish": "tsx scripts/publish.ts",
     "check:integration": "tsx scripts/integration-check.ts",
+    "check:robustness": "tsx scripts/robustness-check.ts",
     "check:subpath": "tsx scripts/subpath-check.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "build": "npm run validate:data && npm run data:build && tsc -b --pretty false && vite build",

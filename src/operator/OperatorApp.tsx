@@ -10,12 +10,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { publicSnapshotSchema, type EventFile } from '../domain/schema';
+import { resolveFinals } from '../domain/finals';
 import { fetchSnapshot, describeFailure, dataUrl } from '../data/snapshot';
 import { formatTime, todayInEventTz } from '../data/view-model';
 import {
   addNotice,
   applyBo1Entry,
   applyBo3Game,
+  applyFinalsBo1,
   adjustSchedule,
   applyQualificationRanking,
   applyQualificationRun,
@@ -36,11 +38,22 @@ import type { ResultKind, Series, SwissMatch } from '../domain/schema';
 import { generateSwissPairings } from '../domain/swiss';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
 
-type Tab = 'matches' | 'bo3' | 'qualification' | 'qualRuns' | 'rounds' | 'seeds' | 'showcase' | 'notices' | 'export';
+type Tab =
+  | 'matches'
+  | 'bo3'
+  | 'finalsBo1'
+  | 'qualification'
+  | 'qualRuns'
+  | 'rounds'
+  | 'seeds'
+  | 'showcase'
+  | 'notices'
+  | 'export';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'matches', label: '录入比赛' },
-  { key: 'bo3', label: 'BO3 小局' },
+  { key: 'finalsBo1', label: '决赛 BO1' },
+  { key: 'bo3', label: '决赛 BO3' },
   { key: 'qualRuns', label: '排位赛成绩' },
   { key: 'qualification', label: '排位赛排名' },
   { key: 'rounds', label: '轮次与配对' },
@@ -48,6 +61,20 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'showcase', label: '展示组抽签' },
   { key: 'notices', label: '公告与时间' },
   { key: 'export', label: '导出与发布' },
+];
+
+/** 决赛 10 场的实际比赛顺序（用于对外「第 N 场」标签）。 */
+const FINALS_SEQUENCE = [
+  'F-L1A',
+  'F-L1B',
+  'F-W1A',
+  'F-W1B',
+  'F-L2A',
+  'F-L2B',
+  'F-LSF',
+  'F-WSF',
+  'F-QUAL',
+  'F-GF',
 ];
 
 export function OperatorApp() {
@@ -192,6 +219,7 @@ export function OperatorApp() {
         </nav>
 
         {tab === 'matches' ? <MatchEntry draft={draft} onApply={applyResult} /> : null}
+        {tab === 'finalsBo1' ? <FinalsBo1Entry draft={draft} onApply={applyResult} /> : null}
         {tab === 'bo3' ? <Bo3Entry draft={draft} onApply={applyResult} /> : null}
         {tab === 'qualRuns' ? <QualRunsEntry draft={draft} onApply={applyResult} /> : null}
         {tab === 'qualification' ? <QualificationEntry draft={draft} onApply={applyResult} /> : null}
@@ -455,6 +483,255 @@ function Bo1Form({
               winnerId,
               resultKind: kind,
               note: note.trim() === '' ? null : note.trim(),
+            }),
+          )
+        }
+      >
+        确认并写入草稿
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 决赛 BO1（第 1–8 场）
+ * ------------------------------------------------------------------ */
+
+/**
+ * 决赛 BO1 录入（八强赛 / 败者组第二轮 / 半决赛）。
+ *
+ * 为什么需要单独一页：决赛 10 场里前 8 场是 BO1、后 2 场是 BO3。
+ * 「录入比赛」只覆盖瑞士轮，「决赛 BO3」只列出 BO3 ——
+ * 这 8 场一度完全没有录入入口，决赛根本推不下去。
+ */
+function FinalsBo1Entry({
+  draft,
+  onApply,
+}: {
+  draft: EventFile;
+  onApply: (r: { event: EventFile; ok: boolean; messages: string[] }) => void;
+}) {
+  const bo1 = draft.finals.series.filter((s) => s.format === 'BO1' && s.countsForStandings);
+  const [selectedId, setSelectedId] = useState<string | null>(bo1[0]?.id ?? null);
+  const selected = draft.finals.series.find((s) => s.id === selectedId) ?? null;
+
+  const resolved = useMemo(() => resolveFinals(draft.finals.series, draft.finals.seeding), [draft]);
+
+  /** 系列赛序号 → 对外「第 N 场」标签。 */
+  const labelOf = (seriesId: string) => {
+    const idx = FINALS_SEQUENCE.indexOf(seriesId);
+    return idx >= 0 ? `第 ${idx + 1} 场` : seriesId;
+  };
+
+  return (
+    <div className="operator-grid">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__title">决赛 BO1（共 {bo1.length} 场）</span>
+        </div>
+        {bo1.length === 0 ? (
+          <div className="empty">当前数据里没有 BO1 决赛系列赛。</div>
+        ) : null}
+        {bo1.map((s) => {
+          const w = seriesWins(s);
+          const parts = resolved.series.get(s.id)?.slots ?? [];
+          const teamOf = (i: number) => {
+            const slot = parts[i];
+            if (!slot) return '—';
+            if (slot.state === 'resolved') {
+              return draft.teams.find((t) => t.id === slot.teamId)?.name ?? slot.teamId;
+            }
+            return slot.label;
+          };
+          return (
+            <button
+              key={s.id}
+              type="button"
+              className="operator-item"
+              aria-current={selectedId === s.id}
+              onClick={() => setSelectedId(s.id)}
+            >
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <strong className="small">
+                  {labelOf(s.id)} · {s.id === 'F-LSF' ? '半决赛败者组' : s.id === 'F-WSF' ? '半决赛胜者组' : ''}
+                </strong>
+                <span className="small tabular">
+                  {w.winnerId ? '已结束' : w.home + w.away > 0 ? '进行中' : '未开始'}
+                </span>
+              </div>
+              <div className="xsmall muted">
+                {teamOf(0)} vs {teamOf(1)}
+              </div>
+              <div className="row" style={{ gap: 'var(--sp-1)', marginTop: 2 }}>
+                <span className="xsmall muted">{s.id}</span>
+                {w.winnerId ? <span className="badge badge--advanced">已确认</span> : <span className="badge badge--pending">未录入</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div>
+        {selected ? (
+          <FinalsBo1Form series={selected} draft={draft} resolved={resolved} label={labelOf(selected.id)} onApply={onApply} />
+        ) : (
+          <div className="empty">从左侧选择一场决赛开始录入。</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FinalsBo1Form({
+  series,
+  draft,
+  resolved,
+  label,
+  onApply,
+}: {
+  series: Series;
+  draft: EventFile;
+  resolved: ReturnType<typeof resolveFinals>;
+  label: string;
+  onApply: (r: { event: EventFile; ok: boolean; messages: string[] }) => void;
+}) {
+  const slots = resolved.series.get(series.id)?.slots ?? [];
+  const resolvedIds = slots.map((s) => (s.state === 'resolved' ? s.teamId : null));
+  const ready = Boolean(resolvedIds[0] && resolvedIds[1]);
+
+  const w = seriesWins(series);
+  const [homeScore, setHomeScore] = useState('');
+  const [awayScore, setAwayScore] = useState('');
+  const [winnerId, setWinnerId] = useState<string | null>(null);
+  const [kind, setKind] = useState<ResultKind>('normal');
+  const [note, setNote] = useState('');
+
+  const nameOf = (id: string | null | undefined) =>
+    id ? draft.teams.find((t) => t.id === id)?.name ?? id : '待定';
+  const isPerformance = kind === 'normal' || kind === 'early-end';
+  const decided = w.winnerId !== null;
+
+  return (
+    <div className="card operator-draft">
+      <div className="card__head">
+        <span className="card__title">
+          {label} · 录入结果
+        </span>
+        <span className="badge badge--neutral">{series.id} · BO1</span>
+      </div>
+
+      {!ready ? (
+        <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
+          参赛双方尚未确定：
+          {slots.map((s, i) => (
+            <div key={i} className="xsmall">
+              席位 {i + 1}：{s.state === 'resolved' ? nameOf(s.teamId) : s.state === 'pending' ? s.label : `冲突 — ${s.reason}`}
+            </div>
+          ))}
+          <div className="xsmall" style={{ marginTop: 4 }}>
+            请先完成上游比赛并确认，再回到这里录入。
+          </div>
+        </div>
+      ) : null}
+
+      {decided ? (
+        <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
+          该场已由 {nameOf(w.winnerId)} 获胜。如需更正，请在下方重新录入 —— 会作为新记录追加。
+        </div>
+      ) : null}
+
+      <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
+        <div className="operator-field">
+          <label htmlFor="fb-home">{nameOf(resolvedIds[0])} 积分</label>
+          <input
+            id="fb-home"
+            className="input"
+            value={homeScore}
+            onChange={(e) => setHomeScore(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
+        </div>
+        <div className="operator-field">
+          <label htmlFor="fb-away">{nameOf(resolvedIds[1])} 积分</label>
+          <input
+            id="fb-away"
+            className="input"
+            value={awayScore}
+            onChange={(e) => setAwayScore(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
+        </div>
+      </div>
+
+      <fieldset style={{ border: 'none', padding: 0, margin: '0 0 var(--sp-3)' }}>
+        <legend className="small" style={{ fontWeight: 600, marginBottom: 'var(--sp-1)' }}>
+          胜者（必须由裁判确认，不自动推断）
+        </legend>
+        <div className="row">
+          {resolvedIds.filter((id): id is string => Boolean(id)).map((id) => (
+            <button
+              key={id}
+              type="button"
+              className="btn btn--small"
+              aria-pressed={winnerId === id}
+              onClick={() => setWinnerId(id)}
+              disabled={!ready}
+            >
+              {nameOf(id)}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="operator-field">
+        <label htmlFor="fb-kind">异常类型</label>
+        <select
+          id="fb-kind"
+          className="select"
+          value={kind}
+          onChange={(e) => setKind(e.target.value as ResultKind)}
+        >
+          {RESULT_KINDS.map((k) => (
+            <option key={k.value} value={k.value}>
+              {k.label}
+            </option>
+          ))}
+        </select>
+        <span className="operator-field__hint">{RESULT_KINDS.find((k) => k.value === kind)?.hint}</span>
+      </div>
+
+      <div className="operator-field">
+        <label htmlFor="fb-note">备注（可选）</label>
+        <input id="fb-note" className="input" value={note} onChange={(e) => setNote(e.target.value)} />
+      </div>
+
+      <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }}>
+        <strong>提交前摘要</strong>
+        <div>
+          {nameOf(resolvedIds[0])} {isPerformance ? homeScore || '—' : '（不计分）'} :{' '}
+          {isPerformance ? awayScore || '—' : '（不计分）'} {nameOf(resolvedIds[1])}
+        </div>
+        <div>胜者：{winnerId ? nameOf(winnerId) : '未选择'}</div>
+        <div>类型：{RESULT_KINDS.find((k) => k.value === kind)?.label}</div>
+      </div>
+
+      <button
+        type="button"
+        className="btn btn--primary"
+        disabled={!ready}
+        onClick={() =>
+          onApply(
+            applyFinalsBo1(draft, {
+              seriesId: series.id,
+              gameIndex: 1,
+              homeTeamId: resolvedIds[0]!,
+              awayTeamId: resolvedIds[1]!,
+              homeScore,
+              awayScore,
+              winnerId,
+              resultKind: kind,
             }),
           )
         }

@@ -15,12 +15,16 @@ import { validateEvent, formatValidation } from '../src/domain/validation';
 import { calculateSwissStandings } from '../src/domain/standings';
 import {
   applyBo1Entry,
+  applyBo3Game,
+  applyFinalsBo1,
   applyQualificationRanking,
   confirmRound,
   generateNextRound,
+  publishFinalsSeeding,
   publishRound,
   preflight,
 } from '../src/operator/draft';
+import { resolveFinals } from '../src/domain/finals';
 import { buildSeedEvent } from './seed-data';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -309,10 +313,149 @@ try {
   rmSync(tmp, { recursive: true, force: true });
 }
 
+section('12. 完成 R4/R5 并公布八强种子');
+{
+  /*
+   * R4 在第 8 节只生成了**候选**（未公布），因此它的比赛还没有参赛双方。
+   * 必须先公布，才能录入结果 —— 这正是真实流程要求的顺序。
+   */
+  const r4RoundDraft = event.swiss.rounds.find((r) => r.index === 4)!;
+  if (r4RoundDraft.publicationStatus !== 'published') {
+    const r4Published = publishRound(event, 4, r4AfterR3.proposal!);
+    if (!r4Published.ok) fail(`R4 公布失败：${r4Published.messages.join('；')}`);
+    event = r4Published.event;
+    ok('R4 已公布');
+  }
+
+  const r4Round = event.swiss.rounds.find((r) => r.index === 4)!;
+  for (const matchId of r4Round.matchIds) {
+    const match = event.swiss.matches.find((m) => m.id === matchId)!;
+    if (!match.participantSnapshot) fail(`${matchId} 缺少参赛双方（R4 未正确公布？）`);
+    const [home] = match.participantSnapshot;
+    const result = applyBo1Entry(event, {
+      matchId, homeScore: '16', awayScore: '5', homeSeconds: '91', awaySeconds: '160',
+      winnerId: home, resultKind: 'normal', note: null,
+    });
+    if (!result.ok) fail(`录入 ${matchId} 失败：${result.messages.join('；')}`);
+    event = result.event;
+  }
+  const r4Confirmed = confirmRound(event, 4);
+  if (!r4Confirmed.ok) fail(`R4 确认失败：${r4Confirmed.messages.join('；')}`);
+  event = r4Confirmed.event;
+  ok('R4 已确认');
+
+  const r5 = generateNextRound(event, 5);
+  if (!r5.ok || !r5.proposal) fail(`R5 候选失败：${r5.messages.join('；')}`);
+  const r5Published = publishRound(event, 5, r5.proposal);
+  if (!r5Published.ok) fail(`R5 公布失败：${r5Published.messages.join('；')}`);
+  event = r5Published.event;
+  ok(`R5 已公布（${r5.proposal.pairs.length} 场）`);
+
+  const r5Round = event.swiss.rounds.find((r) => r.index === 5)!;
+  for (const matchId of r5Round.matchIds) {
+    const match = event.swiss.matches.find((m) => m.id === matchId)!;
+    if (!match.participantSnapshot) fail(`${matchId} 缺少参赛双方（R5 未正确公布？）`);
+    const [home] = match.participantSnapshot;
+    const result = applyBo1Entry(event, {
+      matchId, homeScore: '16', awayScore: '7', homeSeconds: '93', awaySeconds: '155',
+      winnerId: home, resultKind: 'normal', note: null,
+    });
+    if (!result.ok) fail(`录入 ${matchId} 失败：${result.messages.join('；')}`);
+    event = result.event;
+  }
+  const r5Confirmed = confirmRound(event, 5);
+  if (!r5Confirmed.ok) fail(`R5 确认失败：${r5Confirmed.messages.join('；')}`);
+  event = r5Confirmed.event;
+  ok('R5 已确认（瑞士轮结束）');
+
+  const seeded = publishFinalsSeeding(event);
+  if (!seeded.ok) fail(`公布八强种子失败：${seeded.messages.join('；')}`);
+  event = seeded.event;
+  const seeds = event.finals.seeding?.seeds ?? {};
+  if (Object.keys(seeds).length !== 8) fail(`种子应有 8 个，实际 ${Object.keys(seeds).length}`);
+  ok(`八强种子已公布：${Object.entries(seeds).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+}
+
+section('13. 决赛 BO1（第 1–8 场）可完整录入');
+{
+  /*
+   * 这 8 场曾经**没有任何录入入口**：applyBo1Entry 只查瑞士轮，
+   * applyBo3Game 明确拒绝非 BO3/BO2 系列赛，于是决赛推不下去。
+   * 现在由 applyFinalsBo1 覆盖，这里做端到端确认。
+   */
+  const bo1Order = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF'];
+  for (const seriesId of bo1Order) {
+    const slots = resolveFinals(event.finals.series, event.finals.seeding).series.get(seriesId)?.slots;
+    const a = slots?.[0];
+    const b = slots?.[1];
+    if (a?.state !== 'resolved' || b?.state !== 'resolved') {
+      fail(`${seriesId} 参赛双方未就绪`);
+    }
+    const result = applyFinalsBo1(event, {
+      seriesId,
+      gameIndex: 1,
+      homeTeamId: a.teamId,
+      awayTeamId: b.teamId,
+      homeScore: '16',
+      awayScore: '6',
+      winnerId: a.teamId,
+      resultKind: 'normal',
+    });
+    if (!result.ok) fail(`${seriesId} 录入失败：${result.messages.join('；')}`);
+    event = result.event;
+  }
+  ok(`第 1–8 场 BO1 已全部录入`);
+}
+
+section('14. 决赛 BO3（第 9–10 场）与冠军');
+{
+  const playBo3 = (seriesId: string): void => {
+    const slots = resolveFinals(event.finals.series, event.finals.seeding).series.get(seriesId)?.slots;
+    const a = slots?.[0];
+    const b = slots?.[1];
+    if (a?.state !== 'resolved' || b?.state !== 'resolved') fail(`${seriesId} 参赛双方未就绪`);
+    for (const idx of [1, 2]) {
+      const series = event.finals.series.find((s) => s.id === seriesId)!;
+      const game = series.games.find((g) => g.index === idx);
+      if (!game || game.resultStatus === 'confirmed') continue;
+      const result = applyBo3Game(event, {
+        seriesId, gameIndex: idx, homeTeamId: a.teamId, awayTeamId: b.teamId,
+        homeScore: '16', awayScore: '8', winnerId: a.teamId, resultKind: 'normal',
+      });
+      if (!result.ok) fail(`${seriesId} 第 ${idx} 局失败：${result.messages.join('；')}`);
+      event = result.event;
+    }
+  };
+  playBo3('F-QUAL');
+  ok('第 9 场（名额争夺战）已决出');
+  playBo3('F-GF');
+  ok('第 10 场（总决赛）已决出');
+
+  const resolution = resolveFinals(event.finals.series, event.finals.seeding);
+  const { awards } = resolution;
+  if (!awards.champion) fail('未能产生冠军');
+  if (!awards.runnerUp) fail('未能产生亚军');
+  if (awards.champion === awards.runnerUp) fail('冠军与亚军相同');
+  ok(`冠军 ${awards.champion} · 亚军 ${awards.runnerUp} · 季军 ${awards.third ?? '—'}`);
+}
+
+section('15. 完整赛季后数据仍然健康');
+{
+  const finalCheck = preflight(event);
+  if (!finalCheck.ok) {
+    console.error(formatValidation(validateEvent(event)));
+    fail('完整赛季后数据校验失败');
+  }
+  const validation = validateEvent(event);
+  ok(`完整赛季数据校验通过（${validation.errors.length} 错误、${validation.warnings.length} 提示）`);
+}
+
 section('集成检查全部通过');
 console.log(`
 已验证的完整链路：
   种子数据 → 排位赛排名 → 生成/公布 R1 → 录入 8 场 → 确认 → 生成/公布 R2
   → 录入 8 场 → 确认 → 一次性公布 R3 → 跨日锁定（次日 4 场不变）
-  → 完成 R3 → 确认 → 生成 R4（6 场）→ 数据校验 → 排名计算 → 冲突拒绝
+  → 完成 R3 → 确认 → 生成 R4（6 场）→ 完成 R4/R5 → 公布八强种子
+  → 决赛 BO1 第 1–8 场 → BO3 第 9–10 场 → 冠军
+  → 数据校验 → 排名计算 → 冲突拒绝
 `);
