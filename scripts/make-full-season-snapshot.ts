@@ -95,7 +95,7 @@ for (let r = 1; r <= 5; r += 1) {
 e = publishFinalsSeeding(e).event;
 
 // 4. 决赛 8 场 BO1：第一个席位（蓝方）胜
-for (const id of ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF']) {
+for (const id of ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF']) {
   const [a, b] = players(e, id);
   const res = applyFinalsBo1(e, {
     seriesId: id,

@@ -8,8 +8,14 @@
  */
 import type { EventFile, Series, SlotRef, SwissMatch, SwissRound, Team, Venue } from '../src/domain/schema';
 
-/** 原始文档哈希，与实施计划第 1 节记录一致。 */
-export const SOURCE_DOC_SHA256 = '96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47';
+/**
+ * 原始文档哈希。
+ *
+ * 2026-10 手册更新（docs/RoboGame2026赛程安排（暂定） (1).docx）：
+ * 决赛倒数第三、四场（半决赛）次序调整为**胜者组先行、败者组随后**。
+ * 哈希随之更新，以便校验器发现"源文档又变了"。
+ */
+export const SOURCE_DOC_SHA256 = '89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2';
 
 export const EVENT_ID = 'robogame-2026';
 
@@ -220,8 +226,9 @@ export const FINALS_SCHEDULE: readonly {
   { id: 'F-L2A', date: DAY2, start: '15:40', end: '15:50', afterSeriesId: null },
   { id: 'F-L2B', date: DAY2, start: '15:50', end: '16:00', afterSeriesId: null },
   { id: 'showcase-final-3', date: DAY2, start: '16:00', end: '16:15', afterSeriesId: null },
-  { id: 'F-LSF', date: DAY2, start: '16:15', end: '16:25', afterSeriesId: null },
-  { id: 'F-WSF', date: DAY2, start: '16:25', end: '16:35', afterSeriesId: null },
+  // 半决赛：**胜者组先行、败者组随后**（新版赛程手册 16:15~16:35）
+  { id: 'F-WSF', date: DAY2, start: '16:15', end: '16:25', afterSeriesId: null },
+  { id: 'F-LSF', date: DAY2, start: '16:25', end: '16:35', afterSeriesId: null },
   // BO3：无固定结束时刻；依赖前序系列赛。
   { id: 'F-QUAL', date: DAY2, start: '16:35', end: null, afterSeriesId: null },
   { id: 'F-GF', date: DAY2, start: '16:35', end: null, afterSeriesId: 'F-QUAL' },
@@ -828,7 +835,7 @@ const FINALS_NODES_LOCAL: readonly LocalNode[] = [
       { kind: 'loser', seriesId: 'F-W1A' },
       { kind: 'winner', seriesId: 'F-L1B' },
     ],
-    title: '败者组第二轮 A · F-W1A 败者 对 F-L1B 胜者',
+    title: '败者组第二轮 A · 第 3 场败者 对 第 2 场胜者',
     showcaseTeamId: null,
   },
   {
@@ -841,7 +848,7 @@ const FINALS_NODES_LOCAL: readonly LocalNode[] = [
       { kind: 'loser', seriesId: 'F-W1B' },
       { kind: 'winner', seriesId: 'F-L1A' },
     ],
-    title: '败者组第二轮 B · F-W1B 败者 对 F-L1A 胜者',
+    title: '败者组第二轮 B · 第 4 场败者 对 第 1 场胜者',
     showcaseTeamId: null,
   },
   {

@@ -72,8 +72,9 @@ const FINALS_SEQUENCE = [
   'F-W1B',
   'F-L2A',
   'F-L2B',
-  'F-LSF',
+  // 半决赛：胜者组先行、败者组随后（新版赛程手册）
   'F-WSF',
+  'F-LSF',
   'F-QUAL',
   'F-GF',
 ];

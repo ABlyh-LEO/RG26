@@ -324,7 +324,7 @@ export function validateEvent(event: EventFile): ValidationResult {
   }
 
   /* ---------- 顶层 ---------- */
-  if (event.event.sourceDocumentSha256 !== '96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47') {
+  if (event.event.sourceDocumentSha256 !== '89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2') {
     warnings.push(
       warn(
         'event',

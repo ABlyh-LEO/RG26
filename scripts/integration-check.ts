@@ -383,7 +383,7 @@ section('13. 决赛 BO1（第 1–8 场）可完整录入');
    * applyBo3Game 明确拒绝非 BO3/BO2 系列赛，于是决赛推不下去。
    * 现在由 applyFinalsBo1 覆盖，这里做端到端确认。
    */
-  const bo1Order = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF'];
+  const bo1Order = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
   for (const seriesId of bo1Order) {
     const slots = resolveFinals(event.finals.series, event.finals.seeding).series.get(seriesId)?.slots;
     const a = slots?.[0];

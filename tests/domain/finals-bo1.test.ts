@@ -53,7 +53,7 @@ function players(ev: EventFile, id: string): [string, string] | null {
   return [a.teamId, b.teamId];
 }
 
-const EIGHT_BO1 = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF'];
+const EIGHT_BO1 = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
 
 /**
  * 构造一次决赛 BO1 录入。

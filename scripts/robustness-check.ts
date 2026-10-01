@@ -263,7 +263,7 @@ function playFinalsBo1(ev: EventFile, seriesId: string, winnerIsHome = true): Ev
 /** 按依赖顺序录入 8 场决赛 BO1。 */
 function playAllFinalsBo1(base: EventFile): EventFile {
   let e = base;
-  for (const id of ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF']) {
+  for (const id of ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF']) {
     e = playFinalsBo1(e, id);
   }
   return e;
@@ -384,7 +384,7 @@ assertHealthy(event, '种子公布后');
 event = playAllFinalsBo1(event);
 check(
   '8 场 BO1 决赛全部已录入',
-  ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF'].every((id) => {
+  ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'].every((id) => {
     const s = event.finals.series.find((x) => x.id === id);
     return s?.games.some((g) => g.resultStatus === 'confirmed') ?? false;
   }),

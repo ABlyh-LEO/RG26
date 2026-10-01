@@ -116,19 +116,6 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     showcaseOrder: null,
   },
   {
-    id: 'F-LSF',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'winner', seriesId: 'F-L2A' },
-      { kind: 'winner', seriesId: 'F-L2B' },
-    ],
-    label: '半决赛败者组',
-    matchNo: 7,
-    showcaseOrder: null,
-  },
-  {
     id: 'F-WSF',
     format: 'BO1',
     stage: 'finals',
@@ -138,6 +125,19 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-W1B' },
     ],
     label: '半决赛胜者组',
+    matchNo: 7,
+    showcaseOrder: null,
+  },
+  {
+    id: 'F-LSF',
+    format: 'BO1',
+    stage: 'finals',
+    countsForStandings: true,
+    slots: [
+      { kind: 'winner', seriesId: 'F-L2A' },
+      { kind: 'winner', seriesId: 'F-L2B' },
+    ],
+    label: '半决赛败者组',
     matchNo: 8,
     showcaseOrder: null,
   },
@@ -209,7 +209,15 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
   },
 ] as const;
 
-/** 只包含竞技组决赛的节点，按比赛实际发生顺序排列（用于手机纵向视图）。 */
+/**
+ * 只包含竞技组决赛的节点，按比赛**实际发生顺序**排列
+ * （用于手机纵向视图与场次序号）。
+ *
+ * 半决赛的次序按新版赛程手册：**胜者组先行、败者组随后**
+ * （16:15~16:35「先进行半决赛胜者组 BO1，而后进行半决赛败者组 BO1」）。
+ * 注意这只是**发生顺序**：两者的依赖关系没有变 ——
+ * 名额争夺战仍是「半决赛败者组胜者 vs 半决赛胜者组败者」。
+ */
 export const FINALS_MATCH_ORDER: readonly string[] = [
   'F-L1A',
   'F-L1B',
@@ -217,12 +225,11 @@ export const FINALS_MATCH_ORDER: readonly string[] = [
   'F-W1B',
   'F-L2A',
   'F-L2B',
-  'F-LSF',
   'F-WSF',
+  'F-LSF',
   'F-QUAL',
   'F-GF',
 ] as const;
-
 /* ------------------------------------------------------------------ *
  * 种子分配（第 5.5 节）
  * ------------------------------------------------------------------ */

@@ -25,7 +25,7 @@ function makeEventWithSwiss(rounds: ReturnType<typeof simulateSwiss>): EventFile
       name: '测试',
       timezone: 'Asia/Shanghai',
       dates: ['2026-10-03', '2026-10-04'],
-      sourceDocumentSha256: '96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47',
+      sourceDocumentSha256: '89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2',
       officialScheduleUrl: null,
       scheduleNotice: '测试',
       contentUpdatedAt: '2026-10-04T00:00:00+08:00',
