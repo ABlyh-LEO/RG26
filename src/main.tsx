@@ -9,6 +9,7 @@ import { App } from './app/App';
 import { DataProvider } from './data/DataProvider';
 import './styles/tokens.css';
 import './styles/app.css';
+import './styles/bracket.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('找不到 #root 挂载点');

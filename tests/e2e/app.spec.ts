@@ -201,7 +201,7 @@ test.describe('13.3 视觉与设备检查', () => {
     test(`页面本体在 ${width}px 无横向溢出`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
 
-      for (const route of ['/', '/schedule', '/progress?view=qualification', '/progress?view=swiss', '/progress?view=finals', '/teams', '/rules']) {
+      for (const route of ['/', '/schedule', '/progress?view=journey', '/progress?view=qualification', '/progress?view=swiss', '/progress?view=finals', '/progress?view=finals&mode=bracket', '/teams', '/rules']) {
         await goto(page, route);
         await waitForData(page);
 
@@ -276,6 +276,180 @@ test.describe('13.3 视觉与设备检查', () => {
       const text = await badges.nth(i).innerText();
       expect(text.trim().length).toBeGreaterThan(0);
     }
+  });
+});
+
+test.describe('13.4 列式赛程图', () => {
+  /** 量一下图的规模，避免每个用例重复 evaluate。 */
+  async function bracketStats(page: Page) {
+    return page.evaluate(() => {
+      const scroller = document.querySelector('.bracket__scroller');
+      const board = document.querySelector('.bracket__board');
+      return {
+        columns: document.querySelectorAll('.bracket__column').length,
+        cards: document.querySelectorAll('.bracket-card').length,
+        paths: document.querySelectorAll('.bracket__link').length,
+        loserPaths: document.querySelectorAll('.bracket__link--loser').length,
+        columnTitles: [...document.querySelectorAll('.bracket__column-title')].map((e) => e.textContent ?? ''),
+        boardWidth: board?.clientWidth ?? 0,
+        scrollWidth: scroller?.scrollWidth ?? 0,
+        clientWidth: scroller?.clientWidth ?? 0,
+      };
+    });
+  }
+
+  test('决赛图有列、卡片与连线，连线坐标已实测', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=finals&mode=bracket');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const stats = await bracketStats(page);
+
+    // 6 列：败者组首轮 / 胜者组 / 败者组第二轮 / 半决赛 / 名额争夺战 / 总决赛
+    expect(stats.columns).toBe(6);
+    expect(stats.columnTitles).toEqual([
+      '八强·败者组首轮',
+      '八强·胜者组',
+      '败者组第二轮',
+      '半决赛',
+      '名额争夺战',
+      '总决赛',
+    ]);
+    // 10 场计入排名的系列赛
+    expect(stats.cards).toBe(10);
+    // 连线必须真的画出来，而不是只有一个空 svg
+    expect(stats.paths).toBeGreaterThan(0);
+    expect(stats.loserPaths).toBeGreaterThan(0);
+
+    // 连线坐标来自实测 DOM：出现天文数字说明发生了自反馈
+    const d = await page.locator('.bracket__link').first().getAttribute('d');
+    expect(d).toBeTruthy();
+    const coords = (d ?? '').match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
+    expect(coords.length).toBeGreaterThan(0);
+    for (const c of coords) {
+      expect(Number.isFinite(c)).toBe(true);
+      expect(Math.abs(c), `连线坐标 ${c} 超出合理范围`).toBeLessThan(100_000);
+    }
+  });
+
+  test('完整晋级图包含排位赛→瑞士轮→决赛，排位赛两轮都在', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const stats = await bracketStats(page);
+
+    // 排位赛 1 列 + 瑞士轮 5 列 + 决赛 6 列
+    expect(stats.columns).toBe(12);
+    expect(stats.columnTitles.slice(0, 6)).toEqual(['排位赛', 'R1', 'R2', 'R3', 'R4', 'R5']);
+    // 44 次跑图 + 33 场瑞士轮 + 10 场决赛
+    expect(stats.cards).toBe(44 + 33 + 10);
+
+    const text = await page.locator('.bracket').innerText();
+    // 排位赛两轮都要出现，且标明副场地
+    expect(text).toContain('排位赛第 1 轮');
+    expect(text).toContain('排位赛第 2 轮');
+    expect(text).toMatch(/[AB] 副场地 单独跑图/);
+    // 瑞士轮五轮列标题
+    for (const label of ['瑞士轮 R1', '瑞士轮 R5']) {
+      expect(text).toContain(label);
+    }
+  });
+
+  test('对阵未确定时说明在等什么，不编造名次', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const chartText = await page.locator('.bracket').innerText();
+
+    // 尚未公布的对阵必须说明等待原因
+    expect(chartText).toMatch(/等待第 \d 轮结果确认后公布/);
+
+    // 这是本次修复的核心：不能整列都是"排位赛第 N 名 vs 排位赛第 N+1 名"的假配对
+    const fakePairs = chartText.match(/排位赛第 \d+ 名\s*\n\s*排位赛第 \d+ 名/g) ?? [];
+    expect(fakePairs, `出现了 ${fakePairs.length} 组编造的排位赛名次配对`).toHaveLength(0);
+  });
+
+  test('窄屏横向滚动，页面本体不溢出', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const stats = await bracketStats(page);
+
+    // 图比视口宽，必须靠滚动容器承载
+    expect(stats.scrollWidth).toBeGreaterThan(stats.clientWidth);
+    // board 宽度要合理（不能是自反馈放大后的天文数字）
+    expect(stats.boardWidth).toBeLessThan(20_000);
+
+    // 页面本体不出现横向溢出
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(1);
+
+    // 真的能横向滚动
+    const scrolled = await page.evaluate(() => {
+      const el = document.querySelector('.bracket__scroller') as HTMLElement | null;
+      if (!el) return -1;
+      el.scrollLeft = 400;
+      return el.scrollLeft;
+    });
+    expect(scrolled).toBeGreaterThan(0);
+  });
+
+  test('图例与可访问性标签齐备', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+
+    await expect(page.getByRole('group', { name: /完整晋级图/ })).toBeVisible();
+    const legend = page.locator('.bracket__legend');
+    await expect(legend).toBeVisible();
+    await expect(legend).toContainText('胜者晋级方向');
+    await expect(legend).toContainText('败者落位方向');
+
+    // 连线是装饰，不应被读屏念出来
+    await expect(page.locator('.bracket__connectors')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  test('三个阶段纵向依次往下：排位赛 → 瑞士轮 → 决赛', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const bands = await page.evaluate(() =>
+      [...document.querySelectorAll('.bracket__band')].map((b) => ({
+        band: b.getAttribute('data-band') ?? '',
+        top: Number.parseFloat((b as HTMLElement).style.top) || 0,
+        height: Number.parseFloat((b as HTMLElement).style.height) || 0,
+      })),
+    );
+
+    expect(bands.map((b) => b.band)).toEqual(['qualification', 'swiss', 'finals']);
+    // 纵向必须递增 —— 决赛排在最后，而不是被顶到画布最上方
+    expect(bands[1]!.top).toBeGreaterThan(bands[0]!.top);
+    expect(bands[2]!.top).toBeGreaterThan(bands[1]!.top);
+
+    // 每一段都要有实际高度
+    for (const b of bands) {
+      expect(b.height, `${b.band} 段没有高度`).toBeGreaterThan(0);
+    }
+
+    // 画布总高应约等于三段之和，不能因为跨段居中而膨胀
+    const total = await page.evaluate(() => {
+      const el = document.querySelector('.bracket__board') as HTMLElement | null;
+      return el ? Number.parseFloat(el.style.minHeight) || el.clientHeight : 0;
+    });
+    const sum = bands[2]!.top + bands[2]!.height;
+    expect(Math.abs(total - sum)).toBeLessThan(80);
   });
 });
 

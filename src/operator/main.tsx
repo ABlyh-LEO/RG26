@@ -13,6 +13,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { OperatorApp } from './OperatorApp';
 import '../styles/tokens.css';
 import '../styles/app.css';
+import '../styles/bracket.css';
 import './operator.css';
 
 const container = document.getElementById('root');

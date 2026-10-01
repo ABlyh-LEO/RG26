@@ -7,7 +7,6 @@
  * - 决赛桌面用固定流向图，手机按实际比赛顺序纵向卡片。
  */
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useQueryParams } from '../app/useQueryParams';
 import { useData } from '../data/DataProvider';
 import {
@@ -18,11 +17,13 @@ import {
 } from '../data/view-model';
 import { toSeriesView } from '../data/view-model';
 import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
+import { BracketChart, type BracketNodeContent } from '../components/BracketChart';
+import { buildFinalsModel, buildFullModel, nodeParticipants } from '../data/bracket-model';
 import { FINALS_MATCH_ORDER } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
 
-type View = 'qualification' | 'swiss' | 'finals';
+type View = 'qualification' | 'swiss' | 'finals' | 'journey';
 
 export function ProgressPage() {
   const { derived, loading } = useData();
@@ -43,6 +44,7 @@ export function ProgressPage() {
       <div className="segmented" role="group" aria-label="选择赛段视图">
         {(
           [
+            ['journey', '完整晋级图'],
             ['qualification', '排位赛'],
             ['swiss', '瑞士轮'],
             ['finals', '决赛'],
@@ -63,6 +65,7 @@ export function ProgressPage() {
       {view === 'qualification' ? <QualificationView /> : null}
       {view === 'swiss' ? <SwissView /> : null}
       {view === 'finals' ? <FinalsView /> : null}
+      {view === 'journey' ? <FullJourneyView /> : null}
     </div>
   );
 }
@@ -646,87 +649,227 @@ function SeedTable() {
 }
 
 /**
- * 完整对阵图。
- * 放在独立容器里允许缩放/横向滚动，保证页面本体不横向溢出。
+ * 图例：说明连线与卡片状态的含义。
+ */
+function BracketLegend() {
+  return (
+    <div className="bracket__legend">
+      <span className="bracket__legend-item">
+        <span className="bracket__legend-swatch bracket__legend-swatch--winner" aria-hidden="true" />
+        胜者晋级方向
+      </span>
+      <span className="bracket__legend-item">
+        <span className="bracket__legend-swatch bracket__legend-swatch--loser" aria-hidden="true" />
+        败者落位方向
+      </span>
+      <span className="bracket__legend-item">浅色队名 = 对阵尚未确定</span>
+      <span className="bracket__legend-item">左右滑动可查看全部阶段</span>
+    </div>
+  );
+}
+
+/** 决赛节点渲染：一律走 view-model，不在这里重算规则。 */
+function useSeriesNode() {
+  const { derived } = useData();
+
+  return useMemo(() => {
+    if (!derived) return null;
+    const { event, teamMap, venueLabels, finals } = derived;
+    const byId = new Map(event.finals.series.map((s) => [s.id, s]));
+
+    return (nodeId: string): BracketNodeContent => {
+      const series = byId.get(nodeId);
+      if (!series) return { title: nodeId, rows: [] };
+
+      const view = toSeriesView(series, event, teamMap, venueLabels, finals);
+      const [home, away] = view.sides ?? [null, null];
+      const res = finals.series.get(nodeId);
+
+      const status: BracketNodeContent['status'] =
+        view.executionStatus === 'running'
+          ? 'live'
+          : res?.decided || view.resultStatus === 'confirmed'
+            ? 'done'
+            : 'upcoming';
+
+      // 未确定的对阵显示"在等什么"，绝不显示一个看起来像真的名次
+      const sideRow = (side: typeof home): BracketNodeContent['rows'][number] => ({
+        label: '',
+        team: side?.team ? side.team.name : (side?.sourceLabel ?? '待定'),
+        isWinner: side?.isWinner ?? false,
+        dim: !side?.team,
+      });
+
+      const parts: string[] = [];
+      if (view.format) parts.push(view.format);
+      if (view.homeWins !== null && view.awayWins !== null && (view.homeWins > 0 || view.awayWins > 0)) {
+        parts.push(`${view.homeWins} : ${view.awayWins}`);
+      }
+      if (res && res.notNeededGameIndexes.length > 0) {
+        parts.push(`第 ${res.notNeededGameIndexes.join('、')} 局不需要进行`);
+      }
+      if (view.schedule) {
+        parts.push(`${formatDate(view.schedule.date)} ${formatTime(view.schedule.revisedStart ?? view.schedule.plannedStart)}`);
+      }
+
+      return {
+        title: view.title,
+        rows: [sideRow(home), sideRow(away)],
+        meta: parts.length > 0 ? parts.join(' · ') : null,
+        status,
+        to: `/matches/${nodeId}`,
+      };
+    };
+  }, [derived]);
+}
+
+/**
+ * 完整决赛对阵图。
+ *
+ * 列式赛程图：列为依赖图层级、卡片堆叠、SVG 连线表示晋级流向。
+ * 放在独立滚动容器里，保证页面本体不横向溢出。
  */
 function BracketView() {
   const { derived } = useData();
-  if (!derived) return null;
-  const { event, teamMap, venueLabels, finals } = derived;
+  const renderSeriesNode = useSeriesNode();
 
-  const node = (id: string) => {
-    const s = event.finals.series.find((x) => x.id === id);
-    return s ? toSeriesView(s, event, teamMap, venueLabels, finals) : null;
-  };
+  const model = useMemo(() => (derived ? buildFinalsModel(derived.event) : null), [derived]);
 
-  const columns: { title: string; ids: string[] }[] = [
-    { title: '八强败者组首轮', ids: ['F-L1A', 'F-L1B'] },
-    { title: '八强胜者组', ids: ['F-W1A', 'F-W1B'] },
-    { title: '败者组第二轮', ids: ['F-L2A', 'F-L2B'] },
-    { title: '半决赛', ids: ['F-LSF', 'F-WSF'] },
-    { title: '名额争夺战 / 总决赛', ids: ['F-QUAL', 'F-GF'] },
-  ];
+  const renderNode = useMemo(
+    () => renderSeriesNode ?? ((nodeId: string): BracketNodeContent => ({ title: nodeId, rows: [] })),
+    [renderSeriesNode],
+  );
+
+  if (!derived || !model) return null;
 
   return (
-    <div
-      className="card"
-      style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
-      tabIndex={0}
-      role="group"
-      aria-label="完整决赛对阵图，可横向滚动"
-    >
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', minWidth: 'min-content' }}>
-        {columns.map((col) => (
-          <div key={col.title} style={{ minWidth: 210, flex: '1 0 210px' }}>
-            <div className="xsmall muted" style={{ marginBottom: 'var(--sp-2)' }}>
-              {col.title}
-            </div>
-            <div className="stack stack--tight">
-              {col.ids.map((id) => {
-                const v = node(id);
-                if (!v) return null;
-                const [home, away] = v.sides ?? [null, null];
-                return (
-                  <div
-                    key={id}
-                    style={{
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: 'var(--sp-2)',
-                      background: 'var(--panel)',
-                    }}
-                  >
-                    <div className="row" style={{ justifyContent: 'space-between' }}>
-                      <span className="xsmall muted">{v.title}</span>
-                      {v.format ? <span className="badge badge--neutral">{v.format}</span> : null}
-                    </div>
-                    <div className="stack stack--tight" style={{ marginTop: 'var(--sp-1)' }}>
-                      {[home, away].map((side, i) => (
-                        <div key={i} className="row" style={{ gap: 'var(--sp-1)', minWidth: 0 }}>
-                          <span style={{ width: '1em' }} aria-hidden="true">
-                            {side?.isWinner ? '✔' : ''}
-                          </span>
-                          <TeamName team={side?.team ?? null} fallback={side?.sourceLabel ?? '待定'} />
-                        </div>
-                      ))}
-                    </div>
-                    {v.homeWins !== null && v.awayWins !== null ? (
-                      <div className="xsmall muted tabular" style={{ marginTop: 'var(--sp-1)' }}>
-                        {v.homeWins} : {v.awayWins}
-                      </div>
-                    ) : null}
-                    <div style={{ marginTop: 'var(--sp-1)' }}>
-                      <Link to={`/matches/${id}`} className="xsmall">
-                        详情 →
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="stack" style={{ gap: 'var(--sp-2)' }}>
+      <BracketLegend />
+      <BracketChart
+        columns={model.columns}
+        connections={model.connections}
+        renderNode={renderNode}
+        ariaLabel="完整决赛对阵图，可横向滚动"
+      />
+      <p className="xsmall muted">
+        八强败者组首轮与第二轮败者结算八强；半决赛败者组败者结算四强。
+        未决出的名额显示为来源说明（例如“F-WSF 败者”），不提前填队名。
+      </p>
+    </div>
+  );
+}
+
+/**
+ * 完整晋级图：排位赛 → 瑞士轮 R1–R5 → 决赛，一张图看完全部流程。
+ *
+ * 排位赛与瑞士轮之间不画线：两者的关系是"排位前 16 名进入瑞士轮"，
+ * 跨列连线只会变成一团乱麻，用列标题表达更清楚。
+ */
+function FullJourneyView() {
+  const { derived } = useData();
+  const renderSeriesNode = useSeriesNode();
+
+  const model = useMemo(() => (derived ? buildFullModel(derived.event) : null), [derived]);
+
+  /** 瑞士轮与排位赛的节点用各自的数据描述，不借用决赛的解析结果。 */
+  const renderNode = useMemo(() => {
+    const fallbackNode = (nodeId: string): BracketNodeContent => ({ title: nodeId, rows: [] });
+    const seriesNode = renderSeriesNode ?? fallbackNode;
+    if (!derived) return fallbackNode;
+
+    const { event, teamMap, venueLabels, finals } = derived;
+    const runById = new Map(event.qualification.runs.map((r) => [r.id, r]));
+    const swissById = new Map(event.swiss.matches.map((m) => [m.id, m]));
+
+    return (nodeId: string): BracketNodeContent => {
+      const run = runById.get(nodeId);
+      if (run) {
+        const team = teamMap.get(run.teamId)?.team ?? null;
+        return {
+          title: `排位赛第 ${run.round} 轮`,
+          rows: [
+            { label: '', team: team ? team.name : run.teamId },
+            { label: '', team: `${venueLabels.get(run.venueId) ?? run.venueId} 单独跑图`, dim: true },
+          ],
+          meta: run.rawResult ?? '尚未比赛',
+          status: run.resultStatus === 'confirmed' ? 'done' : 'upcoming',
+        };
+      }
+
+      const match = swissById.get(nodeId);
+      if (match) {
+        const { home, away, pending } = nodeParticipants(nodeId, event, finals);
+        const decided = match.participantSnapshot
+          ? match.attempts.some((a) => a.resultStatus === 'confirmed')
+          : false;
+
+        /**
+         * 待公布时两侧是同一句"在等什么"，重复两遍只会把卡片撑高。
+         * 这种情况合并成一行说明，绝不编造具体名次。
+         */
+        const refReason = (): string | null => {
+          for (const ref of match.slots) {
+            if (ref.kind === 'pending') return ref.reason;
+            if (ref.kind === 'qualification-rank') return `等待排位赛第 ${ref.rank} 名`;
+          }
+          return null;
+        };
+
+        const label = (teamId: string | null, index: number): string => {
+          if (teamId) return teamMap.get(teamId)?.displayName ?? teamId;
+          const ref = match.slots[index];
+          if (!ref) return '待定';
+          if (ref.kind === 'pending') return ref.reason;
+          if (ref.kind === 'qualification-rank') return `排位赛第 ${ref.rank} 名`;
+          if (ref.kind === 'team') return teamMap.get(ref.teamId)?.displayName ?? ref.teamId;
+          return '待定';
+        };
+
+        if (pending) {
+          return {
+            title: `瑞士轮 R${match.roundIndex}`,
+            rows: [{ label: '', team: refReason() ?? '对阵待公布', dim: true }],
+            meta: `${match.groupRecord} 战绩组`,
+            status: 'upcoming',
+            to: `/matches/${nodeId}`,
+          };
+        }
+
+        return {
+          title: `瑞士轮 R${match.roundIndex}`,
+          rows: [
+            { label: '', team: label(home, 0), dim: home === null },
+            { label: '', team: label(away, 1), dim: away === null },
+          ],
+          meta: `${match.groupRecord} 战绩组${decided ? ' · 已结算' : ''}`,
+          status: decided ? 'done' : 'upcoming',
+          to: `/matches/${nodeId}`,
+        };
+      }
+
+      return seriesNode(nodeId);
+    };
+  }, [derived, renderSeriesNode]);
+
+  const sectionLabel = useMemo(() => (section: string) => section, []);
+
+  if (!derived || !model) return null;
+
+  return (
+    <div className="stack" style={{ gap: 'var(--sp-2)' }}>
+      <BracketLegend />
+      <BracketChart
+        columns={model.columns}
+        connections={model.connections}
+        renderNode={renderNode}
+        sectionLabel={sectionLabel}
+        minColumnWidth={176}
+        ariaLabel="完整晋级图：排位赛、瑞士轮与决赛，可横向滚动"
+      />
+      <p className="xsmall muted">
+        排位赛为单队跑图（两轮取最优），前 16 名进入瑞士轮；瑞士轮 5 轮后 3 胜晋级八强；
+        八强之后的连线表示胜者与败者的去向。排位赛与瑞士轮之间不连线，因为没有逐场对应关系。
+      </p>
     </div>
   );
 }

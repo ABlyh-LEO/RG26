@@ -29,6 +29,8 @@ const SHOTS = [
   { name: '11-team-detail-longname-mobile', route: '/teams/competitive-13', viewport: MOBILE },
   { name: '12-rules-desktop', route: '/rules', viewport: DESKTOP },
   { name: '13-match-detail', route: '/matches/swiss-r1-00-1', viewport: DESKTOP },
+  { name: '14-progress-journey-desktop', route: '/progress?view=journey', viewport: DESKTOP },
+  { name: '15-progress-journey-mobile', route: '/progress?view=journey', viewport: MOBILE },
 ];
 
 mkdirSync(OUT, { recursive: true });
