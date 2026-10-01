@@ -227,7 +227,7 @@
 ### 6.1 已推送，但**尚未确认部署**
 
 - **已推送**：`https://github.com/ABlyh-LEO/RG26`，`main` 分支
-  commit `0ddbdc3ca8b0a7a0fc6ac5f8d765d2d61a364811`（已用 `git ls-remote` 核对远端一致）。
+  commit `d6774345a5498855d287351133c9098b990a37dd`（已用 `git ls-remote` 核对远端一致）。
 - **未确认**：本次会话中 GitHub Actions 的运行状态**未核实**。
   GitHub REST API 通过当前网络返回 403，无法读取 run 状态。
 - **未确认**：Pages 是否已启用（Settings → Pages → Source 必须选 **GitHub Actions**）。

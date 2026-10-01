@@ -144,7 +144,7 @@ async function main(): Promise<void> {
     check('深链刷新后仍可用', afterReload.includes('Uniforest'), `h1="${afterReload}"`);
 
     console.log('\n=== 6. 全部路由在子路径下可用 ===');
-    for (const route of ['/', '/schedule', '/progress?view=qualification', '/progress?view=swiss', '/progress?view=finals', '/teams', '/rules']) {
+    for (const route of ['/', '/schedule', '/progress?view=journey', '/progress?view=qualification', '/progress?view=swiss', '/progress?view=finals', '/teams', '/rules']) {
       await page.goto(`${base}#${route}`, { waitUntil: 'networkidle' });
       await page.waitForSelector('.meta-bar', { timeout: 20_000 }).catch(() => {});
       const title = await page.locator('h1').first().innerText().catch(() => '');

@@ -5,7 +5,7 @@
 
 - **仓库**：<https://github.com/ABlyh-LEO/RG26>
 - **目标地址**：<https://ablyh-leo.github.io/RG26/>
-- **当前状态**：`main` 已推送（commit `0ddbdc3`）；**Pages 是否启用与部署是否成功尚未确认**
+- **当前状态**：`main` 已推送（commit `d677434`）；**Pages 是否启用与部署是否成功尚未确认**
 
 ---
 
