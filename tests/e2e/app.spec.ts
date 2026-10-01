@@ -362,6 +362,150 @@ test.describe('13.4 列式赛程图', () => {
     ).toHaveLength(0);
   });
 
+  /**
+   * 同 y 共线重叠：**这是曾经的测试盲区**。
+   *
+   * 上一个用例只断言"同一 x 不得有两条竖直段"，于是这个 bug 一直
+   * 没被测出来：两条不同晋级路径的**水平段**落在同一个 y 上、
+   * 区间还互相覆盖，图上看起来只有一条线。
+   * 基线实测 12 处，最长一处重叠 250px
+   * （`F-W1A→F-WSF` 与 `F-L2B→F-LSF` 在 y≈371 的通道里）。
+   *
+   * 判据按**语义**：不同晋级路径在图上必须各自可追踪，
+   * 不能靠"元素存不存在"来判定。
+   *
+   * 允许的例外只有一种：**同一张卡片发出的两条边**（胜者与败者）
+   * 共用一个起点、**指向同一张卡片的两条边**共用一个终点。
+   * 几何上它们必须共用那个边缘中点，无法分开。
+   * 除这种"同一端点扇出/汇聚"外，任何共线重叠都算缺陷。
+   */
+  test('连线不重叠：不同路径的水平段不得共线重叠', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const horizontals = await page.evaluate(() => {
+      const board = document.querySelector('.bracket__board');
+      const boardRect = board?.getBoundingClientRect();
+
+      /** 卡片 id → 左右边缘中点 x（用来识别"同一端点"扇出）。 */
+      const nodeEdges: { id: string; left: number; right: number }[] = [];
+      document.querySelectorAll('[data-node-id]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        nodeEdges.push({
+          id: (el as HTMLElement).dataset.nodeId ?? '',
+          left: boardRect ? r.left - boardRect.left : r.left,
+          right: boardRect ? r.right - boardRect.left : r.right,
+        });
+      });
+
+      const segs: { y: number; x1: number; x2: number; pathId: string }[] = [];
+      document.querySelectorAll('.bracket__link').forEach((p, pathIndex) => {
+        const d = p.getAttribute('d') ?? '';
+        const toks = [
+          ...d.matchAll(/([MHV])\s*(-?[\d.]+)(?:\s+(-?[\d.]+))?/g),
+        ].map((m) => ({
+          c: m[1],
+          a: Number(m[2]),
+          b: m[3] !== undefined ? Number(m[3]) : null,
+        }));
+        let x = 0;
+        let y = 0;
+        for (const t of toks) {
+          if (t.c === 'M') {
+            x = t.a;
+            y = t.b ?? 0;
+          } else if (t.c === 'H') {
+            segs.push({
+              y: Math.round(y * 100) / 100,
+              x1: Math.min(x, t.a),
+              x2: Math.max(x, t.a),
+              pathId: `${pathIndex}`,
+            });
+            x = t.a;
+          } else if (t.c === 'V') {
+            y = t.a;
+          }
+        }
+      });
+
+      /** 该 x 是否落在某张卡片的左右边缘（±3px 视为同一端点）。 */
+      const nearEdge = (px: number): boolean =>
+        nodeEdges.some((n) => Math.abs(px - n.left) <= 3 || Math.abs(px - n.right) <= 3);
+
+      const byY = new Map<number, typeof segs>();
+      for (const s of segs) {
+        const list = byY.get(s.y) ?? [];
+        list.push(s);
+        byY.set(s.y, list);
+      }
+
+      const bad: { y: number; overlap: number; a: string; b: string }[] = [];
+      for (const [y, list] of byY) {
+        for (let i = 0; i < list.length; i += 1) {
+          for (let j = i + 1; j < list.length; j += 1) {
+            const a = list[i]!;
+            const b = list[j]!;
+            if (a.pathId === b.pathId) continue;
+            const lo = Math.max(a.x1, b.x1);
+            const hi = Math.min(a.x2, b.x2);
+            const overlap = hi - lo;
+            // 2px 容差：抗锯齿与浮点噪声
+            if (overlap <= 2) continue;
+            /**
+             * 例外：**同一张卡片发出的两条边，或汇聚到同一张卡的两条边**。
+             *
+             * 这两种情况下两段横线共用同一个端点，而那个端点固定在
+             * 卡片的边缘中点上（`x1` 取右边缘中点、`x2` 取左边缘中点），
+             * 几何上无法分开——规则本身就要求胜者与败者从同一场比赛分出。
+             * 例如 `F-W1A→F-L2A`（败）与 `F-W1A→F-WSF`（胜）都从
+             * 第 3 场的右边缘中点出发，于是共享开头那 17px。
+             *
+             * 判据：两段**共用的那个端点**（重叠区的一端）落在卡片边缘上，
+             * 且两段在重叠处朝**同一个方向**离开（都是起点或都是终点）。
+             * 只判"共用端点贴卡片"是不够的：还要确认它们不是在同一段
+             * 通道里各走各的、只是碰巧同高——那才是真缺陷。
+             */
+            const sharedAtCardEdge = nearEdge(lo) || nearEdge(hi);
+            if (!sharedAtCardEdge) {
+              bad.push({
+                y,
+                overlap: Math.round(overlap),
+                a: `${Math.round(a.x1)}-${Math.round(a.x2)}`,
+                b: `${Math.round(b.x1)}-${Math.round(b.x2)}`,
+              });
+              continue;
+            }
+            /**
+             * 共用端点必须在两段的**同一侧**（都从那里出发，或都到那里），
+             * 否则只是首尾相接式的偶然共线，仍算缺陷。
+             */
+            const aStartsAt = (px: number) => Math.abs(px - a.x1) <= 2;
+            const bStartsAt = (px: number) => Math.abs(px - b.x1) <= 2;
+            const sameSide =
+              (aStartsAt(lo) && bStartsAt(lo)) || (aStartsAt(hi) && bStartsAt(hi));
+            if (!sameSide) {
+              bad.push({
+                y,
+                overlap: Math.round(overlap),
+                a: `${Math.round(a.x1)}-${Math.round(a.x2)}`,
+                b: `${Math.round(b.x1)}-${Math.round(b.x2)}`,
+              });
+            }
+          }
+        }
+      }
+      return { total: segs.length, bad };
+    });
+
+    expect(horizontals.total).toBeGreaterThan(0);
+    expect(
+      horizontals.bad,
+      `这些 y 上有共线重叠的水平段（除同一卡片扇出/汇聚外不允许）：${JSON.stringify(horizontals.bad)}`,
+    ).toHaveLength(0);
+  });
+
   test('对外文案用场次序号，绝不出现内部 ID', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
 

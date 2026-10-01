@@ -65,6 +65,13 @@ const GAP = 64;
 const SECTION_GAP = 20;
 const FALLBACK_HEIGHT = 84;
 
+/**
+ * 横线离卡片的最小留白。也是横向段被占用后左右挪动的**步长**：
+ * 两条同高度的横线分开 18px，视觉上一眼能看出是两条。
+ */
+const CLEAR = 18;
+const CLEAR_STEP = CLEAR;
+
 export function BracketChart({
   columns,
   connections,
@@ -210,10 +217,18 @@ export function BracketChart({
 
     const out: { key: string; d: string; via: 'winner' | 'loser' }[] = [];
 
-    /** 每个节点所属的列序号，用来判断连线是否跨列。 */
     const columnOfNode = new Map<string, number>();
+    const columnBounds: { left: number; right: number }[] = [];
+    const columnEls = board.querySelectorAll<HTMLElement>('.bracket__column');
     columns.forEach((col, ci) => {
       for (const n of col.nodes) columnOfNode.set(n.id, ci);
+      const el = columnEls[ci];
+      if (el) {
+        columnBounds[ci] = {
+          left: el.getBoundingClientRect().left - boardRect.left + board.scrollLeft,
+          right: el.getBoundingClientRect().right - boardRect.left + board.scrollLeft,
+        };
+      }
     });
 
     /**
@@ -223,8 +238,198 @@ export function BracketChart({
      * 如果它们都走同一个 x，就会重叠成一条，看起来像"少了几条线、
      * 连错了地方"。这里按竖直段的行进方向给每条线一个独立偏移，
      * 让它们在通道内并排。
+     *
+     * 车道的**作用域是通道本身**，不是起点：跨列连线与相邻列连线可能
+     * 共用同一条通道（例如 `F-WSF→F-GF` 与别的线都从第 8 列左边过），
+     * 用起点 x 当 key 会让它们各自从 0 开始、撞在同一个 x 上。
      */
     const laneCount = new Map<number, number>();
+
+    /**
+     * 中间列 k 里离目标高度 targetY 最近的**卡片空隙**。
+     *
+     * 跨列连线的水平穿越段必须落在这种空隙里，否则会压在卡片上。
+     * 取不到空隙时退到该列最低卡片的下方（那里必定是空的）。
+     */
+    const nodeSpanOfColumn = new Map<number, { top: number; bottom: number }[]>();
+    for (const [id, colIdx] of columnOfNode) {
+      const el = nodeEls.get(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const span = {
+        top: r.top - boardRect.top + board.scrollTop,
+        bottom: r.bottom - boardRect.top + board.scrollTop,
+      };
+      const list = nodeSpanOfColumn.get(colIdx) ?? [];
+      list.push(span);
+      nodeSpanOfColumn.set(colIdx, list);
+    }
+
+    /**
+     * **横向段占位表**：key 为 `通道 x : 高度 y`，值为已占用次数。
+     *
+     * 为什么必须按 (通道, 高度) 而不是只按高度：两条线只有
+     * **同在一条通道、同一高度**时才会共线重叠；不同通道的同高度横线
+     * 在图上完全分得开，不该互相排挤。
+     *
+     * 为什么必须覆盖**每一段**横线（进入 / 横穿 / 离开）而不只是横穿段：
+     * 实测最严重的重叠根本不在横穿段，而在**进入段**——
+     * `F-W1A→F-WSF` 从八强赛 (cy 370.99) 出发，而「败者组第二轮」的
+     * `F-L2B` 恰好也在 cy 370.99，于是"离开 F-W1A 的横线"与
+     * "进入 F-L2B 的横线"在 x=1376..1440 通道里完全重合（基线实测
+     * 最长一条重叠达 250px）。只给横穿段分车道改不到它。
+     *
+     * 车道偏移过去只作用于竖直段（`laneCount`），横线一直无人管理，
+     * 这正是"图上看起来只有一条线、却代表两条晋级路径"的根源。
+     */
+    const horizontalUsed = new Map<string, number>();
+
+    /** 横向段最多尝试多少个左右交替的候选高度，避免病态输入下死循环。 */
+    const MAX_HORIZONTAL_TRIES = 40;
+
+    /**
+     * 为一段横线挑一个**未被占用**的高度，并登记占用。
+     *
+     * 沿 y 左右交替寻找最近空位（步长 `step`），让线尽量贴回它
+     * 本该在的高度，而不是被弹到很远的地方。
+     */
+    function reserveHorizontal(channelX: number, y: number, step: number): number {
+      const key = (yy: number) => `${Math.round(channelX)}:${Math.round(yy)}`;
+      if ((horizontalUsed.get(key(y)) ?? 0) === 0) {
+        horizontalUsed.set(key(y), 1);
+        return y;
+      }
+      for (let i = 1; i <= MAX_HORIZONTAL_TRIES; i += 1) {
+        for (const cand of [y - i * step, y + i * step]) {
+          if ((horizontalUsed.get(key(cand)) ?? 0) === 0) {
+            horizontalUsed.set(key(cand), 1);
+            return cand;
+          }
+        }
+      }
+      // 候选用尽（极窄通道）：叠加计数，宁可重叠也不能发散出去
+      horizontalUsed.set(key(y), (horizontalUsed.get(key(y)) ?? 0) + 1);
+      return y;
+    }
+
+    /**
+     * 中间列里可用的**横向穿越高度**（该处没有卡片）。
+     *
+     * 只列候选，不在这里挑：挑哪个必须看整条路径，
+     * 见下方 pickCrossingY 的评分。
+     */
+    function crossingCandidates(colIdx: number): number[] {
+      const spans = (nodeSpanOfColumn.get(colIdx) ?? []).slice().sort((a, b) => a.top - b.top);
+      if (spans.length === 0) return [];
+
+      const candidates: number[] = [spans[0]!.top - CLEAR];
+      for (let i = 0; i < spans.length; i += 1) {
+        candidates.push(spans[i]!.bottom + CLEAR);
+        if (i + 1 < spans.length) {
+          const gap = spans[i + 1]!.top - spans[i]!.bottom;
+          // 只在空隙足够宽时才当候选，避免贴着卡片边
+          if (gap >= CLEAR * 2) candidates.push((spans[i]!.bottom + spans[i + 1]!.top) / 2);
+        }
+      }
+      candidates.push(spans[spans.length - 1]!.bottom + CLEAR);
+      return candidates;
+    }
+
+    /**
+     * 选中间列的穿越高度。
+     *
+     * **判据是整条路径的垂直总行程最小，不是"离终点最近"。**
+     * 只朝终点靠会画出"大回环"：例如 `F-WSF(cy 445) → F-GF(cy 297)`，
+     * 中间隔着「名额争夺战」(y 255..339)，离终点 297 最近的空档在其
+     * **上方**(≈241)，于是线先冲到 241 再落回 297 —— 白白多走 200px，
+     * 看起来像接错了地方。
+     *
+     * 改成沿 y1→y2 的**趋势**挑：以 y1、y2 之间距起点约 (k-ci) 比例处的
+     * 高度为期望值，让线在穿越时自然"斜着过去"。
+     *
+     * 另外**避开已被别的线占用的高度**：几何算出来的穿越高度常常撞车
+     * （`F-W1A→F-WSF` 与 `F-W1B→F-WSF` 就都算出同一个高度），两条线
+     * 重叠成一条后，图上看起来只有一条晋级路径。宁可稍微绕一点，也要分开。
+     *
+     * **评分必须包含"腾挪后的实际高度"，不能先挑最好的再硬挪。**
+     * 早先的写法先按 `|c - ideal|` 挑中一个候选，再交给
+     * `reserveHorizontal` 让位；该候选被占用时会被推到最远
+     * `MAX_HORIZONTAL_TRIES × CLEAR = 720px` 之外，实测把
+     * `F-W1B→F-WSF` 顶到 y=265（要跨过第 5 场），绕行比冲到 **2.27**、
+     * 还多出一次竖直折返 —— 比修复前的 1.41 更糟。
+     * 现在对每个候选先算出它**腾挪后会落在哪里**，再按该实际位置评分，
+     * 于是"稍微偏一点但不用让位"的候选会胜过"正中理想但会被推很远"的候选。
+     */
+    function pickCrossingY(
+      colIdx: number,
+      startY: number,
+      endY: number,
+      progress: number,
+      channelX: number,
+    ): number {
+      const candidates = crossingCandidates(colIdx);
+      if (candidates.length === 0) return endY;
+
+      // 期望穿越高度：沿起点到终点的直线，按列序进度插值
+      const ideal = startY + (endY - startY) * progress;
+
+      const key = (yy: number) => `${Math.round(channelX)}:${Math.round(yy)}`;
+
+      let best = candidates[0]!;
+      let bestCost = Infinity;
+      for (const c of candidates) {
+        // 该候选腾挪后的实际落点（未被占用时就是它自己）
+        const landing = occupiedLookup(channelX, c);
+        // 评分：实际落点离理想点多远。腾挪越远，代价越大，
+        // 于是"偏一点但不用挪"会赢过"正理想却被推 700px"。
+        const cost = Math.abs(landing - ideal);
+        if (cost < bestCost) {
+          bestCost = cost;
+          best = landing;
+        }
+      }
+
+      horizontalUsed.set(key(best), (horizontalUsed.get(key(best)) ?? 0) + 1);
+      return best;
+    }
+
+    /**
+     * 若 `y` 已被占用，返回附近最近的空位；否则返回 `y` 本身。
+     *
+     * 与 `reserveHorizontal` 的区别：**只查询、不登记**，
+     * 让 `pickCrossingY` 能先比较各候选的落点再决定占用哪一个。
+     */
+    function occupiedLookup(channelX: number, y: number): number {
+      const key = (yy: number) => `${Math.round(channelX)}:${Math.round(yy)}`;
+      if ((horizontalUsed.get(key(y)) ?? 0) === 0) return y;
+      for (let i = 1; i <= MAX_HORIZONTAL_TRIES; i += 1) {
+        for (const cand of [y - i * CLEAR_STEP, y + i * CLEAR_STEP]) {
+          if ((horizontalUsed.get(key(cand)) ?? 0) === 0) return cand;
+        }
+      }
+      return y;
+    }
+
+    /**
+     * 去掉冗余顶点：连续的同向指令（H 后接 H、V 后接 V）会留下
+     * 无意义的折点，视觉上是"线在这里莫名其妙拐了一下"。
+     * 同时把坐标收敛到 2 位小数，避免 `444.9921875` 这种噪声。
+     */
+    function dedupe(pts: string[]): string[] {
+      const out: string[] = [];
+      for (const p of pts) {
+        const cmd = p[0];
+        const prev = out[out.length - 1];
+        // 同向连续 → 用后一个覆盖前一个
+        if (prev && prev[0] === cmd) out[out.length - 1] = p;
+        else out.push(p);
+      }
+      return out;
+    }
+
+    function round2(n: number): number {
+      return Math.round(n * 100) / 100;
+    }
 
     for (const conn of connections) {
       const fromEl = nodeEls.get(conn.fromId);
@@ -243,25 +448,131 @@ export function BracketChart({
       const spansColumns = ci !== undefined && cj !== undefined && cj - ci > 1;
 
       /**
-       * 跨列连线（胜者组一路直通半决赛/总决赛，跳过败者组的列）走**列间通道**，
-       * 不要横穿中间那一列的卡片：
-       * 起点先水平走一小段进入通道，再竖直移动，最后水平进入目标。
+       * 跨列连线必须走**阶梯路径**，沿中间每一列的间隙逐段推进，
+       * 不能从起点直接平推到目标。
        *
-       * 车道与相邻列共用同一套 offset 公式（见 buildConnectorPath），
-       * 否则两套方案会在 x=212 附近撞到同一个位置。
+       * 为什么：起点列与目标列之间隔着整整一列卡片。任何"先平推到某个
+       * x、再竖直走"的画法，那条水平段都会压在中间那列上（实测
+       * `F-W1A→F-WSF` 的 y=371 水平段正好穿过第 6 列整列）。
+       *
+       * 阶梯走法：在**每条间隙里只做竖直移动**，进入下一列时
+       * 走该列**上方或下方的空档**（那里没有卡片）水平穿过去。
+       * 这样每一段水平线都落在空档里，绝不压卡片。
        */
       let d: string;
-      const laneKey = Math.round(x1);
-      const used = laneCount.get(laneKey) ?? 0;
-      laneCount.set(laneKey, used + 1);
+      let laneKey: number;
+
+      /**
+       * 通道中线。相邻列连线的竖段走这里，跨列连线也走这里，
+       * 因此两条路径的**竖直段会共用同一个 x**，必须共享车道计数。
+       */
+      const channelBetween = (left: number, right: number): number => {
+        const l = columnBounds[left]?.right ?? x1;
+        const r = columnBounds[right]?.left ?? x2;
+        return l + Math.max(0, r - l) / 2;
+      };
 
       if (spansColumns) {
-        // 通道就是本列右侧那段间隙：x1 → x1 + GAP。
-        // 与相邻列共用 laneOffset，否则两套方案会在同一 x 上撞车。
-        const laneX = x1 + GAP / 2 + laneOffset(GAP, used);
-        d = `M ${x1} ${y1} H ${laneX} V ${y2} H ${x2}`;
+        /**
+         * 跨列连线：借中间列的**上方或下方空档**越过去。
+         *
+         * 走法（以 八强赛 → 半决赛，中间隔着败者组第二轮为例）：
+         *   1. 从起点水平进入两列之间的**通道**；
+         *   2. 在通道里竖直移动到"穿越高度"（该处没有卡片）；
+         *   3. 水平越过中间列，进入下一段通道；
+         *   4. 在目标列左侧通道里竖直对齐到目标高度；
+         *   5. 水平进入目标。
+         *
+         * 关键是**横穿只发生一次、且只在穿越高度上**：早先的写法在
+         * 循环末尾就把 x 推到中间列右侧，导致多出一条横跨整列的
+         * 长横线（实测 `F-WSF→F-GF` 横穿了整个「名额争夺战」列）。
+         *
+         * 穿越高度沿 y1→y2 的直线按列序插值选取（见 pickCrossingY）：
+         * 只朝终点靠会画出"大回环"——先冲到无关高度再折回，
+         * 看起来像接错了地方。
+         *
+         * **每一段横线都要过 `reserveHorizontal`**：进入段的横线
+         * 与别的线在通道里同高度时同样会重叠，且那才是最严重的一类。
+         */
+        const pts: string[] = [`M ${round2(x1)} ${round2(y1)}`];
+
+        for (let k = ci + 1; k <= cj - 1; k += 1) {
+          const colL = columnBounds[k]?.left ?? x1;
+          const colR = columnBounds[k]?.right ?? colL;
+          const prevR = columnBounds[k - 1]?.right ?? x1;
+          const gapL = Math.max(0, colL - prevR);
+          const gapR = Math.max(0, (columnBounds[k + 1]?.left ?? colR) - colR);
+
+          // 竖段车道：左侧通道（与相邻列连线共用同一套计数）
+          const laneKeyL = Math.round(prevR + gapL / 2);
+          const usedL = laneCount.get(laneKeyL) ?? 0;
+          laneCount.set(laneKeyL, usedL + 1);
+          const enterX = prevR + gapL / 2 + laneOffset(gapL, usedL);
+          pts.push(`H ${round2(enterX)}`);
+
+          // 穿越高度：沿 y1→y2 的直线按列序比例插值，取最近的可穿越空档。
+          // 传起点而不只是终点，线才不会先绕到无关高度再折回。
+          const progress = (k - ci) / (cj - ci);
+          const crossY = pickCrossingY(k, y1, y2, progress, colR + gapR / 2);
+
+          // 竖直挪到穿越高度，再横穿本列到右侧通道
+          const crossY2 = reserveHorizontal(colR + gapR / 2, crossY, CLEAR_STEP);
+          pts.push(`V ${round2(crossY2)}`);
+          pts.push(`H ${round2(colR + gapR / 2)}`);
+        }
+
+        // 最后一段：在目标列左侧通道里竖直对齐，再进入目标
+        const center = channelBetween(cj - 1, cj);
+        const gap = Math.max(
+          0,
+          (columnBounds[cj]?.left ?? x2) - (columnBounds[cj - 1]?.right ?? x1),
+        );
+        laneKey = Math.round(center);
+        const used = laneCount.get(laneKey) ?? 0;
+        laneCount.set(laneKey, used + 1);
+        const laneX = center + laneOffset(gap, used);
+
+        /**
+         * 在通道里竖直对齐到目标高度。
+         *
+         * 这段竖线的 x 由 `laneOffset` 决定，而 `laneOffset` 只保证
+         * **同一条通道内**不同车道不撞；跨列连线与相邻列连线现在共用
+         * 同一套 `laneCount`，所以这里不会再落到别人用过的 x 上
+         * （基线上曾出现 74px 的竖直重叠，就是两套计数各自从 0 开始）。
+         */
+        const alignY = reserveHorizontal(center, y2, CLEAR_STEP);
+        pts.push(`H ${round2(laneX)}`);
+        pts.push(`V ${round2(alignY)}`);
+
+        // 进入目标卡片。指向同一张卡左边中点的收敛段天然会重合
+        // （例如 `F-LSF→F-QUAL` 与 `F-WSF→F-QUAL` 都落到 cy 296.99），
+        // 这是规则决定的必经汇聚，无法在进入处分开；登记占用是为了
+        // 别再叠上第三条无关的横线。
+        reserveHorizontal(x2, alignY, CLEAR_STEP);
+        pts.push(`H ${round2(x2)}`);
+        d = dedupe(pts).join(' ');
       } else {
-        d = buildConnectorPath(x1, y1, x2, y2, used);
+        /**
+         * 相邻列连线：竖段走两列正中间的通道，并**登记横线占用**。
+         *
+         * `buildConnectorPath` 只负责竖段分车道；同高度的两条横线
+         * （例如 `F-L1A→F-L2A` 与另一条恰好同高的线）仍会重叠，
+         * 因此这里显式登记起止高度。
+         */
+        const center = channelBetween(ci ?? 0, cj ?? 0);
+        laneKey = Math.round(center);
+        const used = laneCount.get(laneKey) ?? 0;
+        laneCount.set(laneKey, used + 1);
+
+        if (Math.abs(y2 - y1) < 0.5 && x2 > x1) {
+          // 同一行直连：整条都是横线，必须独占一个高度
+          const y = reserveHorizontal(center, y1, CLEAR_STEP);
+          d = `M ${round2(x1)} ${round2(y)} H ${round2(x2)}`;
+        } else {
+          const fromY = reserveHorizontal(center, y1, CLEAR_STEP);
+          const toY = reserveHorizontal(center, y2, CLEAR_STEP);
+          d = buildConnectorPath(x1, fromY, x2, toY, used);
+        }
       }
 
       out.push({ key: `${conn.fromId}->${conn.toId}-${conn.via}`, d, via: conn.via });
