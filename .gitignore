@@ -37,3 +37,5 @@ npm-debug.log*
 #   data/event.json          正式输入数据
 #   public/data/event.json   构建产物，但保留可让 Pages 直接查看（由 CI 重新生成）
 #   docs/acceptance/         验收记录与截图
+# 临时文件
+.tmp*
