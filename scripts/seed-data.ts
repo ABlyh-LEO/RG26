@@ -109,35 +109,40 @@ export function buildTeams(): Team[] {
  * ------------------------------------------------------------------ */
 
 /**
- * 场地结构（据用户说明）：
+ * 场地结构（据用户确认）：
  * - **主舞台**：所有两两对抗都在这里 —— 瑞士轮 33 场、决赛全部 BO1/BO3。
- * - **A / B 副场地**：仅排位赛使用，两块并行跑图；
+ * - **副场地A / 副场地B**：仅排位赛使用，两块并行跑图；
  *   每队两轮各用一个不同的场地（第 1 轮奇数名→A、偶数名→B，第 2 轮互换）。
+ *
+ * 三个名称均已于 2026-10-01 由用户确认，**不再是暂定名称**
+ * （provisionalName: false），校验不再对它们输出提示。
  */
 export const VENUE_MAIN = 'venue-main';
 export const VENUE_A = 'venue-a';
 export const VENUE_B = 'venue-b';
 
+export const VENUE_LABEL_MAIN = '主舞台';
+export const VENUE_LABEL_A = '副场地A';
+export const VENUE_LABEL_B = '副场地B';
+
 export function buildVenues(): Venue[] {
   return [
     {
       id: VENUE_MAIN,
-      label: '主舞台',
-      // 名称已由用户确认沿用（2026-10-01）。保留 provisionalName 是因为
-      // 组委会仍可能给出正式名称，届时改 label 即可。
-      provisionalName: true,
+      label: VENUE_LABEL_MAIN,
+      provisionalName: false,
       note: '对抗类比赛（瑞士轮、决赛）场地',
     },
     {
       id: VENUE_A,
-      label: 'A 副场地',
-      provisionalName: true,
+      label: VENUE_LABEL_A,
+      provisionalName: false,
       note: '仅排位赛跑图使用',
     },
     {
       id: VENUE_B,
-      label: 'B 副场地',
-      provisionalName: true,
+      label: VENUE_LABEL_B,
+      provisionalName: false,
       note: '仅排位赛跑图使用',
     },
   ];

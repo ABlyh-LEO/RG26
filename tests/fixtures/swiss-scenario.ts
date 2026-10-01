@@ -31,8 +31,8 @@ export function makeTeams(count = TEST_TEAM_COUNT): Team[] {
 }
 
 export const TEST_VENUES: Venue[] = [
-  { id: 'venue-a', label: 'A 场地', provisionalName: true, note: null },
-  { id: 'venue-b', label: 'B 场地', provisionalName: true, note: null },
+  { id: 'venue-a', label: '副场地A', provisionalName: false, note: null },
+  { id: 'venue-b', label: '副场地B', provisionalName: false, note: null },
 ];
 
 /** 队伍 ID 简写：t1..t16。 */

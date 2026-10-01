@@ -8,6 +8,8 @@ import {
   buildConnectorPath,
   computeColumnLayout,
   isTreeConnection,
+  laneOffset,
+  MAX_LANES,
   resolveDensity,
   showsSecondaryInfo,
   type LayoutColumn,
@@ -364,5 +366,45 @@ describe('纵向分段（band）', () => {
     const r = layout(columns, []);
     expect(r.totalHeight).toBe(r.columnOffsets.b! + r.columnHeights.b!);
     expect(r.totalHeight).toBeGreaterThan(0);
+  });
+});
+
+describe('连线的车道分配', () => {
+  it('车道 0 走通道中线', () => {
+    expect(laneOffset(44, 0)).toBe(0);
+  });
+
+  it('任意两条车道的偏移都不相同（否则会重叠成一条线）', () => {
+    const span = 44;
+    const offsets = Array.from({ length: MAX_LANES }, (_, i) => laneOffset(span, i));
+    const uniq = new Set(offsets.map((v) => v.toFixed(3)));
+    expect(uniq.size, `车道偏移出现重复：${offsets.join(', ')}`).toBe(offsets.length);
+  });
+
+  it('车道偏移始终留在通道内，不侵入两侧卡片', () => {
+    const span = 44;
+    for (let lane = 0; lane < MAX_LANES; lane += 1) {
+      expect(Math.abs(laneOffset(span, lane))).toBeLessThanOrEqual(span / 2);
+    }
+  });
+
+  it('同一通道里多条线的转折 x 互不相同', () => {
+    const [x1, x2] = [0, 44];
+    const xs = Array.from({ length: MAX_LANES }, (_, lane) =>
+      buildConnectorPath(x1, 0, x2, 50, lane).match(/H ([\d.]+) V/)![1],
+    );
+    expect(new Set(xs).size).toBe(MAX_LANES);
+  });
+
+  it('同一行的两个节点走直线，不做折线', () => {
+    const d = buildConnectorPath(0, 50, 100, 50);
+    expect(d).toBe('M 0 50 H 100');
+    expect(d).not.toContain('V');
+  });
+
+  it('通道过窄时不产生 NaN，车道退化为中线', () => {
+    const d = buildConnectorPath(0, 0, 10, 50, 3);
+    expect(d).not.toContain('NaN');
+    expect(d.startsWith('M 0 0')).toBe(true);
   });
 });

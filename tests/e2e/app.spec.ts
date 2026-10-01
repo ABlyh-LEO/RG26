@@ -84,18 +84,18 @@ test.describe('13.2 用户流程', () => {
     expect(whole, '赛程不应出现 Invalid Date').not.toContain('Invalid Date');
     expect(whole, '赛程不应显示内部 ID').not.toMatch(/qual-r\d+-rank\d+/);
     // 副场地名称应出现在时间线中
-    expect(whole).toContain('A 副场地');
-    expect(whole).toContain('B 副场地');
+    expect(whole).toContain('副场地A');
+    expect(whole).toContain('副场地B');
   });
 
-  test('2c. 排位赛只在 A/B 副场地，对抗类比赛在主舞台', async ({ page }) => {
+  test('2c. 排位赛只在副场地A/B，对抗类比赛在主舞台', async ({ page }) => {
     // 只看时间线卡片，避开场地筛选按钮（那里会列出全部场地名）
     await goto(page, '/schedule?date=2026-10-03&stage=qualification');
     await waitForData(page);
     const cards = page.locator('.main .card');
     const qualText = (await cards.allInnerTexts()).join('\n');
-    expect(qualText).toContain('A 副场地');
-    expect(qualText).toContain('B 副场地');
+    expect(qualText).toContain('副场地A');
+    expect(qualText).toContain('副场地B');
     expect(qualText, '排位赛时间线不应出现主舞台').not.toContain('主舞台');
 
     await goto(page, '/schedule?date=2026-10-03&stage=swiss');
@@ -306,11 +306,12 @@ test.describe('13.4 列式赛程图', () => {
 
     const stats = await bracketStats(page);
 
-    // 6 列：败者组首轮 / 胜者组 / 败者组第二轮 / 半决赛 / 名额争夺战 / 总决赛
-    expect(stats.columns).toBe(6);
+    // 5 列：八强赛 / 败者组第二轮 / 半决赛 / 名额争夺战 / 总决赛
+    // 八强首轮四场必须在**同一列**：胜者组与败者组交叉向前喂给败者组第二轮，
+    // 拆成两列会让四条连线各横穿一整列无关卡片。
+    expect(stats.columns).toBe(5);
     expect(stats.columnTitles).toEqual([
-      '八强·败者组首轮',
-      '八强·胜者组',
+      '八强赛',
       '败者组第二轮',
       '半决赛',
       '名额争夺战',
@@ -333,6 +334,34 @@ test.describe('13.4 列式赛程图', () => {
     }
   });
 
+  test('连线不重叠：每条竖直转折各自占一条车道', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/progress?view=finals&mode=bracket');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+
+    const verticals = await page.evaluate(() => {
+      const xs: number[] = [];
+      document.querySelectorAll('.bracket__link').forEach((p) => {
+        const m = (p.getAttribute('d') ?? '').match(/^M [\d.]+ [\d.]+ H ([\d.]+) V /);
+        if (m) xs.push(Math.round(Number(m[1])));
+      });
+      return xs;
+    });
+
+    expect(verticals.length).toBeGreaterThan(0);
+
+    // 同一条通道里的多条线若共用同一个 x，会重叠成一条，
+    // 看起来就像"少了几条线、连错了地方"
+    const counts = new Map<number, number>();
+    for (const x of verticals) counts.set(x, (counts.get(x) ?? 0) + 1);
+    const overlapped = [...counts.entries()].filter(([, n]) => n > 1);
+    expect(
+      overlapped,
+      `这些 x 上有重叠的竖直线段：${JSON.stringify(overlapped)}`,
+    ).toHaveLength(0);
+  });
+
   test('完整晋级图是瑞士轮→决赛一条线', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=journey');
@@ -341,16 +370,15 @@ test.describe('13.4 列式赛程图', () => {
 
     const stats = await bracketStats(page);
 
-    // 瑞士轮 5 列 + 决赛 6 列，共 11 列
-    expect(stats.columns).toBe(11);
+    // 瑞士轮 5 列 + 决赛 5 列，共 10 列
+    expect(stats.columns).toBe(10);
     expect(stats.columnTitles).toEqual([
       'R1',
       'R2',
       'R3',
       'R4',
       'R5',
-      '八强·败者组首轮',
-      '八强·胜者组',
+      '八强赛',
       '败者组第二轮',
       '半决赛',
       '名额争夺战',
@@ -380,7 +408,8 @@ test.describe('13.4 列式赛程图', () => {
       })),
     );
 
-    expect(cols).toHaveLength(11);
+    // 瑞士轮 5 列 + 决赛 5 列
+    expect(cols).toHaveLength(10);
     // 所有列 top 相同 —— 同一条纵向带，不上下错开
     expect([...new Set(cols.map((c) => c.top))]).toEqual([0]);
 

@@ -271,20 +271,65 @@ function pickAdjacentPair(sorted: string[], centers: Record<string, number>): st
  * 生成 SVG 连线路径。
  *
  * 起点为 from 的右边缘中点，终点为 to 的左边缘中点。
- * 横向间距足够时走直角折线（H-V-H），否则用三次贝塞尔平滑过渡。
+ *
+ * 三种走法：
+ * 1. **同一行**（y1 ≈ y2）→ 一条直线。折线在这里会画出一个无意义的
+ *    上下抖动，看起来像连错了。
+ * 2. **相邻列**（间距 ≥ 12px）→ 直角折线 H-V-H，拐点在两列正中间的通道里。
+ * 3. **间距过窄或反向** → 三次贝塞尔平滑过渡，避免出现尖锐回头。
+ *
+ * 拐点用 `midX` 而不是贴近某一侧，是为了让上下相邻的线在通道内
+ * 尽量分离；如果多条线共用同一个 midX，它们会在同一竖直线上重叠成一条，
+ * 看起来就像"少了几条线"。
  */
 export function buildConnectorPath(
   x1: number,
   y1: number,
   x2: number,
   y2: number,
+  /** 同一条通道内的车道号（0 起）。多条线共用一个 midX 时会重叠成一条。 */
+  lane = 0,
 ): string {
+  // 同一行：直接连通，不要折线
+  if (Math.abs(y2 - y1) < 0.5 && x2 > x1) {
+    return `M ${x1} ${y1} H ${x2}`;
+  }
+
   if (x2 > x1 + 8) {
-    const midX = (x1 + x2) / 2;
+    const midX = (x1 + x2) / 2 + laneOffset(x2 - x1, lane);
     return `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
   }
+
   // 反向或重叠：用曲线避免出现尖锐回头
   return `M ${x1} ${y1} C ${x1 + 24} ${y1}, ${x2 - 24} ${y2}, ${x2} ${y2}`;
+}
+
+/** 一条通道里最多容纳的车道数。 */
+export const MAX_LANES = 6;
+
+/**
+ * 车道在通道内的横向偏移（相对通道中线）。
+ *
+ * 同一段间隙里往往有多条线竖直穿过（八强赛 → 半决赛有 5 条）。
+ * 如果它们都走同一条中线，就会**重叠成一条**，看起来像"少了几条线、
+ * 连错了地方"。这里给每条线一个互不相同的偏移。
+ *
+ * 两个容易踩的坑：
+ * 1. `min(lane * step, span/2)` —— 后面的车道会被同一个上限夹到同一 x，
+ *    重新叠在一起。
+ * 2. `lane % 2` 的左右交替 —— 车道 1 与 3 会落在同一侧同一 offset 上。
+ *
+ * 因此用**严格单调**的铺开：车道 0 在中线，之后左右交替且距离递增。
+ */
+export function laneOffset(span: number, lane: number): number {
+  if (lane <= 0) return 0;
+  const usable = Math.max(0, span - 12);
+  const step = usable / (MAX_LANES + 1);
+  if (step <= 0) return 0;
+  const slot = Math.min(lane, MAX_LANES);
+  const rank = Math.ceil(slot / 2);
+  const sign = slot % 2 === 1 ? 1 : -1;
+  return sign * Math.min(rank * step, usable / 2);
 }
 
 /**

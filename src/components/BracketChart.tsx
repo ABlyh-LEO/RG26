@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import {
   buildConnectorPath,
   computeColumnLayout,
+  laneOffset,
   resolveDensity,
   showsSecondaryInfo,
   type LayoutColumn,
@@ -55,7 +56,12 @@ export interface BracketChartProps {
   legend?: ReactNode;
 }
 
-const GAP = 12;
+/**
+ * 列间距。连线走的是列与列之间的**通道**，因此这个值不能太小：
+ * 12px 时折线的竖直段几乎贴在卡片边缘，上下相邻的线会挤在一起，
+ * 看起来像一团乱麻。44px 让拐点通道足够宽，连线清晰可读。
+ */
+const GAP = 44;
 const SECTION_GAP = 20;
 const FALLBACK_HEIGHT = 84;
 
@@ -187,6 +193,23 @@ export function BracketChart({
     });
 
     const out: { key: string; d: string; via: 'winner' | 'loser' }[] = [];
+
+    /** 每个节点所属的列序号，用来判断连线是否跨列。 */
+    const columnOfNode = new Map<string, number>();
+    columns.forEach((col, ci) => {
+      for (const n of col.nodes) columnOfNode.set(n.id, ci);
+    });
+
+    /**
+     * 列间通道要**分车道**。
+     *
+     * 同一段间隙里往往有多条线竖直穿过（八强赛→半决赛有 5 条）。
+     * 如果它们都走同一个 x，就会重叠成一条，看起来像"少了几条线、
+     * 连错了地方"。这里按竖直段的行进方向给每条线一个独立偏移，
+     * 让它们在通道内并排。
+     */
+    const laneCount = new Map<number, number>();
+
     for (const conn of connections) {
       const fromEl = nodeEls.get(conn.fromId);
       const toEl = nodeEls.get(conn.toId);
@@ -198,12 +221,39 @@ export function BracketChart({
       const x2 = t.left - boardRect.left + board.scrollLeft;
       const y2 = t.top + t.height / 2 - boardRect.top + board.scrollTop;
       if (![x1, y1, x2, y2].every(Number.isFinite)) continue;
-      out.push({ key: `${conn.fromId}->${conn.toId}-${conn.via}`, d: buildConnectorPath(x1, y1, x2, y2), via: conn.via });
+
+      const ci = columnOfNode.get(conn.fromId);
+      const cj = columnOfNode.get(conn.toId);
+      const spansColumns = ci !== undefined && cj !== undefined && cj - ci > 1;
+
+      /**
+       * 跨列连线（胜者组一路直通半决赛/总决赛，跳过败者组的列）走**列间通道**，
+       * 不要横穿中间那一列的卡片：
+       * 起点先水平走一小段进入通道，再竖直移动，最后水平进入目标。
+       *
+       * 车道与相邻列共用同一套 offset 公式（见 buildConnectorPath），
+       * 否则两套方案会在 x=212 附近撞到同一个位置。
+       */
+      let d: string;
+      const laneKey = Math.round(x1);
+      const used = laneCount.get(laneKey) ?? 0;
+      laneCount.set(laneKey, used + 1);
+
+      if (spansColumns) {
+        // 通道就是本列右侧那段间隙：x1 → x1 + GAP。
+        // 与相邻列共用 laneOffset，否则两套方案会在同一 x 上撞车。
+        const laneX = x1 + GAP / 2 + laneOffset(GAP, used);
+        d = `M ${x1} ${y1} H ${laneX} V ${y2} H ${x2}`;
+      } else {
+        d = buildConnectorPath(x1, y1, x2, y2, used);
+      }
+
+      out.push({ key: `${conn.fromId}->${conn.toId}-${conn.via}`, d, via: conn.via });
     }
     return out;
     // 依赖的是已经应用到 DOM 上的 top/left 与实测高度：位置变化必须重算。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connections, heights, columnWidth]);
+  }, [connections, heights, columnWidth, columns]);
 
   const maxHeight = Math.max(
     ...columns.map((c) => (layout.columnOffsets[c.key] ?? 0) + (layout.columnHeights[c.key] ?? 0)),

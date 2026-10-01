@@ -275,14 +275,14 @@ describe('未公布轮次的槽位必须是 pending，不能编造具体对阵',
   });
 });
 
-describe('场地结构：主舞台 + A/B 副场地', () => {  it('数据里恰好三个场地，且区分主舞台与副场地', () => {
+describe('场地结构：主舞台 + 副场地A/B', () => {  it('数据里恰好三个场地，且区分主舞台与副场地', () => {
     expect(EVENT.venues).toHaveLength(3);
     const main = EVENT.venues.find((v) => v.id === 'venue-main');
     const a = EVENT.venues.find((v) => v.id === 'venue-a');
     const b = EVENT.venues.find((v) => v.id === 'venue-b');
     expect(main?.label).toBe('主舞台');
-    expect(a?.label).toBe('A 副场地');
-    expect(b?.label).toBe('B 副场地');
+    expect(a?.label).toBe('副场地A');
+    expect(b?.label).toBe('副场地B');
   });
 
   it('排位赛只在 A/B 副场地进行，从不使用主舞台', () => {

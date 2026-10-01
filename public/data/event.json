@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "bd4f573958739eecf151e96f112fca72",
-  "builtAt": "2026-10-01T10:58:09.630Z",
-  "sourceCommit": "4ccf950d958c876f468025e743ac6362788db95b",
+  "revision": "94e779c65d691cde1e038db687899424",
+  "builtAt": "2026-10-01T11:16:05.880Z",
+  "sourceCommit": "2e87918d5992443ddb365cf11edd0ae63b393033",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-01T09:48:35.714Z",
+      "contentUpdatedAt": "2026-10-01T11:06:38.207Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -259,19 +259,19 @@
       {
         "id": "venue-main",
         "label": "主舞台",
-        "provisionalName": true,
+        "provisionalName": false,
         "note": "对抗类比赛（瑞士轮、决赛）场地"
       },
       {
         "id": "venue-a",
-        "label": "A 副场地",
-        "provisionalName": true,
+        "label": "副场地A",
+        "provisionalName": false,
         "note": "仅排位赛跑图使用"
       },
       {
         "id": "venue-b",
-        "label": "B 副场地",
-        "provisionalName": true,
+        "label": "副场地B",
+        "provisionalName": false,
         "note": "仅排位赛跑图使用"
       }
     ],
@@ -3889,7 +3889,7 @@
     "notices": [
       {
         "id": "notice-times-are-reference",
-        "at": "2026-10-01T09:48:35.714Z",
+        "at": "2026-10-01T11:06:38.207Z",
         "title": "时间仅供参考",
         "body": "本页时间来自赛前计划表。当天以赛程组共享文档的安排为准，现场调整会在此处公告。",
         "severity": "info"
