@@ -62,6 +62,45 @@ function git(args: string[]): { code: number; out: string } {
   return { code: r.status ?? 1, out: `${r.stdout ?? ''}${r.stderr ?? ''}`.trim() };
 }
 
+/**
+ * 推送，带"代理 / 直连"双路径自动回退。
+ *
+ * 实测这台机器上代理（127.0.0.1:7890）与直连**都会偶发**
+ * `SSL_ERROR_SYSCALL`，任一单独路径都可能连续失败。
+ * 因此两条路径轮流尝试，任一成功即返回。
+ */
+function tryPush(): boolean {
+  const proxy = git(['config', '--get', 'http.proxy']).out;
+  // 每条路径尝试 3 轮，每轮之间等 3 秒
+  const paths: { label: string; args: string[] }[] = [];
+  if (proxy) {
+    paths.push({ label: `代理 ${proxy}`, args: [] });
+    paths.push({ label: '直连', args: ['-c', 'http.proxy=', '-c', 'https.proxy='] });
+  } else {
+    paths.push({ label: '直连', args: [] });
+  }
+
+  for (let round = 1; round <= 3; round += 1) {
+    for (const p of paths) {
+      const r = spawnSync('git', [...p.args, 'push', 'origin', 'HEAD'], {
+        cwd: ROOT,
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+      });
+      if ((r.status ?? 1) === 0) {
+        if (p.label !== paths[0]!.label) console.log(`  ${C.dim}（改用${p.label}成功）${C.reset}`);
+        return true;
+      }
+      console.log(`  ${C.yellow}${p.label}推送失败，换下一条路径…${C.reset}`);
+    }
+    if (round < 3) {
+      console.log(`  ${C.dim}第 ${round} 轮都失败，等 3 秒后重试…${C.reset}`);
+      spawnSync(process.platform === 'win32' ? 'timeout' : 'sleep', process.platform === 'win32' ? ['/t', '3', '/nobreak'] : ['3'], { shell: true });
+    }
+  }
+  return false;
+}
+
 function main(): void {
   const argv = process.argv.slice(2);
   const fileIdx = argv.indexOf('--file');
@@ -157,18 +196,7 @@ function main(): void {
     }
 
     step(5, TOTAL, '推送到 GitHub');
-    // 代理偶发 SSL 错误：自动重试最多 4 次
-    let pushed = false;
-    for (let i = 1; i <= 4; i += 1) {
-      if (run('git', ['push', 'origin', 'HEAD']) === 0) {
-        pushed = true;
-        break;
-      }
-      if (i < 4) {
-        console.log(`  ${C.yellow}第 ${i} 次推送失败（网络/代理），2 秒后重试…${C.reset}`);
-        spawnSync(process.platform === 'win32' ? 'timeout' : 'sleep', process.platform === 'win32' ? ['/t', '2', '/nobreak'] : ['2'], { shell: true });
-      }
-    }
+    const pushed = tryPush();
     if (!pushed) {
       if (existsSync(backup)) unlinkSync(backup);
       die(
