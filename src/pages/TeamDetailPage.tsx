@@ -440,24 +440,54 @@ function CompetitiveDetail({ journey }: { journey: NonNullable<ReturnType<typeof
       {journey.qualificationRuns.length > 0 ? (
         <div className="card">
           <div className="card__head">
-            <span className="card__title">排位赛跑图</span>
+            <span className="card__title">排位赛跑图（原始成绩）</span>
           </div>
-          <div className="stack stack--tight">
-            {journey.qualificationRuns
-              .sort((a, b) => a.round - b.round)
-              .map((run) => (
-                <div key={run.id} className="row" style={{ justifyContent: 'space-between' }}>
-                  <span className="small">
-                    第 {run.round} 轮 · {derived.venueLabels.get(run.venueId) ?? run.venueId}
-                  </span>
-                  <span className="row" style={{ gap: 'var(--sp-2)' }}>
-                    <span className="tabular small">
-                      {run.rawResult ?? run.score ?? '—'}
-                    </span>
-                    <ResultBadge status={run.resultStatus} />
-                  </span>
-                </div>
-              ))}
+          <p className="xsmall muted" style={{ marginTop: 0 }}>
+            两轮的原始成绩都列出。名次口径：积分高者优；积分相同时，到达最终分时间早者优。
+          </p>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th className="num">轮次</th>
+                  <th>场地</th>
+                  <th className="num">积分</th>
+                  <th className="num">到达最终分</th>
+                  <th>成绩原文</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...journey.qualificationRuns]
+                  .sort((a, b) => a.round - b.round)
+                  .map((run) => {
+                    const isBest = derived.qualification.bestByTeam.get(team.id) === run.round;
+                    return (
+                      <tr key={run.id}>
+                        <td className="num tabular">
+                          第 {run.round} 轮
+                          {isBest ? (
+                            <span className="badge badge--advanced" style={{ marginLeft: 6 }}>
+                              计入名次
+                            </span>
+                          ) : null}
+                        </td>
+                        <td>{derived.venueLabels.get(run.venueId) ?? run.venueId}</td>
+                        <td className="num tabular">{run.score ?? '—'}</td>
+                        <td className="num tabular">
+                          {run.elapsedSeconds !== null && run.elapsedSeconds !== ''
+                            ? `${run.elapsedSeconds} 秒`
+                            : '—'}
+                        </td>
+                        <td>{run.rawResult ?? '—'}</td>
+                        <td>
+                          <ResultBadge status={run.resultStatus} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
           </div>
         </div>
       ) : null}

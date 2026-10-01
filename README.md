@@ -28,7 +28,7 @@ npm run dev            # 启动观众站（http://127.0.0.1:5173）
 | --- | --- |
 | `npm ci` | 按锁文件安装依赖 |
 | `npm run dev` | 启动观众站开发服务器 |
-| `npm run operator` | 启动**本地维护工具**（127.0.0.1，仅本机） |
+| `npm run operator` | 启动**本地维护工具**（仅本机，入口 `http://127.0.0.1:5199/operator.html`） |
 | `npm run typecheck` | TypeScript 类型检查 |
 | `npm run lint` | ESLint |
 | `npm run test` | 领域单元测试（Vitest） |
@@ -52,6 +52,9 @@ git pull                                   # 1. 先同步
 npm run operator                           # 2. 打开维护工具录入，导出变更包
 npm run publish -- --file <导出文件> -m "说明"   # 3. 发布
 ```
+
+> `npm run operator` 会自动打开录入页 `http://127.0.0.1:5199/operator.html`。
+> **根地址 `http://127.0.0.1:5199/` 是只读的观众站**，上面没有录入表单。
 
 `publish` 会自动完成 **导入 → 校验 → 生成快照 → 提交 → 推送（失败自动重试）**，
 任一步失败都会**回滚** `data/event.json`，不会留下半成品。
@@ -118,8 +121,10 @@ RG26/
   窄屏横向滚动（设计参考见 [`docs/reference/rm-schedule-ui-notes.md`](docs/reference/rm-schedule-ui-notes.md)）
 - ✅ 队伍搜索、详情、本机关注、复制链接
 - ✅ 本地维护工具：录入、校验、预览、确认、导入导出、发布前检查
+- ✅ 排位赛：单场成绩更新后按「积分高者优，同分时用时短者优」**自动重排 1–22 名**，人工覆盖可选
+- ✅ 排位赛原始成绩（44 次跑图）与名次一起公开：排位赛页总表 + 队伍详情页各自两轮
 - ✅ GitHub Pages 工作流、数据更新提示、读取失败处理
-- ✅ 149 个领域测试 + 111 个端到端测试
+- ✅ 167 个领域测试 + 120 个端到端测试
 - ✅ 维护闭环集成演练（`npm run check:integration`）
 - ✅ **仓库子路径部署验证**（`npm run check:subpath`）
 

@@ -19,6 +19,7 @@ import {
   adjustSchedule,
   applyQualificationRanking,
   applyQualificationRun,
+  applyQualificationAutoRanking,
   confirmQualificationRuns,
   qualificationProgress,
   applyShowcaseDraw,
@@ -33,6 +34,7 @@ import {
 } from './draft';
 import type { ResultKind, Series, SwissMatch } from '../domain/schema';
 import { generateSwissPairings } from '../domain/swiss';
+import { computeQualificationRanking } from '../domain/qualification-ranking';
 
 type Tab = 'matches' | 'bo3' | 'qualification' | 'qualRuns' | 'rounds' | 'seeds' | 'showcase' | 'notices' | 'export';
 
@@ -808,17 +810,33 @@ function QualRunForm({
   const [elapsed, setElapsed] = useState(run.elapsedSeconds ?? '');
   const [judgeNote, setJudgeNote] = useState(run.judgeNote ?? '');
 
-  const submit = (confirm: boolean) =>
-    onApply(
-      applyQualificationRun(draft, {
-        runId: run.id,
-        rawResult,
-        score: score.trim() === '' ? null : score,
-        elapsedSeconds: elapsed.trim() === '' ? null : elapsed,
-        judgeNote: judgeNote.trim() === '' ? null : judgeNote.trim(),
-        confirm,
-      }),
-    );
+  /**
+   * 保存一条跑图成绩。
+   *
+   * `confirm` 为真时，保存后**自动重排名次** —— 这是本工具的核心行为：
+   * 单场成绩更新后名次立刻跟着变，不需要人工拉顺序。
+   * 只有「仅保存（待确认）」不触发，因为未确认成绩不该影响对外名次。
+   */
+  const submit = (confirm: boolean) => {
+    const saved = applyQualificationRun(draft, {
+      runId: run.id,
+      rawResult,
+      score: score.trim() === '' ? null : score,
+      elapsedSeconds: elapsed.trim() === '' ? null : elapsed,
+      judgeNote: judgeNote.trim() === '' ? null : judgeNote.trim(),
+      confirm,
+    });
+    if (!saved.ok || !confirm) {
+      onApply(saved);
+      return;
+    }
+    const reranked = applyQualificationAutoRanking(saved.event);
+    onApply({
+      event: reranked.event,
+      ok: true,
+      messages: ['已保存并确认成绩，名次已按「积分高者优，同分时用时短者优」自动重排。', ...reranked.messages],
+    });
+  };
 
   return (
     <div className="card operator-draft">
@@ -866,10 +884,12 @@ function QualRunForm({
         <input id="q-note" className="input" value={judgeNote} onChange={(e) => setJudgeNote(e.target.value)} />
       </div>
 
-      <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
-        <strong>重要：</strong>这两项只作记录，<strong>不参与自动排名</strong>。
-        原文未规定「两轮最优」的比较与同分规则，因此正式名次请在
-        「排位赛排名」页签人工录入裁判确认的 1–22 名。
+      <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }}>
+        <strong>排序口径</strong>
+        <div>积分高者优；积分相同时，到达最终分时间早者优。</div>
+        <div className="xsmall muted">
+          「两轮最优」按同一口径取。保存后名次会**自动重排**，无需手动拉顺序。
+        </div>
       </div>
 
       <div className="row">
@@ -911,6 +931,10 @@ function QualificationEntry({
   const [order, setOrder] = useState<string[]>(existing.length === competitive.length ? existing : []);
   const [sourceNote, setSourceNote] = useState(draft.qualification.ranking.sourceNote ?? '');
 
+  /** 由成绩实时推算的名次（口径：积分高者优，同分时用时短者优）。 */
+  const computed = useMemo(() => computeQualificationRanking(draft), [draft]);
+  const bestOf = (teamId: string) => computed.standings.find((s) => s.teamId === teamId)?.best ?? null;
+
   const move = (index: number, delta: number) => {
     const next = [...order];
     const target = index + delta;
@@ -923,75 +947,149 @@ function QualificationEntry({
     setOrder(next);
   };
 
-  if (order.length === 0) {
-    return (
-      <div className="card">
+  return (
+    <div className="stack">
+      <div className="card operator-draft">
         <div className="card__head">
-          <span className="card__title">排位赛最终排名</span>
+          <span className="card__title">按成绩自动推算的名次</span>
+          <span className="badge badge--info">积分高者优 · 同分时用时短者优</span>
         </div>
-        <p className="small muted">
-          录入裁判确认的 1–22 名最终排序。排名必须包含全部 22 支竞技组队伍且不重复。
-          不按积分、用时或三审排名自动排序。
+
+        <p className="small muted" style={{ marginTop: 0 }}>
+          这是由已确认成绩实时算出的名次。单场成绩更新后会自动重排，无需手动拉顺序。
         </p>
+
+        {computed.incompleteTeamIds.length > 0 ? (
+          <div className="operator-errors" style={{ marginBottom: 'var(--sp-2)' }}>
+            <strong>{computed.incompleteTeamIds.length} 支队伍暂无积分成绩，已排在榜尾：</strong>
+            <div className="xsmall" style={{ marginTop: 4 }}>
+              {computed.incompleteTeamIds
+                .map((id) => draft.teams.find((t) => t.id === id)?.name ?? id)
+                .join('、')}
+            </div>
+          </div>
+        ) : null}
+        {computed.tiedTeamIds.length > 0 ? (
+          <div className="operator-warnings" style={{ marginBottom: 'var(--sp-2)' }}>
+            积分与用时完全相同的并列，名次无法由数据区分，请人工复核：
+            {computed.tiedTeamIds
+              .map((id) => draft.teams.find((t) => t.id === id)?.name ?? id)
+              .join('、')}
+          </div>
+        ) : null}
+
+        <div className="table-wrap" style={{ maxHeight: '45vh', overflowY: 'auto' }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th className="num">名次</th>
+                <th>队伍</th>
+                <th className="num">最优积分</th>
+                <th className="num">用时(秒)</th>
+                <th>取自</th>
+                <th>成绩</th>
+              </tr>
+            </thead>
+            <tbody>
+              {computed.standings.map((s) => (
+                <tr key={s.teamId}>
+                  <td className="num tabular">{s.rank}</td>
+                  <td>
+                    {draft.teams.find((t) => t.id === s.teamId)?.name ?? s.teamId}
+                    {s.tiedWithPrevious ? <span className="badge badge--pending" style={{ marginLeft: 6 }}>并列</span> : null}
+                  </td>
+                  <td className="num tabular">{s.best?.score ?? '—'}</td>
+                  <td className="num tabular">{s.best?.elapsedSeconds ?? '—'}</td>
+                  <td className="xsmall">第 {s.best?.round ?? '—'} 轮</td>
+                  <td className="xsmall">{s.best?.label ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         <button
           type="button"
           className="btn btn--primary"
-          onClick={() => setOrder(competitive.map((t) => t.id))}
+          style={{ marginTop: 'var(--sp-3)' }}
+          onClick={() => onApply(applyQualificationAutoRanking(draft))}
         >
-          以当前顺序开始（三审顺序，需人工调整）
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="card operator-draft">
-      <div className="card__head">
-        <span className="card__title">排位赛最终排名（{order.length} 队）</span>
-        <button type="button" className="btn btn--small" onClick={() => setOrder([])}>
-          重置
+          采用这个名次并写入草稿
         </button>
       </div>
 
-      <div className="operator-list" style={{ maxHeight: '50vh' }}>
-        {order.map((teamId, i) => (
-          <div key={teamId} className="row" style={{ justifyContent: 'space-between', padding: 'var(--sp-1) 0' }}>
-            <span className="row" style={{ gap: 'var(--sp-2)' }}>
-              <strong className="tabular small" style={{ width: '2em' }}>
-                {i + 1}
-              </strong>
-              <span className="small">{draft.teams.find((t) => t.id === teamId)?.name ?? teamId}</span>
-            </span>
-            <span className="row" style={{ gap: 'var(--sp-1)' }}>
-              <button type="button" className="btn btn--small" onClick={() => move(i, -1)} aria-label="上移">
-                ↑
-              </button>
-              <button type="button" className="btn btn--small" onClick={() => move(i, 1)} aria-label="下移">
-                ↓
-              </button>
-            </span>
-          </div>
-        ))}
-      </div>
+      <div className="card operator-draft">
+        <div className="card__head">
+          <span className="card__title">人工覆盖（可选）</span>
+          {order.length > 0 ? <span className="badge badge--pending">已启用</span> : null}
+        </div>
+        <p className="xsmall muted" style={{ marginTop: 0 }}>
+          仅当自动名次无法表达组委会决定时使用（例如并列需指定先后）。
+          排名必须包含全部 {competitive.length} 支竞技组队伍且不重复。
+        </p>
 
-      <div className="operator-field" style={{ marginTop: 'var(--sp-3)' }}>
-        <label htmlFor="qual-source">来源说明</label>
-        <input
-          id="qual-source"
-          className="input"
-          value={sourceNote}
-          onChange={(e) => setSourceNote(e.target.value)}
-          placeholder="例如：裁判组核分表"
-        />
-      </div>
+        {order.length === 0 ? (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setOrder(computed.standings.map((s) => s.teamId))}
+          >
+            以自动名次为起点，手动微调
+          </button>
+        ) : (
+          <>
+            <div className="operator-list" style={{ maxHeight: '50vh' }}>
+              {order.map((teamId, i) => (
+                <div key={teamId} className="row" style={{ justifyContent: 'space-between', padding: 'var(--sp-1) 0' }}>
+                  <span className="row" style={{ gap: 'var(--sp-2)' }}>
+                    <strong className="tabular small" style={{ width: '2em' }}>
+                      {i + 1}
+                    </strong>
+                    <span className="small">{draft.teams.find((t) => t.id === teamId)?.name ?? teamId}</span>
+                    <span className="xsmall muted">
+                      {bestOf(teamId)?.score ?? '—'} 分 / {bestOf(teamId)?.elapsedSeconds ?? '—'} 秒
+                    </span>
+                  </span>
+                  <span className="row" style={{ gap: 'var(--sp-1)' }}>
+                    <button type="button" className="btn btn--small" onClick={() => move(i, -1)} aria-label="上移">
+                      ↑
+                    </button>
+                    <button type="button" className="btn btn--small" onClick={() => move(i, 1)} aria-label="下移">
+                      ↓
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
 
-      <button
-        type="button"
-        className="btn btn--primary"
-        onClick={() => onApply(applyQualificationRanking(draft, order, sourceNote.trim() === '' ? null : sourceNote.trim()))}
-      >
-        确认排名并写入草稿
-      </button>
+            <div className="operator-field" style={{ marginTop: 'var(--sp-3)' }}>
+              <label htmlFor="qual-source">来源说明</label>
+              <input
+                id="qual-source"
+                className="input"
+                value={sourceNote}
+                onChange={(e) => setSourceNote(e.target.value)}
+                placeholder="例如：裁判组核分表"
+              />
+            </div>
+
+            <div className="row">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() =>
+                  onApply(applyQualificationRanking(draft, order, sourceNote.trim() === '' ? null : sourceNote.trim()))
+                }
+              >
+                确认人工名次并写入草稿
+              </button>
+              <button type="button" className="btn" onClick={() => setOrder([])}>
+                取消人工覆盖
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -1459,23 +1557,46 @@ function ExportPanel({
         <div className="card__head">
           <span className="card__title">接下来的发布步骤</span>
         </div>
-        <ol className="small" style={{ paddingLeft: '1.2em', margin: 0 }}>
+        {/*
+          这里必须与 docs/OPERATOR_GUIDE.md §9 一致：一条命令发布。
+          早先这里写的是手动 5 步（import → validate → build → commit → push），
+          手册与 README 早已改成 `npm run publish`，但屏幕上的字没跟着改，
+          照着做的人会退回手动流程 —— 那正是本页最容易误导人的地方。
+        */}
+        <p className="small" style={{ marginTop: 0 }}>
+          保存变更包后，在终端运行**一条命令**即可发布：
+        </p>
+        <pre
+          className="small"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            background: 'var(--surface-2)',
+            padding: 'var(--sp-2)',
+            borderRadius: 6,
+            overflowX: 'auto',
+            margin: 'var(--sp-2) 0',
+          }}
+        >
+          npm run publish -- --file &lt;导出文件路径&gt; -m &quot;说明&quot;
+        </pre>
+        <p className="xsmall muted" style={{ marginTop: 0 }}>
+          它会自动完成：导入 → 校验 → 生成公开快照 → 提交 → 推送（失败自动重试）。
+          任何一步失败都会回滚 <code>data/event.json</code>，不会留下半成品。
+        </p>
+        <ul className="xsmall muted" style={{ paddingLeft: '1.2em', margin: 'var(--sp-2) 0 0' }}>
           <li>
-            保存变更包后，在终端运行：
-            <br />
-            <code>npm run data:import -- --file &lt;导出文件路径&gt;</code>
+            先预览不提交：加 <code>--dry-run</code>
           </li>
           <li>
-            运行 <code>npm run validate:data</code> 复核。
+            只提交不推送：加 <code>--no-push</code>
           </li>
           <li>
-            运行 <code>npm run data:build</code> 生成公开快照并本地预览。
+            想手动分步执行：见 <code>docs/OPERATOR_GUIDE.md</code> §9.6
           </li>
-          <li>提交 data/event.json，提交信息说明轮次或更正原因，推送到发布分支。</li>
-          <li>等待 Actions 部署成功，在公开页面核对 revision 与结果。</li>
-        </ol>
-        <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
-          注意：导入完成、commit 成功、push 成功都不等于观众已经看到更新。
+        </ul>
+        <p className="xsmall" style={{ marginTop: 'var(--sp-3)', color: 'var(--pending)' }}>
+          注意：push 成功 ≠ 观众已看到。请到 Actions 等部署变绿，
+          并打开公开站点确认「数据更新时间」已变化。
         </p>
       </div>
     </div>

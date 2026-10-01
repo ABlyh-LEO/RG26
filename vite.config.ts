@@ -34,6 +34,17 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '127.0.0.1',
       port: isOperator ? 5199 : 5173,
+      /**
+       * 维护模式下**必须直接打开 `/operator.html`**。
+       *
+       * Vite 只会把根 URL 当成 "Local" 打印出来，而维护模式的根 URL
+       * 是**只读的观众站**（index.html），录入页在独立的 operator.html
+       * 入口里。不指定 open 的话，跑 `npm run operator` 的人看到的
+       * 是一个没有任何录入表单的公开页面，会以为维护工具坏了。
+       *
+       * 见 docs/OPERATOR_GUIDE.md §1。
+       */
+      open: isOperator ? '/operator.html' : undefined,
     },
     preview: {
       host: '127.0.0.1',

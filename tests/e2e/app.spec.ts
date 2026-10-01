@@ -88,6 +88,57 @@ test.describe('13.2 用户流程', () => {
     expect(whole).toContain('副场地B');
   });
 
+  test('2d. 排位赛原始成绩公开，且名次口径写明', async ({ page }) => {
+    await goto(page, '/progress?view=qualification');
+    await waitForData(page);
+
+    // 名次口径必须写在页面上，不能让观众猜（与规则页一致）
+    const body = await page.locator('body').innerText();
+    expect(body).toContain('积分高者优');
+    expect(body).toContain('到达最终分时间早者优');
+
+    /*
+     * 原始成绩表本身：种子数据里 44 条跑图全部未录入（resultStatus=none），
+     * 此时页面正确地显示「尚未比赛」空状态，表格不会渲染。
+     * 因此这里断言**两种合法形态之一**，而不是硬要求表格存在：
+     *   - 有成绩 → 表格出现，且必须带全部可比列；
+     *   - 无成绩 → 明确的空状态。
+     * 表格的列结构由 2e（队伍详情页，表格必然渲染）覆盖。
+     */
+    const hasTable = await page.getByRole('table').filter({ hasText: '到达最终分' }).count();
+    if (hasTable > 0) {
+      const head = await page
+        .getByRole('table')
+        .filter({ hasText: '到达最终分' })
+        .first()
+        .locator('thead')
+        .innerText();
+      for (const col of ['队伍', '轮次', '场地', '积分', '到达最终分', '成绩原文', '状态']) {
+        expect(head, `原始成绩表缺少「${col}」列`).toContain(col);
+      }
+    } else {
+      await expect(page.getByText('尚未比赛')).toBeVisible();
+      await expect(page.getByText('跑图记录（原始成绩）')).toBeVisible();
+    }
+  });
+
+  test('2e. 队伍详情页展示该队两轮原始成绩', async ({ page }) => {
+    await goto(page, '/teams/competitive-18');
+    await waitForData(page);
+
+    // 该队两轮跑图记录必须公开，且带可比字段（观众能看到名次是怎么来的）
+    await expect(page.getByText('排位赛跑图（原始成绩）')).toBeVisible();
+    const table = page.getByRole('table').filter({ hasText: '到达最终分' });
+    await expect(table).toBeVisible();
+
+    const head = await table.locator('thead').innerText();
+    for (const col of ['轮次', '场地', '积分', '到达最终分', '成绩原文', '状态']) {
+      expect(head, `原始成绩表缺少「${col}」列`).toContain(col);
+    }
+    const rows = await table.locator('tbody tr').count();
+    expect(rows, '应列出该队两轮跑图记录').toBe(2);
+  });
+
   test('2c. 排位赛只在副场地A/B，对抗类比赛在主舞台', async ({ page }) => {
     // 只看时间线卡片，避开场地筛选按钮（那里会列出全部场地名）
     await goto(page, '/schedule?date=2026-10-03&stage=qualification');
@@ -160,8 +211,11 @@ test.describe('13.2 用户流程', () => {
     await expect(page.getByText(/min\(s_k, 16\)/)).toBeVisible();
     // 时间权威性声明
     await expect(page.getByText(/仅供参考/)).toBeVisible();
-    // 已知未明确项
-    await expect(page.getByText(/以下内容原文未明确/)).toBeVisible();
+    // 排位赛名次口径已由组委会确认，规则页必须写明确（不能还写"未明确"）
+    await expect(page.getByText(/积分高者优/)).toBeVisible();
+    await expect(page.getByText(/到达最终分时间早者优/)).toBeVisible();
+    // 仍然存在的已知未明确项
+    await expect(page.getByText(/以下内容原文仍未明确/)).toBeVisible();
   });
 
   test('7. 数据元信息区分"数据更新时间"与"最近成功检查时间"', async ({ page }) => {

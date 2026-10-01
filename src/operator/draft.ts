@@ -12,6 +12,7 @@ import type {
 } from '../domain/schema';
 import { calculateSwissStandings } from '../domain/standings';
 import { generateSwissPairings, proposalToMatchSkeletons, ROUND_GROUP_ORDER } from '../domain/swiss';
+import { computeQualificationRanking } from '../domain/qualification-ranking';
 import { validateEvent } from '../domain/validation';
 import { qualifiedTeamIds } from '../data/view-model';
 import { ONE_HALF, mul, THREE_FIFTHS } from '../domain/rational';
@@ -353,6 +354,72 @@ export function qualificationProgress(event: EventFile): {
 /* ------------------------------------------------------------------ *
  * 排位赛
  * ------------------------------------------------------------------ */
+
+/**
+ * 按「积分高者优，同分时到达最终分时间早者优」自动重排排位赛 1–22 名。
+ *
+ * 口径由组委会确认，见 `domain/qualification-ranking.ts`。
+ *
+ * 与 `applyQualificationRanking` 的区别：
+ * - 本函数**从成绩推算**名次，用于单场成绩更新后自动重排；
+ * - `applyQualificationRanking` 是**人工覆盖**，用于数据无法区分的并列
+ *   （积分与用时完全相同）或组委会特批的调整。
+ *
+ * 存在并列或成绩不全时依然写入，但会在 messages 里明确提示需人工复核，
+ * 绝不假装名次已经确定。
+ */
+export function applyQualificationAutoRanking(event: EventFile): ApplyResult {
+  const result = computeQualificationRanking(event);
+  const messages: string[] = [];
+
+  if (result.incompleteTeamIds.length > 0) {
+    const names = result.incompleteTeamIds
+      .map((id) => event.teams.find((t) => t.id === id)?.name ?? id)
+      .slice(0, 5);
+    messages.push(
+      `${result.incompleteTeamIds.length} 支队伍暂无积分成绩，已排在榜尾：${names.join('、')}${
+        result.incompleteTeamIds.length > names.length ? ' 等' : ''
+      }`,
+    );
+  }
+  if (result.partialTeamIds.length > 0) {
+    messages.push(`${result.partialTeamIds.length} 支队伍只录到一轮成绩，名次基于现有数据。`);
+  }
+  if (result.tiedTeamIds.length > 0) {
+    const names = result.tiedTeamIds
+      .map((id) => event.teams.find((t) => t.id === id)?.name ?? id)
+      .slice(0, 5);
+    messages.push(
+      `积分与用时完全相同的并列，名次无法由数据区分，请人工复核：${names.join('、')}`,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const orderedTeamIds = result.standings.map((s) => s.teamId);
+  const bestResultLabels = result.standings.map((s) => s.best?.label ?? '—');
+
+  return {
+    event: {
+      ...event,
+      qualification: {
+        ...event.qualification,
+        ranking: {
+          ...event.qualification.ranking,
+          orderedTeamIds,
+          bestResultLabels,
+          sourceNote: event.qualification.ranking.sourceNote ?? '按积分与到达最终分时间自动排序',
+          status: 'confirmed',
+          confirmedAt: now,
+          publicationStatus: 'published',
+          publishedAt: now,
+        },
+      },
+      event: { ...event.event, contentUpdatedAt: now },
+    },
+    ok: true,
+    messages,
+  };
+}
 
 /** 录入裁判确认的排位赛最终排名（1–22）。 */
 export function applyQualificationRanking(

@@ -20,6 +20,7 @@ import {
   calculateSwissStandings,
 } from '../domain/standings';
 import { describeGroup, groupStakes, ROUND_GROUP_ORDER } from '../domain/swiss';
+import { computeQualificationRanking } from '../domain/qualification-ranking';
 import {
   type Awards,
   type FinalsResolution,
@@ -421,6 +422,14 @@ export interface DerivedEvent {
     bestResultLabels: string[] | null;
     confirmedAt: string | null;
     publishedAt: string | null;
+    /**
+     * 每队计入名次的那一轮（1 或 2），由**已确认成绩**按
+     * 「积分高者优，同分时用时短者优」算出。
+     *
+     * 用于在公开的跑图记录表里标出"哪一轮算数"，让观众能把
+     * 原始成绩和名次表里的数字对上。无可用成绩的队伍不在表里。
+     */
+    bestByTeam: Map<string, 1 | 2>;
   };
   /** 瑞士轮排名（全部比赛，等价于“截至最后已确认轮次”）。 */
   standings: Standings;
@@ -477,6 +486,7 @@ export function deriveEvent(event: EventFile): DerivedEvent {
       bestResultLabels: event.qualification.ranking.bestResultLabels,
       confirmedAt: event.qualification.ranking.confirmedAt,
       publishedAt: event.qualification.ranking.publishedAt,
+      bestByTeam: computeBestRounds(event),
     },
     standings,
     finals,
@@ -490,10 +500,24 @@ export function deriveEvent(event: EventFile): DerivedEvent {
   };
 }
 
+/**
+ * 每队计入名次的那一轮。
+ *
+ * 复用 domain 层的纯函数，口径与维护工具、名次表**完全一致**
+ * （积分高者优；同分时用时短者优），避免页面自己重算出现分歧。
+ */
+function computeBestRounds(event: EventFile): Map<string, 1 | 2> {
+  const result = new Map<string, 1 | 2>();
+  for (const standing of computeQualificationRanking(event).standings) {
+    const best = standing.best;
+    if (best && !best.incomplete) result.set(standing.teamId, best.round);
+  }
+  return result;
+}
+
 /* ------------------------------------------------------------------ *
  * “正在进行 / 下一场”逻辑（首页）
  * ------------------------------------------------------------------ */
-
 export interface NowPlaying {
   /** 显式标记为 running 的项目。 */
   running: MatchView[];

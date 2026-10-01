@@ -233,12 +233,16 @@ function QualificationView() {
 
       <div className="card">
         <div className="card__head">
-          <span className="card__title">跑图记录</span>
+          <span className="card__title">跑图记录（原始成绩）</span>
           <span className="xsmall muted">
             共 {event.qualification.runs.length} 次 · 已确认{' '}
             {event.qualification.runs.filter((r) => r.resultStatus === 'confirmed').length} 次
           </span>
         </div>
+        <p className="xsmall muted" style={{ marginTop: 0 }}>
+          全部 44 次单队跑图的原始成绩都公开在这里。
+          名次口径：积分高者优；积分相同时，到达最终分时间早者优。每队取两轮中最优的一轮。
+        </p>
         {event.qualification.runs.every((r) => r.resultStatus === 'none') ? (
           <EmptyState title="尚未比赛" hint="排位赛成绩录入后显示在这里。" />
         ) : (
@@ -249,33 +253,50 @@ function QualificationView() {
                   <th className="table__team">队伍</th>
                   <th className="num">轮次</th>
                   <th>场地</th>
-                  <th>成绩</th>
+                  <th className="num">积分</th>
+                  <th className="num">到达最终分</th>
+                  <th>成绩原文</th>
                   <th>状态</th>
                 </tr>
               </thead>
               <tbody>
-                {event.qualification.runs
-                  .filter((r) => r.resultStatus !== 'none')
-                  .map((run) => (
+                {event.qualification.runs.map((run) => {
+                  // 该队的最优一轮加标记，让观众能对上名次表里的数字
+                  const best = qualification.bestByTeam.get(run.teamId);
+                  const isBest = best !== undefined && best !== null && best === run.round;
+                  return (
                     <tr key={run.id}>
                       <td className="table__team">
                         <TeamName team={teamMap.get(run.teamId)?.team ?? null} fallback={run.teamId} />
+                        {isBest ? (
+                          <span className="badge badge--advanced" style={{ marginLeft: 6 }}>
+                            计入名次
+                          </span>
+                        ) : null}
                       </td>
                       <td className="num tabular">{run.round}</td>
                       <td>{derived.venueLabels.get(run.venueId) ?? run.venueId}</td>
-                      <td className="tabular">
-                        {run.rawResult ?? run.score ?? '—'}
-                        {run.resultStatus === 'provisional' ? '（待确认）' : ''}
+                      <td className="num tabular">{run.score ?? '—'}</td>
+                      <td className="num tabular">
+                        {run.elapsedSeconds !== null && run.elapsedSeconds !== ''
+                          ? `${run.elapsedSeconds} 秒`
+                          : '—'}
                       </td>
+                      <td>{run.rawResult ?? '—'}</td>
                       <td>
                         <span
                           className={`badge ${run.resultStatus === 'confirmed' ? 'badge--advanced' : 'badge--pending'}`}
                         >
-                          {run.resultStatus === 'confirmed' ? '已确认' : '待确认'}
+                          {run.resultStatus === 'confirmed'
+                            ? '已确认'
+                            : run.resultStatus === 'provisional'
+                              ? '待确认'
+                              : '未录入'}
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

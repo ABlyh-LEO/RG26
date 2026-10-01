@@ -196,11 +196,24 @@ export function RulesPage() {
         </div>
 
         <p className="small" style={{ marginTop: 'var(--sp-3)' }}>
-          以下内容原文未明确，本工具采用安全默认，<strong>不自行推测</strong>：
+          排位赛名次口径（<strong>已由组委会确认</strong>）：
         </p>
         <ul className="stack stack--tight small" style={{ paddingLeft: '1.2em', margin: 0 }}>
-          <li>排位赛两轮“最优成绩”的比较规则与同分打破规则：采用裁判确认的 1–22 名最终排序，不按积分、用时或三审排名自行排序。</li>
-          <li>原始成绩的结构：允许保存结果文字与可选积分/用时，但它们不参与自动确定排位名次。</li>
+          <li>
+            <strong>积分高者优；积分相同时，到达最终分时间早者优。</strong>
+            每队取两轮中最优的一轮参与比较，两名次表与原始成绩一起公开。
+          </li>
+          <li>
+            积分与用时完全相同的并列无法由数据区分，工具会标出「并列」并保留原顺序，
+            需人工复核。
+          </li>
+        </ul>
+
+        <p className="small" style={{ marginTop: 'var(--sp-3)' }}>
+          以下内容原文仍未明确，本工具采用安全默认，<strong>不自行推测</strong>：
+        </p>
+        <ul className="stack stack--tight small" style={{ paddingLeft: '1.2em', margin: 0 }}>
+          <li>原始成绩的结构：允许保存结果文字与可选积分/用时；文字仅作展示，名次只用积分与用时。</li>
           <li>“已登记对阵”的口径：按已经确认结果的有效对阵计入；下一轮仅公布但尚未完赛的配对不提前计入 O。</li>
           <li>时间字段的总范围：大于 360 秒只提示复核，不据此新增硬性判罚。</li>
         </ul>
