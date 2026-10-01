@@ -112,7 +112,11 @@ export const venueSchema = z
   .object({
     id: z.string().min(1),
     label: z.string().min(1),
-    /** 名称是否为临时占位（真实场地名尚未提供时不得虚构）。 */
+    /**
+     * 名称是否仍可能变动。
+     * 为 true 时界面标注「暂定名称」，校验输出提示（非错误）。
+     * 用于"沿用当前命名但组委会可能给出正式名称"的情形。
+     */
     provisionalName: z.boolean(),
     note: z.string().nullable().default(null),
   })

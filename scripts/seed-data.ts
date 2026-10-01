@@ -123,20 +123,22 @@ export function buildVenues(): Venue[] {
     {
       id: VENUE_MAIN,
       label: '主舞台',
+      // 名称已由用户确认沿用（2026-10-01）。保留 provisionalName 是因为
+      // 组委会仍可能给出正式名称，届时改 label 即可。
       provisionalName: true,
-      note: '对抗类比赛（瑞士轮、决赛）场地；真实名称待赛程组提供',
+      note: '对抗类比赛（瑞士轮、决赛）场地',
     },
     {
       id: VENUE_A,
       label: 'A 副场地',
       provisionalName: true,
-      note: '仅排位赛跑图使用；真实名称待赛程组提供',
+      note: '仅排位赛跑图使用',
     },
     {
       id: VENUE_B,
       label: 'B 副场地',
       provisionalName: true,
-      note: '仅排位赛跑图使用；真实名称待赛程组提供',
+      note: '仅排位赛跑图使用',
     },
   ];
 }
@@ -676,7 +678,6 @@ export function buildSeedEvent(now: string): EventFile {
       contentUpdatedAt: now,
       openItems: [
         '赛程组共享文档地址（原文声明以其当天安排为准）',
-        '真实场地名称（当前为「主舞台 / A 副场地 / B 副场地」占位名）',
         '是否公开原始 DOCX',
         '展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）',
       ],

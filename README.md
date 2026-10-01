@@ -136,8 +136,12 @@ RG26/
 见 [`docs/RULES.md`](docs/RULES.md) §8，以及 `data/event.json` 的 `event.openItems`。
 
 **队名已确认：** 25 支队伍的队名均已按官方名单逐项核对（`nameVerified: true`），
-界面上不再有待核对标记。仅场地名仍为占位（主舞台 / A 副场地 / B 副场地），
-界面以 `*` 与「临时名称」标注。
+界面上不再有待核对标记。
+
+**场地：** 采用「主舞台 / A 副场地 / B 副场地」三个名称。
+主舞台用于所有两两对抗（瑞士轮、决赛），A/B 副场地仅用于排位赛跑图
+（两块并行，每队两轮各用一个不同场地、互换）。
+数据里标记为 `provisionalName: true`，若组委会给出正式名称需更新。
 
 完整验收证据见 [`docs/acceptance/ACCEPTANCE.md`](docs/acceptance/ACCEPTANCE.md)。
 

@@ -119,7 +119,15 @@ export function validateEvent(event: EventFile): ValidationResult {
   }
   for (const venue of event.venues) {
     if (venue.provisionalName) {
-      warnings.push(warn('venue', venue.id, 'provisionalName', 'provisional-venue', `场地名称为临时占位：${venue.label}`));
+      warnings.push(
+        warn(
+          'venue',
+          venue.id,
+          'provisionalName',
+          'provisional-venue',
+          `场地名称沿用当前命名：${venue.label}（若组委会给出正式名称需更新）`,
+        ),
+      );
     }
   }
 

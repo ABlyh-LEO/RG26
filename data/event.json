@@ -11,10 +11,9 @@
     "sourceDocumentSha256": "96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-01T08:44:32.402Z",
+    "contentUpdatedAt": "2026-10-01T09:38:13.325Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
-      "真实场地名称（当前为「主舞台 / A 副场地 / B 副场地」占位名）",
       "是否公开原始 DOCX",
       "展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）"
     ]
@@ -256,19 +255,19 @@
       "id": "venue-main",
       "label": "主舞台",
       "provisionalName": true,
-      "note": "对抗类比赛（瑞士轮、决赛）场地；真实名称待赛程组提供"
+      "note": "对抗类比赛（瑞士轮、决赛）场地"
     },
     {
       "id": "venue-a",
       "label": "A 副场地",
       "provisionalName": true,
-      "note": "仅排位赛跑图使用；真实名称待赛程组提供"
+      "note": "仅排位赛跑图使用"
     },
     {
       "id": "venue-b",
       "label": "B 副场地",
       "provisionalName": true,
-      "note": "仅排位赛跑图使用；真实名称待赛程组提供"
+      "note": "仅排位赛跑图使用"
     }
   ],
   "scheduleItems": [
@@ -3885,7 +3884,7 @@
   "notices": [
     {
       "id": "notice-times-are-reference",
-      "at": "2026-10-01T08:44:32.402Z",
+      "at": "2026-10-01T09:38:13.325Z",
       "title": "时间仅供参考",
       "body": "本页时间来自赛前计划表。当天以赛程组共享文档的安排为准，现场调整会在此处公告。",
       "severity": "info"

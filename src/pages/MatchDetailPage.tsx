@@ -136,7 +136,7 @@ export function MatchDetailPage() {
             label="场地"
             value={
               view.venueLabel
-                ? `${view.venueLabel}${schedule?.venueId && event.venues.find((v) => v.id === schedule.venueId)?.provisionalName ? '（临时名称）' : ''}`
+                ? `${view.venueLabel}${schedule?.venueId && event.venues.find((v) => v.id === schedule.venueId)?.provisionalName ? '（暂定名称）' : ''}`
                 : '待定'
             }
           />

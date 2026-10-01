@@ -192,7 +192,7 @@ export function SchedulePage() {
       ) : null}
 
       <p className="xsmall muted">
-        * 表示场地名称仍为临时占位，真实名称待赛程组提供。原文说明：{event.event.scheduleNotice}
+        * 表示场地名称沿用当前命名，若组委会给出正式名称需更新。原文说明：{event.event.scheduleNotice}
       </p>
     </div>
   );

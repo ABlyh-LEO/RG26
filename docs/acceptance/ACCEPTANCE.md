@@ -286,7 +286,7 @@ npm run test:e2e          # 默认包含 mobile-webkit 项目
 | 项目 | 状态 |
 | --- | --- |
 | **队名** | ✅ **已全部确认** —— 依据用户提供的官方名单逐项核对，25 支队伍均 `nameVerified: true`，界面无待核对标记 |
-| 场地名称（主舞台 / A 副场地 / B 副场地） | `provisionalName: true`，界面标注 `*` 与「临时名称」 |
+| 场地名称（主舞台 / A 副场地 / B 副场地） | 用户已确认沿用；`provisionalName: true` 保留，界面标注 `*` 与「暂定名称」，校验输出提示（非错误） |
 | 展示组决赛抽签顺序 | 未登记，页面显示「等待抽签」，不推测 |
 | 赛程组共享文档地址 | `officialScheduleUrl: null`，记录在 `openItems` |
 
