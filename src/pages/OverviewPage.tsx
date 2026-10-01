@@ -21,6 +21,63 @@ export function OverviewPage() {
   const { derived, loading } = useData();
   const now = useMemo(() => new Date(), []);
 
+  /**
+   * 首日安排摘要。
+   *
+   * 排位赛有 44 次跑图（每个时间点 2 场），逐条列出会淹没页面，
+   * 因此把同一时间点的跑图合并成一行，并显示对阵与场地。
+   *
+   * hook 必须在提前 return 之前调用。
+   */
+  const firstDayGroups = useMemo(() => {
+    if (!derived) return [];
+    const preview = deriveNowPlaying(derived, now).firstDayPreview;
+    const groups: { key: string; time: string; title: string; detail: string | null }[] = [];
+    const runByStart = new Map<string, { teams: string[]; venues: string[] }>();
+
+    // 跑图日程项的 referenceId 是**跑图 ID**（不是队伍 ID），
+    // 因此要先经 qualification.runs 解析出 teamId，再取队名。
+    const runById = new Map(derived.event.qualification.runs.map((r) => [r.id, r]));
+
+    for (const item of preview) {
+      if (item.kind !== 'run') continue;
+      // 同一批（同一起始时间）的两次跑图合并成一行
+      const key = item.plannedStart;
+      const bucket = runByStart.get(key) ?? { teams: [], venues: [] };
+      const run = item.referenceId ? runById.get(item.referenceId) : undefined;
+      const teamName = run
+        ? (derived.teamMap.get(run.teamId)?.displayName ?? derived.teamMap.get(run.teamId)?.team.name ?? run.teamId)
+        : '';
+      const venue = item.venueId ? (derived.venueLabels.get(item.venueId) ?? item.venueId) : '';
+      if (teamName) bucket.teams.push(teamName);
+      if (venue) bucket.venues.push(venue);
+      runByStart.set(key, bucket);
+    }
+
+    for (const [key, bucket] of [...runByStart.entries()].sort(
+      (a, b) => Date.parse(a[0]) - Date.parse(b[0]),
+    )) {
+      groups.push({
+        key: `run-${key}`,
+        time: formatTime(key),
+        title: '排位赛跑图',
+        detail: `${bucket.teams.join(' / ')}（${bucket.venues.join('、')}）`,
+      });
+    }
+
+    for (const item of preview) {
+      if (item.kind === 'run') continue;
+      groups.push({
+        key: item.id,
+        time: formatTime(item.revisedStart ?? item.plannedStart),
+        title: item.title,
+        detail: item.venueId ? (derived.venueLabels.get(item.venueId) ?? null) : null,
+      });
+    }
+
+    return groups.sort((a, b) => a.time.localeCompare(b.time));
+  }, [derived, now]);
+
   if (loading && !derived) {
     return <div className="empty">正在加载赛事数据…</div>;
   }
@@ -106,14 +163,17 @@ export function OverviewPage() {
         <Section title="首日安排">
           <div className="card">
             <div className="stack stack--tight">
-              {nowPlaying.firstDayPreview.map((item) => (
-                <div key={item.id} className="row" style={{ justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
-                  <span className="tabular small" style={{ flexShrink: 0 }}>
-                    {formatTime(item.plannedStart)}
-                  </span>
-                  <span className="small" style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
-                    {item.title}
-                  </span>
+              {firstDayGroups.map((g) => (
+                <div key={g.key}>
+                  <div className="row" style={{ justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
+                    <span className="tabular small" style={{ flexShrink: 0, fontWeight: 600 }}>
+                      {g.time}
+                    </span>
+                    <span className="small" style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+                      {g.title}
+                    </span>
+                  </div>
+                  {g.detail ? <div className="xsmall muted">{g.detail}</div> : null}
                 </div>
               ))}
             </div>

@@ -8,6 +8,7 @@
  */
 import type {
   EventFile,
+  QualificationRun,
   FinalsSeed,
   ScheduleItem,
   Series,
@@ -149,7 +150,7 @@ export interface MatchSideView {
 
 export interface MatchView {
   id: string;
-  kind: 'swiss' | 'series';
+  kind: 'swiss' | 'series' | 'run';
   title: string;
   stage: 'qualification' | 'swiss' | 'finals' | 'showcase';
   groupRecord: string | null;
@@ -195,6 +196,66 @@ function slotSourceLabel(
     case 'loser':
       return `${ref.seriesId} 败者`;
   }
+}
+
+/** 把一次排位赛跑图转成视图。 */
+export function toQualificationRunView(
+  run: QualificationRun,
+  event: EventFile,
+  teamMap: Map<string, TeamView>,
+  venueLabels: Map<string, string>,
+): MatchView {
+  const schedule = event.scheduleItems.find((s) => s.id === run.scheduleItemId) ?? null;
+  const view = teamMap.get(run.teamId);
+  const team = view?.team ?? null;
+
+  // 跑图是单队项目：只有一个“本方”，没有对手。
+  const sides: [MatchSideView, MatchSideView] | null = team
+    ? [
+        {
+          team,
+          sourceLabel: view?.displayName ?? run.teamId,
+          score: run.score,
+          seconds: run.elapsedSeconds,
+          isWinner: false,
+        },
+        {
+          team: null,
+          sourceLabel: '单队跑图',
+          score: null,
+          seconds: null,
+          isWinner: false,
+        },
+      ]
+    : null;
+
+  const [w = '0', l = '0'] = ['0', '0'];
+  void w;
+  void l;
+
+  return {
+    id: run.id,
+    kind: 'run',
+    title: `排位赛第 ${run.round} 轮 · ${view?.displayName ?? run.teamId}`,
+    stage: 'qualification',
+    groupRecord: null,
+    groupDescription: null,
+    stakes: null,
+    roundIndex: run.round,
+    orderInGroup: team?.thirdReviewRank ?? null,
+    schedule,
+    venueLabel: venueLabels.get(run.venueId) ?? run.venueId,
+    format: null,
+    executionStatus: run.executionStatus,
+    resultStatus: run.resultStatus,
+    sides,
+    homeWins: null,
+    awayWins: null,
+    notNeededGames: [],
+    note: run.judgeNote,
+    conflicts: [],
+    countsForStandings: false,
+  };
 }
 
 /** 把一场瑞士轮比赛转成视图。 */
@@ -443,7 +504,10 @@ export function deriveNowPlaying(derived: DerivedEvent, now: Date): NowPlaying {
   const phase = deriveEventPhase(event, now);
   const t = now.getTime();
 
+  // 必须包含排位赛跑图：否则赛事开始前的"下一批比赛"只会显示瑞士轮，
+  // 让观众误以为第一天没有排位赛。
   const allViews: MatchView[] = [
+    ...event.qualification.runs.map((r) => toQualificationRunView(r, event, teamMap, venueLabels)),
     ...event.swiss.matches.map((m) => toSwissMatchView(m, event, teamMap, venueLabels)),
     ...event.finals.series.map((s) => toSeriesView(s, event, teamMap, venueLabels, derived.finals)),
   ];
@@ -466,7 +530,7 @@ export function deriveNowPlaying(derived: DerivedEvent, now: Date): NowPlaying {
   const firstDay = event.event.dates[0];
   const firstDayPreview =
     phase === 'before' && firstDay
-      ? derived.scheduleByDate.filter((s) => s.date === firstDay).slice(0, 8)
+      ? derived.scheduleByDate.filter((s) => s.date === firstDay)
       : [];
 
   return {

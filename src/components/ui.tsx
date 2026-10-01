@@ -112,6 +112,7 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
   const schedule = match.schedule;
   const time = schedule ? schedule.plannedStart : null;
   const [home, away] = match.sides ?? [null, null];
+  const isRun = match.kind === 'run';
 
   return (
     <div className="card" style={{ padding: 'var(--sp-3)' }}>
@@ -131,9 +132,16 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
           )}
           {match.venueLabel ? <span className="muted xsmall">{match.venueLabel}</span> : null}
           {match.format ? <span className="badge badge--neutral">{match.format}</span> : null}
+          {isRun ? <span className="badge badge--neutral">单队跑图</span> : null}
           {showStage ? (
             <span className="badge badge--neutral">
-              {match.stage === 'swiss' ? `R${match.roundIndex}` : match.stage === 'finals' ? '决赛' : '展示'}
+              {match.stage === 'swiss'
+                ? `R${match.roundIndex}`
+                : match.stage === 'qualification'
+                  ? `排位 R${match.roundIndex}`
+                  : match.stage === 'finals'
+                    ? '决赛'
+                    : '展示'}
             </span>
           ) : null}
         </div>
@@ -143,9 +151,10 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
         </div>
       </div>
 
+      {/* 排位赛跑图是单队项目：只显示本方，不显示“对手” */}
       <div className="stack stack--tight">
         <SideRow side={home} />
-        <SideRow side={away} />
+        {isRun ? null : <SideRow side={away} />}
       </div>
 
       {match.homeWins !== null && match.awayWins !== null ? (
@@ -161,11 +170,13 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
         </div>
       ) : null}
 
-      <div style={{ marginTop: 'var(--sp-2)' }}>
-        <Link to={`/matches/${match.id}`} className="small">
-          查看详情 →
-        </Link>
-      </div>
+      {!isRun ? (
+        <div style={{ marginTop: 'var(--sp-2)' }}>
+          <Link to={`/matches/${match.id}`} className="small">
+            查看详情 →
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

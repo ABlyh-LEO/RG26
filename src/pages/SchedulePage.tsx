@@ -12,7 +12,7 @@ import {
   formatTime,
   type MatchView,
 } from '../data/view-model';
-import { toSeriesView, toSwissMatchView } from '../data/view-model';
+import { toQualificationRunView, toSeriesView, toSwissMatchView } from '../data/view-model';
 import { EmptyState, MatchCard, TeamName } from '../components/ui';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -33,14 +33,15 @@ export function SchedulePage() {
   const venue = params.get('venue');
   const teamId = params.get('team');
 
-  // 组装当天全部比赛视图（瑞士轮 + 决赛系列赛）
+  // 组装当天全部项目（排位赛跑图 + 瑞士轮 + 决赛系列赛）
   // hook 必须在提前 return 之前调用。
   const matchesOfDay: MatchView[] = useMemo(() => {
     if (!derived) return [];
     const { event, teamMap, venueLabels } = derived;
+    const runs = event.qualification.runs.map((r) => toQualificationRunView(r, event, teamMap, venueLabels));
     const swiss = event.swiss.matches.map((m) => toSwissMatchView(m, event, teamMap, venueLabels));
     const series = event.finals.series.map((s) => toSeriesView(s, event, teamMap, venueLabels, derived.finals));
-    return [...swiss, ...series].filter((m) => m.schedule?.date === date);
+    return [...runs, ...swiss, ...series].filter((m) => m.schedule?.date === date);
   }, [derived, date]);
 
   if (loading && !derived) return <div className="empty">正在加载赛程…</div>;

@@ -48,13 +48,62 @@ test.describe('13.2 用户流程', () => {
     await goto(page, '/progress?view=qualification');
     await waitForData(page);
 
-    // 出场安排表：每批两支队，标注两个场地
+    // 出场安排表：每批两支队，标注两个副场地
     await expect(page.getByText('出场安排（三审顺序）')).toBeVisible();
     await expect(page.getByRole('table', { name: '排位赛出场批次与场地' })).toBeVisible();
 
     // 三审排名与正式排名是分开的两块
     await expect(page.getByText('不是正式排名')).toBeVisible();
     await expect(page.getByText('正式排名', { exact: true })).toBeVisible();
+  });
+
+  test('2b. 总览与赛程都要能看到排位赛', async ({ page }) => {
+    // 总览：下一批比赛必须包含排位赛跑图（而不是只显示瑞士轮）
+    await goto(page, '/');
+    await waitForData(page);
+    const overview = await page.locator('body').innerText();
+    expect(overview, '总览的下一批比赛应包含排位赛跑图').toContain('单队跑图');
+    expect(overview).toContain('排位 R1');
+    // 首日安排必须列出排位赛批次与真实队名（不是内部 ID）
+    expect(overview).toContain('排位赛跑图');
+    expect(overview).toContain('Uniforest队');
+    expect(overview, '不应显示内部 ID').not.toMatch(/qual-r\d+-rank\d+/);
+
+    // 赛程：10/3 的排位赛筛选必须包含全部 22 次第一轮跑图
+    await goto(page, '/schedule?date=2026-10-03&stage=qualification');
+    await waitForData(page);
+    // 只看时间线区域，避开场地筛选按钮等界面文字
+    const cards = page.locator('.main .card');
+    const cardTexts = await cards.allInnerTexts();
+    // 44 张跑图卡片 + 1 张核分活动卡片
+    const runCards = cardTexts.filter((t) => t.includes('单队跑图'));
+    expect(runCards, '排位赛应有 44 次跑图（两轮各 22）').toHaveLength(44);
+    expect(runCards[0]).toContain('副场地');
+
+    const whole = (await page.locator('.main').innerText());
+    expect(whole, '赛程不应出现 Invalid Date').not.toContain('Invalid Date');
+    expect(whole, '赛程不应显示内部 ID').not.toMatch(/qual-r\d+-rank\d+/);
+    // 副场地名称应出现在时间线中
+    expect(whole).toContain('A 副场地');
+    expect(whole).toContain('B 副场地');
+  });
+
+  test('2c. 排位赛只在 A/B 副场地，对抗类比赛在主舞台', async ({ page }) => {
+    // 只看时间线卡片，避开场地筛选按钮（那里会列出全部场地名）
+    await goto(page, '/schedule?date=2026-10-03&stage=qualification');
+    await waitForData(page);
+    const cards = page.locator('.main .card');
+    const qualText = (await cards.allInnerTexts()).join('\n');
+    expect(qualText).toContain('A 副场地');
+    expect(qualText).toContain('B 副场地');
+    expect(qualText, '排位赛时间线不应出现主舞台').not.toContain('主舞台');
+
+    await goto(page, '/schedule?date=2026-10-03&stage=swiss');
+    await waitForData(page);
+    const swissCards = page.locator('.main .card');
+    const swissText = (await swissCards.allInnerTexts()).join('\n');
+    expect(swissText).toContain('主舞台');
+    expect(swissText, '瑞士轮时间线不应出现副场地').not.toContain('副场地');
   });
 
   test('3. 展示组抽签未录入时不虚构演出队伍', async ({ page }) => {
