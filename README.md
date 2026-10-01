@@ -135,8 +135,9 @@ RG26/
 **规则上的已知不确定项**（不阻塞开发，运行前应补齐）：
 见 [`docs/RULES.md`](docs/RULES.md) §8，以及 `data/event.json` 的 `event.openItems`。
 
-**重要：** 数据中的队名有三项标注为「待核对」（`nameVerified: false`），
-场地名称为临时占位（A/B 场地）。这些在界面上都有明确标识，不会冒充官方确认值。
+**队名已确认：** 25 支队伍的队名均已按官方名单逐项核对（`nameVerified: true`），
+界面上不再有待核对标记。仅场地名仍为占位（主舞台 / A 副场地 / B 副场地），
+界面以 `*` 与「临时名称」标注。
 
 完整验收证据见 [`docs/acceptance/ACCEPTANCE.md`](docs/acceptance/ACCEPTANCE.md)。
 

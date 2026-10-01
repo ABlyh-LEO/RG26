@@ -11,14 +11,12 @@
     "sourceDocumentSha256": "96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-09-30T16:18:05.055Z",
+    "contentUpdatedAt": "2026-10-01T08:44:32.402Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
-      "真实场地名称（当前为 A/B 临时名）",
-      "GitHub 仓库与所有者，用于部署",
+      "真实场地名称（当前为「主舞台 / A 副场地 / B 副场地」占位名）",
       "是否公开原始 DOCX",
-      "展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）",
-      "第 5 名队名首字“沬/沫”与第 14、16 名的 rg 大小写最终写法"
+      "展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）"
     ]
   },
   "rules": {
@@ -67,9 +65,9 @@
       "id": "competitive-35",
       "division": "competitive",
       "number": 35,
-      "name": "沬日堡垒队",
-      "nameVerified": false,
-      "nameNote": "首字为“沬”（三点水+未）抑或“沫”，请对照官方名单最终确认",
+      "name": "沫日堡垒队",
+      "nameVerified": true,
+      "nameNote": null,
       "thirdReviewRank": 5
     },
     {
@@ -149,8 +147,8 @@
       "division": "competitive",
       "number": 17,
       "name": "我也要打rg吗，队",
-      "nameVerified": false,
-      "nameNote": "拉丁字母为小写 rg，逗号后含一个空格；请确认官方写法",
+      "nameVerified": true,
+      "nameNote": null,
       "thirdReviewRank": 14
     },
     {
@@ -167,15 +165,15 @@
       "division": "competitive",
       "number": 27,
       "name": "Rg小队",
-      "nameVerified": false,
-      "nameNote": "首字母大写 R；与第 14 名的小写 rg 写法不同，请确认是否统一",
+      "nameVerified": true,
+      "nameNote": null,
       "thirdReviewRank": 16
     },
     {
       "id": "competitive-3",
       "division": "competitive",
       "number": 3,
-      "name": "少微模个鱼队",
+      "name": "少微摸个鱼队",
       "nameVerified": true,
       "nameNote": null,
       "thirdReviewRank": 17
@@ -419,7 +417,7 @@
       "afterSeriesId": null,
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank05",
-      "title": "排位赛第 1 轮 · 三审第 5 名 沬日堡垒队",
+      "title": "排位赛第 1 轮 · 三审第 5 名 沫日堡垒队",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -599,7 +597,7 @@
       "afterSeriesId": null,
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank17",
-      "title": "排位赛第 1 轮 · 三审第 17 名 少微模个鱼队",
+      "title": "排位赛第 1 轮 · 三审第 17 名 少微摸个鱼队",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -749,7 +747,7 @@
       "afterSeriesId": null,
       "venueId": "venue-b",
       "referenceId": "qual-r2-rank05",
-      "title": "排位赛第 2 轮 · 三审第 5 名 沬日堡垒队",
+      "title": "排位赛第 2 轮 · 三审第 5 名 沫日堡垒队",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -929,7 +927,7 @@
       "afterSeriesId": null,
       "venueId": "venue-b",
       "referenceId": "qual-r2-rank17",
-      "title": "排位赛第 2 轮 · 三审第 17 名 少微模个鱼队",
+      "title": "排位赛第 2 轮 · 三审第 17 名 少微摸个鱼队",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -3887,7 +3885,7 @@
   "notices": [
     {
       "id": "notice-times-are-reference",
-      "at": "2026-09-30T16:18:05.055Z",
+      "at": "2026-10-01T08:44:32.402Z",
       "title": "时间仅供参考",
       "body": "本页时间来自赛前计划表。当天以赛程组共享文档的安排为准，现场调整会在此处公告。",
       "severity": "info"

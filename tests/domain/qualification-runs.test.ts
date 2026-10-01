@@ -203,8 +203,7 @@ describe('排位赛跑图成绩录入', () => {
   });
 });
 
-describe('场地结构：主舞台 + A/B 副场地', () => {
-  it('数据里恰好三个场地，且区分主舞台与副场地', () => {
+describe('场地结构：主舞台 + A/B 副场地', () => {  it('数据里恰好三个场地，且区分主舞台与副场地', () => {
     expect(EVENT.venues).toHaveLength(3);
     const main = EVENT.venues.find((v) => v.id === 'venue-main');
     const a = EVENT.venues.find((v) => v.id === 'venue-a');

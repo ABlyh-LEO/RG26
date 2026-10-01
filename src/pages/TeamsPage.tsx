@@ -15,6 +15,9 @@ export function TeamsPage() {
 
   const division = params.get('division') ?? 'all';
 
+  // 需要在渲染前统计：hook 之后、提前 return 之前
+  const unverifiedCount = derived ? derived.event.teams.filter((t) => !t.nameVerified).length : 0;
+
   // 必须在任何提前 return 之前调用 hook。
   const filtered = useMemo(() => {
     if (!derived) return [];
@@ -129,7 +132,9 @@ export function TeamsPage() {
       </div>
 
       <p className="xsmall muted">
-        队名待核对的队伍已明确标注，不会以推测的字形冒充官方名称。
+        {unverifiedCount > 0
+          ? `有 ${unverifiedCount} 支队伍的队名尚未核对，已明确标注，不会以推测的字形冒充官方名称。`
+          : '队名与编号均依据官方名单核对。三审排名仅用于排位赛出场安排，与正式名次无关。'}
       </p>
     </div>
   );

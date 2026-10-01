@@ -410,7 +410,7 @@ git push
 
 ## 13 发布前检查清单
 
-- [ ] `npm run validate:data` 通过（只有已知的待核对提示）
+- [ ] `npm run validate:data` 通过（只剩「场地名为占位」这类已知提示）
 - [ ] `npm run test` 全部通过
 - [ ] `npm run data:build` 成功生成公开快照
 - [ ] 本地 `npm run dev` 抽查受影响的队伍与对阵

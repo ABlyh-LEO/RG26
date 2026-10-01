@@ -29,22 +29,20 @@ interface RosterEntry {
 /**
  * 竞技组 22 队，按三审排名 1–22。
  *
- * 核读结论（对照 image1.png，放大 3 倍逐行确认）：
- * - 第 5 名首字为“沬”（三点水 + 未）。该字库边缘笔画在低分辨率下不易分辨，
- *   按图片实际渲染字形采用“沬”，并保留 nameVerified:false 供运营前复核。
- * - 第 11 名确认为“煽风点火队”（火字旁 + 扇），非“瀚”。
- * - 第 14 名“我也要打rg吗，队”：拉丁字母为小写 rg，逗号为全角后接空格。
- * - 第 16 名“Rg小队”：首字母大写 R。
- *   14/16 两行的 rg 大小写不同，按图片逐行字形保留，不做统一。
- * - 第 17 名确认为“少微模个鱼队”（模，非“摸”）。
- * - 第 21 名确认为“iRunTV队”。
+ * 队名已由用户提供的**官方名单**逐项确认（2026-10-01），全部 nameVerified: true。
+ *
+ * 此前从低分辨率图片核读时有四处存疑，现已定案：
+ * - 第 5 名首字为「沫」（非「沬」）—— 图片上两点水与三点水难以分辨，以官方名单为准。
+ * - 第 17 名为「少微摸个鱼队」（摸，非「模」）—— 此前按图片误判为「模」。
+ * - 第 14 名小写 `rg`、第 16 名大写 `Rg`：两处写法确实不同，保留原样，不做统一。
+ * - 第 11 名为「煽风点火队」（非「瀚」）。
  */
 export const COMPETITIVE_ROSTER: readonly RosterEntry[] = [
   { number: 18, name: 'Uniforest队', verified: true, note: null },
   { number: 4, name: '机器曼妙队', verified: true, note: null },
   { number: 5, name: '保卫萝卜队', verified: true, note: null },
   { number: 14, name: 'All Last队', verified: true, note: null },
-  { number: 35, name: '沬日堡垒队', verified: false, note: '首字为“沬”（三点水+未）抑或“沫”，请对照官方名单最终确认' },
+  { number: 35, name: '沫日堡垒队', verified: true, note: null },
   { number: 1, name: '萝卜施工队', verified: true, note: null },
   { number: 10, name: '吃饭要排队', verified: true, note: null },
   { number: 23, name: '组一辈子战队', verified: true, note: null },
@@ -53,10 +51,10 @@ export const COMPETITIVE_ROSTER: readonly RosterEntry[] = [
   { number: 2, name: '煽风点火队', verified: true, note: null },
   { number: 21, name: '西餐不好吃队', verified: true, note: null },
   { number: 25, name: '黄瓜同好会', verified: true, note: null },
-  { number: 17, name: '我也要打rg吗，队', verified: false, note: '拉丁字母为小写 rg，逗号后含一个空格；请确认官方写法' },
+  { number: 17, name: '我也要打rg吗，队', verified: true, note: null },
   { number: 13, name: '名字够长就一定会有人看队', verified: true, note: null },
-  { number: 27, name: 'Rg小队', verified: false, note: '首字母大写 R；与第 14 名的小写 rg 写法不同，请确认是否统一' },
-  { number: 3, name: '少微模个鱼队', verified: true, note: null },
+  { number: 27, name: 'Rg小队', verified: true, note: null },
+  { number: 3, name: '少微摸个鱼队', verified: true, note: null },
   { number: 9, name: '超时空辉月机队', verified: true, note: null },
   { number: 31, name: '啊对对队', verified: true, note: null },
   { number: 12, name: '萝卜给猫队', verified: true, note: null },
@@ -678,11 +676,9 @@ export function buildSeedEvent(now: string): EventFile {
       contentUpdatedAt: now,
       openItems: [
         '赛程组共享文档地址（原文声明以其当天安排为准）',
-        '真实场地名称（当前为 A/B 临时名）',
-        'GitHub 仓库与所有者，用于部署',
+        '真实场地名称（当前为「主舞台 / A 副场地 / B 副场地」占位名）',
         '是否公开原始 DOCX',
         '展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）',
-        '第 5 名队名首字“沬/沫”与第 14、16 名的 rg 大小写最终写法',
       ],
     },
     rules: {

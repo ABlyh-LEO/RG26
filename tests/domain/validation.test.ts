@@ -27,11 +27,11 @@ describe('空赛果的种子数据必须校验通过', () => {
     expect(parsed.success, parsed.success ? '' : JSON.stringify(parsed.error.issues.slice(0, 5), null, 2)).toBe(true);
 
     const result = validateEvent(parsed.data!);
-    // 只允许“未核对队名”和“临时场地名”这类已知警告
+    // 队名已按官方名单全部核对，因此只剩"场地名为占位"这类已知警告
     expect(result.errors, formatValidation(result)).toEqual([]);
     expect(result.warnings.length).toBeGreaterThan(0);
     const codes = new Set(result.warnings.map((w) => w.code));
-    expect([...codes].sort()).toEqual(['name-unverified', 'provisional-venue']);
+    expect([...codes].sort()).toEqual(['provisional-venue']);
   });
 
   it('空赛果的种子数据包含正确的队伍与赛程规模', () => {
