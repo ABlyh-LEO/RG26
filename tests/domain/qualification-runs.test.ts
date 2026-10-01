@@ -60,8 +60,41 @@ describe('排位赛跑图成绩录入', () => {
     expect(p.pending).toBe(43);
   });
 
-  it('「仅保存」记为待确认，不算完成', () => {
-    const run = EVENT.qualification.runs[1]!;
+  it('外部传入 null 字段时返回可读错误而不是抛异常', () => {
+    const run = EVENT.qualification.runs[0]!;
+    // 类型上 rawResult 是 string，但脚本 / 反序列化可能传来 null。
+    // 早先直接 .trim() 会抛 TypeError，维护工具会白屏。
+    const r = applyQualificationRun(EVENT, {
+      runId: run.id,
+      rawResult: null as unknown as string,
+      score: null,
+      elapsedSeconds: null,
+      judgeNote: null,
+      confirm: true,
+    });
+    // 已确认但既无成绩文字也无积分 → 应当是"可解释的失败"
+    expect(r.ok).toBe(false);
+    expect(r.messages.join()).toContain('至少要填写成绩文字或积分');
+  });
+
+  it('null 成绩文字 + 有积分时可以保存', () => {
+    const run = EVENT.qualification.runs[0]!;
+    const r = applyQualificationRun(EVENT, {
+      runId: run.id,
+      rawResult: null as unknown as string,
+      score: '77',
+      elapsedSeconds: '15',
+      judgeNote: null,
+      confirm: true,
+    });
+    expect(r.ok).toBe(true);
+    const updated = r.event.qualification.runs.find((x) => x.id === run.id)!;
+    expect(updated.rawResult).toBeNull();
+    expect(updated.score).toBe('77');
+    expect(updated.resultStatus).toBe('confirmed');
+  });
+
+  it('「仅保存」记为待确认，不算完成', () => {    const run = EVENT.qualification.runs[1]!;
     const result = applyQualificationRun(EVENT, {
       runId: run.id,
       rawResult: '完成',

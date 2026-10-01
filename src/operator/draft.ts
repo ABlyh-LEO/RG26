@@ -224,11 +224,17 @@ export function seriesWins(series: Series): { home: number; away: number; need: 
 
 export interface QualificationRunEntry {
   runId: string;
-  /** 成绩文字（例如「2.35 米」）。规则未规定结构，因此允许自由文本。 */
+  /** 成绩文字（例如「2.35 米」）。规则未规定结构，因此允许自由文本；仅作展示。 */
   rawResult: string;
-  /** 可选积分。不参与自动确定排位名次。 */
+  /**
+   * 积分。**参与排名的依据之一**（积分高者优）。
+   * 未确认的成绩不计入名次。
+   */
   score: string | null;
-  /** 可选用时（秒）。 */
+  /**
+   * 到达最终分时间（秒）。**参与排名的依据之一**
+   * （积分相同时，用时短者优）。
+   */
   elapsedSeconds: string | null;
   judgeNote: string | null;
   /** 是否标记为已确认。 */
@@ -240,26 +246,32 @@ const NON_NEGATIVE_DECIMAL = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
 /**
  * 录入一次排位赛跑图成绩。
  *
- * 注意（原文未规定）：
- * - 原始成绩结构与"两轮最优"的比较规则原文未给出，因此这些字段**只作记录**，
- *   不参与自动确定排位名次。正式名次由 applyQualificationRanking 人工录入。
- * - 因此这里不做任何"取两轮最优"的计算，避免发明规则。
+ * 口径（组委会确认，见 `domain/qualification-ranking.ts`）：
+ * **积分高者优；积分相同时，到达最终分时间早者优。**
+ * 成绩文字只作展示，不参与比较。
+ *
+ * 本函数只负责**写入**这一条记录；调用方在 `confirm` 为真时
+ * 接着调用 `applyQualificationAutoRanking` 重排名次。
+ * 未确认（provisional）的成绩**不影响**对外名次。
  */
 export function applyQualificationRun(event: EventFile, entry: QualificationRunEntry): ApplyResult {
   const run = event.qualification.runs.find((r) => r.id === entry.runId);
   if (!run) return { event, ok: false, messages: [`找不到跑图记录 ${entry.runId}`] };
 
-  if (entry.score !== null && entry.score.trim() !== '' && !NON_NEGATIVE_DECIMAL.test(entry.score.trim())) {
+  // 这两个字段在类型上是 string，但外部调用（脚本 / 反序列化）可能传来
+  // null。早先直接 .trim() 会抛 TypeError 而不是返回一条可读的错误，
+  // 这里统一按空串处理，失败也要是"可解释的失败"。
+  const rawText = (entry.rawResult ?? '').trim();
+  const scoreText = (entry.score ?? '').trim();
+  const elapsedText = (entry.elapsedSeconds ?? '').trim();
+
+  if (scoreText !== '' && !NON_NEGATIVE_DECIMAL.test(scoreText)) {
     return { event, ok: false, messages: ['积分必须是非负十进制数值（可留空）'] };
   }
-  if (
-    entry.elapsedSeconds !== null &&
-    entry.elapsedSeconds.trim() !== '' &&
-    !NON_NEGATIVE_DECIMAL.test(entry.elapsedSeconds.trim())
-  ) {
+  if (elapsedText !== '' && !NON_NEGATIVE_DECIMAL.test(elapsedText)) {
     return { event, ok: false, messages: ['用时必须是非负十进制数值（秒）'] };
   }
-  if (entry.confirm && entry.rawResult.trim() === '' && (entry.score === null || entry.score.trim() === '')) {
+  if (entry.confirm && rawText === '' && scoreText === '') {
     return { event, ok: false, messages: ['标记为已确认时，至少要填写成绩文字或积分'] };
   }
 
@@ -275,12 +287,9 @@ export function applyQualificationRun(event: EventFile, entry: QualificationRunE
           r.id === entry.runId
             ? {
                 ...r,
-                rawResult: entry.rawResult.trim() === '' ? null : entry.rawResult.trim(),
-                score: entry.score === null || entry.score.trim() === '' ? null : entry.score.trim(),
-                elapsedSeconds:
-                  entry.elapsedSeconds === null || entry.elapsedSeconds.trim() === ''
-                    ? null
-                    : entry.elapsedSeconds.trim(),
+                rawResult: rawText === '' ? null : rawText,
+                score: scoreText === '' ? null : scoreText,
+                elapsedSeconds: elapsedText === '' ? null : elapsedText,
                 judgeNote: entry.judgeNote,
                 resultStatus: nextStatus,
                 executionStatus: entry.confirm ? ('finished' as const) : r.executionStatus,
