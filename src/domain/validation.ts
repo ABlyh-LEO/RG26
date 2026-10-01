@@ -589,6 +589,37 @@ export function validateSwiss(event: EventFile, teamIds: Set<string>, _offset: n
             err('swiss-match', m.id, 'participantSnapshot', 'published-without-participants', '已发布轮次的比赛必须有实际参赛队伍快照'),
           );
         }
+        for (const [i, ref] of m.slots.entries()) {
+          if (ref.kind === 'pending') {
+            errors.push(
+              err(
+                'swiss-match',
+                m.id,
+                `slots[${i}]`,
+                'published-with-pending-slot',
+                `已发布轮次的对阵位不能仍是「${ref.reason}」`,
+              ),
+            );
+          }
+        }
+      }
+    } else {
+      // 未发布轮次：对阵位应为 pending，而不是具体的排位赛名次/种子 ——
+      // 后者会显示成"排位赛第 1 名 vs 第 2 名"这种看似真实却错误的配对。
+      for (const m of matches) {
+        for (const [i, ref] of m.slots.entries()) {
+          if (ref.kind === 'qualification-rank' || ref.kind === 'finals-seed') {
+            errors.push(
+              warn(
+                'swiss-match',
+                m.id,
+                `slots[${i}]`,
+                'unpublished-with-specific-slot',
+                `第 ${round.index} 轮尚未公布，槽位却是具体的「${ref.kind === 'qualification-rank' ? `排位赛第 ${ref.rank} 名` : ref.seed}」；建议改用 pending 说明在等什么`,
+              ),
+            );
+          }
+        }
       }
     }
   }

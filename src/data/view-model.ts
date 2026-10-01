@@ -189,6 +189,8 @@ function slotSourceLabel(
     }
     case 'qualification-rank':
       return `排位赛第 ${ref.rank} 名`;
+    case 'pending':
+      return ref.reason;
     case 'finals-seed':
       return ref.seed;
     case 'winner':

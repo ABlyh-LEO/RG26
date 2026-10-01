@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "96c9c6b67cbd7e75e127d4126b36d166b583cb4f3de6fd98ac532bd80bb18a47",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-01T09:38:13.325Z",
+    "contentUpdatedAt": "2026-10-01T09:48:35.714Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -2546,12 +2546,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2569,12 +2569,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2592,12 +2592,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2615,12 +2615,12 @@
         "orderInGroup": 4,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2638,12 +2638,12 @@
         "orderInGroup": 5,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2661,12 +2661,12 @@
         "orderInGroup": 6,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2684,12 +2684,12 @@
         "orderInGroup": 7,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2707,12 +2707,12 @@
         "orderInGroup": 8,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待排位赛排名公布"
           }
         ],
         "participantSnapshot": null,
@@ -2730,12 +2730,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2753,12 +2753,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2776,12 +2776,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2799,12 +2799,12 @@
         "orderInGroup": 4,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布1-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2822,12 +2822,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -2845,12 +2845,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -2868,12 +2868,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -2891,12 +2891,12 @@
         "orderInGroup": 4,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 1 轮结果确认后公布0-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -2914,12 +2914,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布2-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布2-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2937,12 +2937,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布2-0 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布2-0 组"
           }
         ],
         "participantSnapshot": null,
@@ -2960,12 +2960,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -2983,12 +2983,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3006,12 +3006,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3029,12 +3029,12 @@
         "orderInGroup": 4,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布1-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3052,12 +3052,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布0-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布0-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3075,12 +3075,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布0-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 2 轮结果确认后公布0-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3098,12 +3098,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3121,12 +3121,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3144,12 +3144,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布2-1 组"
           }
         ],
         "participantSnapshot": null,
@@ -3167,12 +3167,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3190,12 +3190,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3213,12 +3213,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 3 轮结果确认后公布1-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3236,12 +3236,12 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3259,12 +3259,12 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3282,12 +3282,12 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "qualification-rank",
-            "rank": 1
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           },
           {
-            "kind": "qualification-rank",
-            "rank": 2
+            "kind": "pending",
+            "reason": "等待第 4 轮结果确认后公布2-2 组"
           }
         ],
         "participantSnapshot": null,
@@ -3884,7 +3884,7 @@
   "notices": [
     {
       "id": "notice-times-are-reference",
-      "at": "2026-10-01T09:38:13.325Z",
+      "at": "2026-10-01T09:48:35.714Z",
       "title": "时间仅供参考",
       "body": "本页时间来自赛前计划表。当天以赛程组共享文档的安排为准，现场调整会在此处公告。",
       "severity": "info"

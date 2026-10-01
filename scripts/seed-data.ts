@@ -478,6 +478,17 @@ export function buildSeedEvent(now: string): EventFile {
   const rounds: SwissRound[] = [];
   const matches: SwissMatch[] = [];
 
+  /**
+   * 每一轮在等什么 —— 用于 pending 槽位的说明。
+   * R1 等排位赛名次；之后各轮等上一轮结果确认。
+   */
+  const waitingReasonOf = (roundIndex: number, groupRecord: string): string => {
+    if (roundIndex === 1) return '等待排位赛排名公布';
+    const basedOn = roundIndex - 1;
+    const groupHint = groupRecord === '0-0' ? '' : `${groupRecord} 组`;
+    return `等待第 ${basedOn} 轮结果确认后公布${groupHint}`;
+  };
+
   for (const indexKey of Object.keys(SWISS_SLOT_PLAN)) {
     const index = Number(indexKey);
     const plan = SWISS_SLOT_PLAN[index];
@@ -490,6 +501,7 @@ export function buildSeedEvent(now: string): EventFile {
       for (let order = 1; order <= count; order += 1) {
         const scheduleId = swissScheduleId(index, groupRecord, order);
         const matchId = swissMatchId(index, groupRecord, order);
+        const waitingReason = waitingReasonOf(index, groupRecord);
         matchIds.push(matchId);
 
         // 时间：R3 使用显式的跨日槽位表；其余轮次在组顺序内连续排布。
@@ -534,10 +546,12 @@ export function buildSeedEvent(now: string): EventFile {
           roundIndex: index,
           groupRecord,
           orderInGroup: order,
-          // 未公布前对阵引用留空，避免伪造参赛双方。
+          // 轮次尚未公布：对阵位标记为 pending，说明在等什么。
+          // 绝不填具体的排位赛名次 —— 那会让 33 个时间槽全部显示成
+          // "排位赛第 1 名 vs 第 2 名"，看似真实却完全错误。
           slots: [
-            { kind: 'qualification-rank', rank: 1 },
-            { kind: 'qualification-rank', rank: 2 },
+            { kind: 'pending', reason: waitingReason },
+            { kind: 'pending', reason: waitingReason },
           ],
           participantSnapshot: null,
           attempts: [],

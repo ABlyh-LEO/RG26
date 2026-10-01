@@ -329,6 +329,8 @@ function placeholderLabel(ref: SlotRef): string {
       return `${ref.seriesId} 胜者`;
     case 'loser':
       return `${ref.seriesId} 败者`;
+    case 'pending':
+      return ref.reason;
   }
 }
 
@@ -374,6 +376,9 @@ function resolveSlot(
         if (!teamId) return { state: 'pending', label: placeholderLabel(ref) };
         return { state: 'resolved', teamId };
       }
+      case 'pending':
+        // 尚未确定：直接给出"在等什么"，不编造具体名次。
+        return { state: 'pending', label: ref.reason };
     }
   };
 

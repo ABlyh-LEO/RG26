@@ -203,6 +203,78 @@ describe('排位赛跑图成绩录入', () => {
   });
 });
 
+describe('未公布轮次的槽位必须是 pending，不能编造具体对阵', () => {
+  it('瑞士轮 33 个时间槽都不含具体的排位赛名次/种子', () => {
+    for (const m of EVENT.swiss.matches) {
+      for (const [i, ref] of m.slots.entries()) {
+        expect(
+          ref.kind,
+          `${m.id} 的 slots[${i}] 不应是 ${ref.kind}（会显示成看似真实的配对）`,
+        ).toBe('pending');
+      }
+    }
+  });
+
+  it('pending 槽位给出"在等什么"，且每轮说法不同', () => {
+    const reasonOf = (matchId: string) => {
+      const m = EVENT.swiss.matches.find((x) => x.id === matchId)!;
+      const ref = m.slots[0];
+      if (ref.kind !== 'pending') throw new Error(`${matchId} 不是 pending`);
+      return ref.reason;
+    };
+
+    expect(reasonOf('swiss-r1-00-1')).toBe('等待排位赛排名公布');
+    expect(reasonOf('swiss-r2-10-1')).toContain('第 1 轮');
+    expect(reasonOf('swiss-r3-20-1')).toContain('第 2 轮');
+    expect(reasonOf('swiss-r4-21-1')).toContain('第 3 轮');
+    expect(reasonOf('swiss-r5-22-1')).toContain('第 4 轮');
+
+    // 同一轮内：等的是同一个上一轮，但会带上战绩组提示，因此
+    // 按"等第几轮"归并后只应有一种说法。
+    const r3Stage = new Set(
+      EVENT.swiss.matches
+        .filter((m) => m.roundIndex === 3)
+        .map((m) => {
+          const ref = m.slots[0] as { reason: string };
+          // 去掉组名后缀，只比较"在等哪一轮"
+          return ref.reason.replace(/[0-9]-[0-9] 组$/, '').trim();
+        }),
+    );
+    expect(r3Stage.size).toBe(1);
+    // 且确实带上了组名，便于维护者分辨
+    const r3WithGroup = EVENT.swiss.matches
+      .filter((m) => m.roundIndex === 3 && m.groupRecord !== '0-0')
+      .map((m) => (m.slots[0] as { reason: string }).reason);
+    expect(r3WithGroup.every((r) => r.includes('组'))).toBe(true);
+  });
+
+  it('未公布轮次里没有 "排位赛第 N 名" 这种具体占位', () => {
+    const allRefs = EVENT.swiss.matches.flatMap((m) => m.slots);
+    expect(allRefs.some((r) => r.kind === 'qualification-rank')).toBe(false);
+  });
+
+  it('33 个槽位的 pending 说明按轮次分布（R1 一种，R2–R5 各一种）', () => {
+    const byRound = new Map<number, string>();
+    for (const m of EVENT.swiss.matches) {
+      const ref = m.slots[0];
+      if (ref.kind !== 'pending') continue;
+      byRound.set(m.roundIndex, ref.reason);
+    }
+    expect([...byRound.keys()].sort()).toEqual([1, 2, 3, 4, 5]);
+    expect(new Set(byRound.values()).size).toBe(5);
+  });
+
+  it('决赛种子槽位用的是 finals-seed 引用（合法），不是 pending', () => {
+    const ranked = EVENT.finals.series.filter((s) => s.countsForStandings);
+    for (const s of ranked) {
+      expect(s.slots, s.id).not.toBeNull();
+      for (const ref of s.slots!) {
+        expect(['finals-seed', 'winner', 'loser']).toContain(ref.kind);
+      }
+    }
+  });
+});
+
 describe('场地结构：主舞台 + A/B 副场地', () => {  it('数据里恰好三个场地，且区分主舞台与副场地', () => {
     expect(EVENT.venues).toHaveLength(3);
     const main = EVENT.venues.find((v) => v.id === 'venue-main');

@@ -132,6 +132,19 @@ export const slotRefSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('finals-seed'), seed: finalsSeedSchema }).strict(),
   z.object({ kind: z.literal('winner'), seriesId: z.string().min(1) }).strict(),
   z.object({ kind: z.literal('loser'), seriesId: z.string().min(1) }).strict(),
+  /**
+   * 尚未确定的对阵位。
+   *
+   * 用于**轮次尚未公布**的情形：此时不该写任何具体的排位赛名次或种子，
+   * 因为那会显示成"排位赛第 1 名 vs 第 2 名"这种看似真实、实则错误的配对。
+   * `reason` 说明在等什么（例如"等待排位赛排名公布"）。
+   */
+  z
+    .object({
+      kind: z.literal('pending'),
+      reason: z.string().min(1).max(80),
+    })
+    .strict(),
 ]);
 
 /* ------------------------------------------------------------------ *
