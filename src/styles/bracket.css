@@ -123,20 +123,18 @@
   z-index: 1;
 }
 
-/* 分段（排位赛 / 瑞士轮 / 决赛）的分隔与背景，说明纵向是"依次往下" */
+/* 分段（排位赛 / 瑞士轮 / 决赛）的分隔线，说明纵向是"依次往下" */
 .bracket__band {
   position: absolute;
   left: 0;
   right: 0;
   z-index: 0;
-  border-top: 1px dashed var(--border);
-  background: linear-gradient(180deg, var(--panel) 0%, transparent 60%);
+  border-top: 1px dashed var(--border-strong);
   pointer-events: none;
 }
 
 .bracket__band:first-of-type {
   border-top: none;
-  background: none;
 }
 
 .bracket__column-title {
@@ -159,22 +157,29 @@
   position: absolute;
   left: 0;
   right: 0;
-  background: var(--panel);
+  background: rgba(127, 145, 180, 0.06);
   border: 1px dashed var(--border);
   border-radius: var(--bc-radius);
   pointer-events: none;
 }
 
+/*
+  标签放在区块**内部**左上角，而不是压在区块上边缘。
+  压边缘时，一列里的第一个分区标签会和列标题（R2 等）重叠。
+*/
 .bracket__section-label {
   position: absolute;
-  top: -8px;
-  left: 8px;
-  background: var(--bg);
-  padding: 0 var(--sp-1);
-  font-size: 11px;
+  top: 2px;
+  left: 6px;
+  padding: 0 4px;
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
+  background: var(--bg);
+  border-radius: 3px;
   white-space: nowrap;
+  line-height: 1.4;
 }
 
 .bracket__node {

@@ -214,24 +214,19 @@ export function buildSwissModel(event: EventFile): BracketModel {
 }
 
 /**
- * 构建完整晋级图：排位赛 → 瑞士轮 R1–R5 → 决赛。
+ * 构建完整晋级图：瑞士轮 R1–R5 → 决赛。
  *
- * 三个阶段各占一条纵向分段（`band`），纵向依次往下串接。
- * 否则 44 张排位赛卡片会把整列拉到 5000px，
- * 而决赛只有 10 张卡 —— 决赛会被摆到画布最顶端，
- * 看起来像"决赛先于排位赛发生"，那是错的。
+ * **不含排位赛。** 排位赛是 44 次单队跑图，与瑞士轮没有逐场对应关系。
+ * 把它画进来会让一列占掉整张图 80% 的高度（44 张卡 vs 决赛 10 张），
+ * 整张图糊成一团、看不到主线。排位赛保留它自己的独立页签。
  *
- * 注意：排位赛与瑞士轮之间**不连线** —— 两者的对应关系是
- * "排位前 16 名进入瑞士轮"，跨 6 列画线只会变成一团乱麻。
- * 用列标题与说明表达这层关系更清楚。
+ * 瑞士轮与决赛**共用同一条纵向带**：两者都是横向推进的阶段，
+ * 高度也相当（约 780px vs 324px），并排才能看出"R5 的胜者进入八强"。
+ * 用分段把它们上下错开会读成"决赛发生在瑞士轮之后且无关"。
  */
 export function buildFullModel(event: EventFile): BracketModel {
-  const qual = buildQualificationColumn(event);
-  const swiss = buildSwissColumns(event).map((c) => ({ ...c, band: 'swiss' }));
-  const finals = buildFinalsColumns(event).map((c) => ({ ...c, band: 'finals' }));
-
   return {
-    columns: [...(qual ? [{ ...qual, band: 'qualification' }] : []), ...swiss, ...finals],
+    columns: [...buildSwissColumns(event), ...buildFinalsColumns(event)],
     connections: [...buildSwissConnections(event), ...buildFinalsConnections(event)],
     knockout: false,
   };

@@ -44,7 +44,7 @@ export function ProgressPage() {
       <div className="segmented" role="group" aria-label="选择赛段视图">
         {(
           [
-            ['journey', '完整晋级图'],
+            ['journey', '瑞士轮→决赛'],
             ['qualification', '排位赛'],
             ['swiss', '瑞士轮'],
             ['finals', '决赛'],
@@ -777,25 +777,10 @@ function FullJourneyView() {
     const seriesNode = renderSeriesNode ?? fallbackNode;
     if (!derived) return fallbackNode;
 
-    const { event, teamMap, venueLabels, finals } = derived;
-    const runById = new Map(event.qualification.runs.map((r) => [r.id, r]));
+    const { event, teamMap, finals } = derived;
     const swissById = new Map(event.swiss.matches.map((m) => [m.id, m]));
 
     return (nodeId: string): BracketNodeContent => {
-      const run = runById.get(nodeId);
-      if (run) {
-        const team = teamMap.get(run.teamId)?.team ?? null;
-        return {
-          title: `排位赛第 ${run.round} 轮`,
-          rows: [
-            { label: '', team: team ? team.name : run.teamId },
-            { label: '', team: `${venueLabels.get(run.venueId) ?? run.venueId} 单独跑图`, dim: true },
-          ],
-          meta: run.rawResult ?? '尚未比赛',
-          status: run.resultStatus === 'confirmed' ? 'done' : 'upcoming',
-        };
-      }
-
       const match = swissById.get(nodeId);
       if (match) {
         const { home, away, pending } = nodeParticipants(nodeId, event, finals);
@@ -827,7 +812,7 @@ function FullJourneyView() {
 
         if (pending) {
           return {
-            title: `瑞士轮 R${match.roundIndex}`,
+            title: `R${match.roundIndex}`,
             rows: [{ label: '', team: refReason() ?? '对阵待公布', dim: true }],
             meta: `${match.groupRecord} 战绩组`,
             status: 'upcoming',
@@ -836,7 +821,7 @@ function FullJourneyView() {
         }
 
         return {
-          title: `瑞士轮 R${match.roundIndex}`,
+          title: `R${match.roundIndex}`,
           rows: [
             { label: '', team: label(home, 0), dim: home === null },
             { label: '', team: label(away, 1), dim: away === null },
@@ -864,11 +849,12 @@ function FullJourneyView() {
         renderNode={renderNode}
         sectionLabel={sectionLabel}
         minColumnWidth={176}
-        ariaLabel="完整晋级图：排位赛、瑞士轮与决赛，可横向滚动"
+        ariaLabel="完整晋级图：瑞士轮与决赛，可横向滚动"
       />
       <p className="xsmall muted">
-        排位赛为单队跑图（两轮取最优），前 16 名进入瑞士轮；瑞士轮 5 轮后 3 胜晋级八强；
-        八强之后的连线表示胜者与败者的去向。排位赛与瑞士轮之间不连线，因为没有逐场对应关系。
+        瑞士轮 5 轮后 3 胜晋级八强；八强之后的连线表示胜者与败者的去向。
+        排位赛不在本图内 —— 它是 44 次单队跑图，与瑞士轮没有逐场对应关系，
+        请见上方「排位赛」页签。
       </p>
     </div>
   );

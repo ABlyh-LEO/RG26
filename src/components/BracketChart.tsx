@@ -259,7 +259,16 @@ export function BracketChart({
               }}
             >
               <div className="bracket__column-title">{col.title}</div>
-              <div className="bracket__column-body" style={{ height: maxHeight }}>
+              {/*
+                高度取**本列**内容高度，不是全局 maxHeight。
+                取全局值会让矮列（决赛只有 2 张卡）的 body 撑到 6000px，
+                而它的节点是绝对定位在 body 内的，于是 body 溢出列与画布，
+                页面出现双倍高度的滚动区，各列在视觉上糊成一团。
+              */}
+              <div
+                className="bracket__column-body"
+                style={{ height: layout.columnHeights[col.key] ?? 0 }}
+              >
                 {layout.sectionTops[col.key]?.map((sec) => (
                   <div
                     key={sec.section}
