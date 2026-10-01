@@ -22,6 +22,12 @@ import { calculateSwissStandings } from '../src/domain/standings';
 import { resolveFinals } from '../src/domain/finals';
 import { computeQualificationRanking } from '../src/domain/qualification-ranking';
 import {
+  sideOfTeamInSeriesGame,
+  sidesForFinals,
+  sidesForSeriesGame,
+  swissSidesOf,
+} from '../src/domain/sides';
+import {
   applyBo1Entry,
   applyBo3Game,
   applyFinalsBo1,
@@ -791,6 +797,156 @@ section('F. 确定性：同样输入 → 同样输出');
   const a = snapshot();
   const b = snapshot();
   check('两次完整赛季（含排位赛）结果完全一致', a === b);
+}
+
+/* ================================================================== *
+ * G. 红蓝方
+ * ================================================================== */
+
+section('G. 红蓝方：自动维护与换边');
+
+{
+  // G1. 完整赛季里，每场瑞士轮都有确定的红蓝方
+  const e = playFiveRounds(playQualification(loadEvent()));
+  const played = e.swiss.matches.filter((m) => m.participantSnapshot !== null);
+  let allHaveSides = true;
+  let oddRoundOk = true;
+  let evenRoundOk = true;
+  for (const m of played) {
+    const r = swissSidesOf(m);
+    if (!r) {
+      allHaveSides = false;
+      continue;
+    }
+    const [first, second] = m.participantSnapshot!;
+    if (m.roundIndex % 2 === 1) {
+      // 奇数轮：第一蓝、第二红
+      if (r.blue !== first || r.red !== second) oddRoundOk = false;
+    } else {
+      // 偶数轮：第一红、第二蓝
+      if (r.red !== first || r.blue !== second) evenRoundOk = false;
+    }
+  }
+  check('G1 每场已公布比赛都有确定的红蓝方', allHaveSides, `${played.length} 场`);
+  check('G1 奇数轮（R1/R3/R5）第一席位蓝、第二席位红', oddRoundOk);
+  check('G1 偶数轮（R2/R4）第一席位红、第二席位蓝', evenRoundOk);
+
+  // G2. 瑞士轮里每场恰好一红一蓝
+  const oneEach = played.every((m) => {
+    const r = swissSidesOf(m);
+    return r !== null && r.blue !== r.red;
+  });
+  check('G2 每场恰好一红一蓝（不会两队同色）', oneEach);
+
+  // G3. 红蓝方不写入数据（纯派生），因此不存在"忘记维护"的状态
+  const anyStoredSide = JSON.stringify(e).includes('"red"') || JSON.stringify(e).includes('"blue"');
+  check('G3 红蓝方不落库（由赛程结构派生，无需人工维护）', !anyStoredSide);
+}
+
+{
+  // G4. 决赛 BO1 不换边
+  check('G4 决赛 BO1：第一席位蓝、第二席位红', (() => {
+    const s = sidesForSeriesGame(1);
+    return s.first === 'blue' && s.second === 'red';
+  })());
+  check('G4 八强双败不反向', (() => {
+    const s = sidesForFinals();
+    return s.first === 'blue' && s.second === 'red';
+  })());
+
+  // G5. BO3 每局交替
+  const g1 = sidesForSeriesGame(1);
+  const g2 = sidesForSeriesGame(2);
+  const g3 = sidesForSeriesGame(3);
+  check('G5 BO3 第 1 局：第一蓝、第二红', g1.first === 'blue' && g1.second === 'red');
+  check('G5 BO3 第 2 局换边：第一红、第二蓝', g2.first === 'red' && g2.second === 'blue');
+  check('G5 BO3 第 3 局换回：第一蓝、第二红', g3.first === 'blue' && g3.second === 'red');
+  check('G5 同一队在 3 局里两种颜色都打过',
+    new Set([1, 2, 3].map((i) => sideOfTeamInSeriesGame('A', 'A', 'B', i))).size === 2);
+}
+
+{
+  // G6. 打满 3 局的 BO3，每局红蓝方都正确
+  let e = playFiveRounds(playQualification(loadEvent()));
+  e = publishFinalsSeeding(e).event;
+  e = playAllFinalsBo1(e);
+
+  const qp = requireParticipants(e, 'F-QUAL');
+  for (const [idx, winner] of [
+    [1, qp[0]],
+    [2, qp[1]],
+    [3, qp[0]],
+  ] as const) {
+    const res = applyBo3Game(e, {
+      seriesId: 'F-QUAL', gameIndex: idx, homeTeamId: qp[0], awayTeamId: qp[1],
+      homeScore: '16', awayScore: '9',
+      homeReachedSeconds: '80', awayReachedSeconds: '120',
+      winnerId: winner, resultKind: 'normal',
+    });
+    if (!res.ok) throw new Error(`F-QUAL 第 ${idx} 局失败：${res.messages.join('；')}`);
+    e = res.event;
+  }
+
+  const qs = e.finals.series.find((s) => s.id === 'F-QUAL')!;
+  check('G6 BO3 三局都记录了到达最终分时间',
+    qs.games.every((g) => g.homeReachedSeconds !== null && g.awayReachedSeconds !== null),
+    qs.games.map((g) => `${g.index}:${g.homeReachedSeconds}/${g.awayReachedSeconds}`).join(' '));
+
+  // 每局的红蓝方归属（用已确认局的参赛双方）
+  const sidePerGame = qs.games.map((g) => {
+    if (!g.homeTeamId || !g.awayTeamId) return null;
+    return [
+      sideOfTeamInSeriesGame(g.homeTeamId, qp[0], qp[1], g.index),
+      sideOfTeamInSeriesGame(g.awayTeamId, qp[0], qp[1], g.index),
+    ];
+  });
+  check('G6 第 2 局相对第 1 局换边',
+    sidePerGame[0]?.[0] === 'blue' && sidePerGame[1]?.[0] === 'red',
+    `第1局 ${sidePerGame[0]?.join('/')}，第2局 ${sidePerGame[1]?.join('/')}`);
+  check('G6 第 3 局相对第 2 局换回', sidePerGame[2]?.[0] === 'blue',
+    `第3局 ${sidePerGame[2]?.join('/')}`);
+}
+
+{
+  // G7. 时间字段：必须存下来，且空值不等于 0
+  // F-QUAL 的参赛双方依赖上游 8 场 BO1，因此这里跑完整链路再测。
+  let ev = playFiveRounds(playQualification(loadEvent()));
+  ev = publishFinalsSeeding(ev).event;
+  ev = playAllFinalsBo1(ev);
+  const p = requireParticipants(ev, 'F-QUAL');
+
+  const missing = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '16', awayScore: '9', homeReachedSeconds: '', awayReachedSeconds: '',
+    winnerId: p[0], resultKind: 'normal',
+  });
+  check('G7 时间留空可以保存（记为 null，不是 0）', missing.ok);
+  const g = missing.event.finals.series.find((s) => s.id === 'F-QUAL')!.games[0]!;
+  check('G7 留空时间为 null 而非 "0"', g.homeReachedSeconds === null && g.awayReachedSeconds === null,
+    `${JSON.stringify(g.homeReachedSeconds)}/${JSON.stringify(g.awayReachedSeconds)}`);
+
+  const bad = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '16', awayScore: '9', homeReachedSeconds: 'abc', awayReachedSeconds: '10',
+    winnerId: p[0], resultKind: 'normal',
+  });
+  check('G7 非法时间被拒绝', !bad.ok, bad.messages.join('；').slice(0, 80));
+
+  const neg = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '16', awayScore: '9', homeReachedSeconds: '-5', awayReachedSeconds: '10',
+    winnerId: p[0], resultKind: 'normal',
+  });
+  check('G7 负数时间被拒绝', !neg.ok);
+
+  const ok = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '16', awayScore: '16', homeReachedSeconds: '95.5', awayReachedSeconds: '120',
+    winnerId: p[0], resultKind: 'normal',
+  });
+  const g2 = ok.event.finals.series.find((s) => s.id === 'F-QUAL')!.games[0]!;
+  check('G7 时间原样保存（含小数）', g2.homeReachedSeconds === '95.5' && g2.awayReachedSeconds === '120',
+    `${g2.homeReachedSeconds}/${g2.awayReachedSeconds}`);
 }
 
 report();

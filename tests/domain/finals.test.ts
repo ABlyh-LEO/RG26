@@ -36,6 +36,8 @@ function emptySeries(id: string, format: 'BO1' | 'BO2' | 'BO3'): Series {
       awayTeamId: null,
       homeScore: null,
       awayScore: null,
+      homeReachedSeconds: null,
+      awayReachedSeconds: null,
       winnerId: null,
       resultKind: 'normal' as const,
       resultStatus: 'none' as const,

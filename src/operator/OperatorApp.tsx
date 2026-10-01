@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { publicSnapshotSchema, type EventFile } from '../domain/schema';
 import { resolveFinals } from '../domain/finals';
+import { assignSides, sidesForSeriesGame } from '../domain/sides';
 import { fetchSnapshot, describeFailure, dataUrl } from '../data/snapshot';
 import { formatTime, todayInEventTz } from '../data/view-model';
 import {
@@ -600,8 +601,10 @@ function FinalsBo1Form({
   const ready = Boolean(resolvedIds[0] && resolvedIds[1]);
 
   const w = seriesWins(series);
-  const [homeScore, setHomeScore] = useState('');
-  const [awayScore, setAwayScore] = useState('');
+  const [firstScore, setFirstScore] = useState('');
+  const [secondScore, setSecondScore] = useState('');
+  const [firstSeconds, setFirstSeconds] = useState('');
+  const [secondSeconds, setSecondSeconds] = useState('');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [kind, setKind] = useState<ResultKind>('normal');
   const [note, setNote] = useState('');
@@ -611,13 +614,20 @@ function FinalsBo1Form({
   const isPerformance = kind === 'normal' || kind === 'early-end';
   const decided = w.winnerId !== null;
 
+  /*
+   * 八强双败（决赛 8 场 BO1）**不换边**：一律第一个席位蓝方、第二个红方。
+   * 红蓝方由赛程结构推出，不需要人工维护，因此不会出现两队都选了红方。
+   */
+  const blueId = ready ? resolvedIds[0]! : null;
+  const redId = ready ? resolvedIds[1]! : null;
+
   return (
     <div className="card operator-draft">
       <div className="card__head">
         <span className="card__title">
           {label} · 录入结果
         </span>
-        <span className="badge badge--neutral">{series.id} · BO1</span>
+        <span className="badge badge--neutral">BO1 · 八强双败不换边</span>
       </div>
 
       {!ready ? (
@@ -640,25 +650,70 @@ function FinalsBo1Form({
         </div>
       ) : null}
 
+      {/* 红蓝方提示：让裁判一眼看清谁在哪一侧 */}
+      <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }} data-testid="side-banner">
+        <strong>本场红蓝方（自动维护）</strong>
+        <div className="row" style={{ gap: 'var(--sp-3)', marginTop: 4 }}>
+          <span>
+            <span className="badge badge--danger" style={{ marginRight: 6 }}>
+              红方
+            </span>
+            {nameOf(redId)}
+          </span>
+          <span>
+            <span className="badge badge--info" style={{ marginRight: 6 }}>
+              蓝方
+            </span>
+            {nameOf(blueId)}
+          </span>
+        </div>
+      </div>
+
       <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
         <div className="operator-field">
-          <label htmlFor="fb-home">{nameOf(resolvedIds[0])} 积分</label>
+          <label htmlFor="fb-blue">蓝方 {nameOf(blueId)} 积分</label>
           <input
-            id="fb-home"
+            id="fb-blue"
             className="input"
-            value={homeScore}
-            onChange={(e) => setHomeScore(e.target.value)}
+            value={blueId === resolvedIds[0] ? firstScore : secondScore}
+            onChange={(e) => (blueId === resolvedIds[0] ? setFirstScore : setSecondScore)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
           />
         </div>
         <div className="operator-field">
-          <label htmlFor="fb-away">{nameOf(resolvedIds[1])} 积分</label>
+          <label htmlFor="fb-blue-sec">蓝方到达最终分时间（秒）</label>
           <input
-            id="fb-away"
+            id="fb-blue-sec"
             className="input"
-            value={awayScore}
-            onChange={(e) => setAwayScore(e.target.value)}
+            value={blueId === resolvedIds[0] ? firstSeconds : secondSeconds}
+            onChange={(e) => (blueId === resolvedIds[0] ? setFirstSeconds : setSecondSeconds)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
+          <span className="operator-field__hint">积分相同时，最后得分时间是判断胜负的重要依据</span>
+        </div>
+      </div>
+
+      <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
+        <div className="operator-field">
+          <label htmlFor="fb-red">红方 {nameOf(redId)} 积分</label>
+          <input
+            id="fb-red"
+            className="input"
+            value={redId === resolvedIds[0] ? firstScore : secondScore}
+            onChange={(e) => (redId === resolvedIds[0] ? setFirstScore : setSecondScore)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
+        </div>
+        <div className="operator-field">
+          <label htmlFor="fb-red-sec">红方到达最终分时间（秒）</label>
+          <input
+            id="fb-red-sec"
+            className="input"
+            value={redId === resolvedIds[0] ? firstSeconds : secondSeconds}
+            onChange={(e) => (redId === resolvedIds[0] ? setFirstSeconds : setSecondSeconds)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
           />
@@ -670,18 +725,23 @@ function FinalsBo1Form({
           胜者（必须由裁判确认，不自动推断）
         </legend>
         <div className="row">
-          {resolvedIds.filter((id): id is string => Boolean(id)).map((id) => (
-            <button
-              key={id}
-              type="button"
-              className="btn btn--small"
-              aria-pressed={winnerId === id}
-              onClick={() => setWinnerId(id)}
-              disabled={!ready}
-            >
-              {nameOf(id)}
-            </button>
-          ))}
+          {[
+            { id: redId, tag: '红方' },
+            { id: blueId, tag: '蓝方' },
+          ]
+            .filter((x): x is { id: string; tag: string } => Boolean(x.id))
+            .map(({ id, tag }) => (
+              <button
+                key={id}
+                type="button"
+                className="btn btn--small"
+                aria-pressed={winnerId === id}
+                onClick={() => setWinnerId(id)}
+                disabled={!ready}
+              >
+                {nameOf(id)}（{tag}）
+              </button>
+            ))}
         </div>
       </fieldset>
 
@@ -692,6 +752,7 @@ function FinalsBo1Form({
           className="select"
           value={kind}
           onChange={(e) => setKind(e.target.value as ResultKind)}
+          disabled={!ready}
         >
           {RESULT_KINDS.map((k) => (
             <option key={k.value} value={k.value}>
@@ -710,10 +771,11 @@ function FinalsBo1Form({
       <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }}>
         <strong>提交前摘要</strong>
         <div>
-          {nameOf(resolvedIds[0])} {isPerformance ? homeScore || '—' : '（不计分）'} :{' '}
-          {isPerformance ? awayScore || '—' : '（不计分）'} {nameOf(resolvedIds[1])}
+          红方 {nameOf(redId)} {isPerformance ? (redId === resolvedIds[0] ? firstScore : secondScore) || '—' : '（不计分）'}
+          {' : '}
+          {isPerformance ? (blueId === resolvedIds[0] ? firstScore : secondScore) || '—' : '（不计分）'} 蓝方 {nameOf(blueId)}
         </div>
-        <div>胜者：{winnerId ? nameOf(winnerId) : '未选择'}</div>
+        <div>胜者：{winnerId ? `${nameOf(winnerId)}（${winnerId === redId ? '红方' : '蓝方'}）` : '未选择'}</div>
         <div>类型：{RESULT_KINDS.find((k) => k.value === kind)?.label}</div>
       </div>
 
@@ -728,8 +790,10 @@ function FinalsBo1Form({
               gameIndex: 1,
               homeTeamId: resolvedIds[0]!,
               awayTeamId: resolvedIds[1]!,
-              homeScore,
-              awayScore,
+              homeScore: firstScore,
+              awayScore: secondScore,
+              homeReachedSeconds: firstSeconds,
+              awayReachedSeconds: secondSeconds,
               winnerId,
               resultKind: kind,
             }),
@@ -757,11 +821,33 @@ function Bo3Entry({
   const [selectedId, setSelectedId] = useState<string | null>(bo3[0]?.id ?? null);
   const selected = draft.finals.series.find((s) => s.id === selectedId) ?? null;
 
+  const resolved = useMemo(() => resolveFinals(draft.finals.series, draft.finals.seeding), [draft]);
+
+  /** 对外只用「第 N 场」，绝不展示 F-XXXX 内部 ID。 */
+  const labelOf = (seriesId: string) => {
+    const idx = FINALS_SEQUENCE.indexOf(seriesId);
+    return idx >= 0 ? `第 ${idx + 1} 场` : seriesId;
+  };
+
+  /** 某系列赛的参赛双方展示文字（未决出时显示「第 N 场胜者」这类占位）。 */
+  const teamsTextOf = (seriesId: string) => {
+    const slots = resolved.series.get(seriesId)?.slots ?? [];
+    return slots
+      .map((s) =>
+        s.state === 'resolved'
+          ? draft.teams.find((t) => t.id === s.teamId)?.name ?? s.teamId
+          : s.state === 'pending'
+            ? s.label
+            : '冲突',
+      )
+      .join(' vs ');
+  };
+
   return (
     <div className="operator-grid">
       <div className="card">
         <div className="card__head">
-          <span className="card__title">BO3 系列赛</span>
+          <span className="card__title">决赛 BO3（共 {bo3.length} 组）</span>
         </div>
         {bo3.map((s) => {
           const w = seriesWins(s);
@@ -774,22 +860,33 @@ function Bo3Entry({
               onClick={() => setSelectedId(s.id)}
             >
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <strong className="small">{s.id}</strong>
+                <strong className="small">
+                  {labelOf(s.id)} · {s.id === 'F-QUAL' ? '总决赛名额争夺战' : '总决赛'}
+                </strong>
                 <span className="small tabular">
                   {w.home} : {w.away}
                   {w.winnerId ? ' 已决出' : ''}
                 </span>
               </div>
-              <div className="xsmall muted">
-                {s.id === 'F-QUAL' ? '总决赛名额争夺战' : '总决赛'} · 先赢 2 局者胜
-              </div>
+              <div className="xsmall muted">{teamsTextOf(s.id)}</div>
+              <div className="xsmall muted">先赢 2 局者胜 · 每局换边</div>
             </button>
           );
         })}
       </div>
 
       <div>
-        {selected ? <Bo3Form series={selected} draft={draft} onApply={onApply} /> : <div className="empty">选择一组 BO3。</div>}
+        {selected ? (
+          <Bo3Form
+            series={selected}
+            draft={draft}
+            resolved={resolved}
+            label={labelOf(selected.id)}
+            onApply={onApply}
+          />
+        ) : (
+          <div className="empty">选择一组 BO3。</div>
+        )}
       </div>
     </div>
   );
@@ -798,25 +895,43 @@ function Bo3Entry({
 function Bo3Form({
   series,
   draft,
+  resolved,
+  label,
   onApply,
 }: {
   series: Series;
   draft: EventFile;
+  resolved: ReturnType<typeof resolveFinals>;
+  label: string;
   onApply: (r: { event: EventFile; ok: boolean; messages: string[] }) => void;
 }) {
   const w = seriesWins(series);
-  const snap = series.participantSnapshot;
-  const [homeTeamId, setHomeTeamId] = useState(snap?.[0] ?? '');
-  const [awayTeamId, setAwayTeamId] = useState(snap?.[1] ?? '');
+
+  /*
+   * 参赛双方**由上游自动推出**，不让管理员手选 ——
+   * 早先这里是两个「主方队伍 / 客方队伍」下拉框，可以选错人且系统不会拦。
+   * 决赛的席位来自 winner/loser 依赖图，本来就该是确定的。
+   */
+  const slots = resolved.series.get(series.id)?.slots ?? [];
+  const resolvedIds = slots.map((s) => (s.state === 'resolved' ? s.teamId : null));
+  const firstTeamId = resolvedIds[0] ?? null;
+  const secondTeamId = resolvedIds[1] ?? null;
+  const ready = Boolean(firstTeamId && secondTeamId);
+
   const [gameIndex, setGameIndex] = useState(1);
-  const [homeScore, setHomeScore] = useState('');
-  const [awayScore, setAwayScore] = useState('');
+  const [firstScore, setFirstScore] = useState('');
+  const [secondScore, setSecondScore] = useState('');
+  const [firstSeconds, setFirstSeconds] = useState('');
+  const [secondSeconds, setSecondSeconds] = useState('');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [kind, setKind] = useState<ResultKind>('normal');
 
-  const nameOf = (id: string) => draft.teams.find((t) => t.id === id)?.name ?? id;
+  const nameOf = (id: string | null | undefined) =>
+    id ? draft.teams.find((t) => t.id === id)?.name ?? id : '待定';
+
   // 下一局序号：跳过已确认的局
-  const nextIndex = [...series.games].sort((a, b) => a.index - b.index).find((g) => g.resultStatus !== 'confirmed')?.index ?? 1;
+  const nextIndex =
+    [...series.games].sort((a, b) => a.index - b.index).find((g) => g.resultStatus !== 'confirmed')?.index ?? 1;
   const effectiveIndex = gameIndex || nextIndex;
 
   useEffect(() => {
@@ -824,89 +939,169 @@ function Bo3Form({
   }, [nextIndex]);
 
   const notNeeded = w.winnerId !== null;
+  const isPerformance = kind === 'normal' || kind === 'early-end';
+
+  /** 本局红蓝方：每局交替，由局号推出，不需要人工维护。 */
+  const blueId = ready ? assignSides(firstTeamId!, secondTeamId!, sidesForSeriesGame(effectiveIndex)).blue : null;
+  const redId = ready ? assignSides(firstTeamId!, secondTeamId!, sidesForSeriesGame(effectiveIndex)).red : null;
 
   return (
     <div className="card operator-draft">
       <div className="card__head">
-        <span className="card__title">{series.id} · 逐局录入</span>
+        <span className="card__title">
+          {label} · 逐局录入
+        </span>
         <span className="badge badge--info tabular">
           系列赛比分 {w.home} : {w.away}（先到 {w.need} 胜）
         </span>
       </div>
 
+      {!ready ? (
+        <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
+          参赛双方尚未确定：
+          {slots.map((s, i) => (
+            <div key={i} className="xsmall">
+              席位 {i + 1}：
+              {s.state === 'resolved' ? nameOf(s.teamId) : s.state === 'pending' ? s.label : `冲突 — ${s.reason}`}
+            </div>
+          ))}
+          <div className="xsmall" style={{ marginTop: 4 }}>
+            请先完成上游比赛并确认，再回到这里录入。
+          </div>
+        </div>
+      ) : null}
+
       {notNeeded ? (
         <div className="operator-warnings" style={{ marginBottom: 'var(--sp-3)' }}>
-          该系列赛已由 {nameOf(w.winnerId!)} 取得 {w.need} 胜并结束。
+          该系列赛已由 {nameOf(w.winnerId)} 取得 {w.need} 胜并结束。
           剩余小局标为“不需要进行”，不能再录入。
         </div>
       ) : null}
 
-      <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
-        <div className="operator-field">
-          <label htmlFor="bo3-home">主方队伍</label>
-          <select id="bo3-home" className="select" value={homeTeamId} onChange={(e) => setHomeTeamId(e.target.value)}>
-            <option value="">（选择）</option>
-            {draft.teams
-              .filter((t) => t.division === 'competitive')
-              .map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-          </select>
-        </div>
-        <div className="operator-field">
-          <label htmlFor="bo3-away">客方队伍</label>
-          <select id="bo3-away" className="select" value={awayTeamId} onChange={(e) => setAwayTeamId(e.target.value)}>
-            <option value="">（选择）</option>
-            {draft.teams
-              .filter((t) => t.division === 'competitive')
-              .map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-          </select>
+      <div className="operator-field" style={{ marginBottom: 'var(--sp-3)' }}>
+        <label htmlFor="bo3-index">第几局</label>
+        <select
+          id="bo3-index"
+          className="select"
+          value={effectiveIndex}
+          onChange={(e) => setGameIndex(Number(e.target.value))}
+          disabled={!ready}
+        >
+          {series.games.map((g) => (
+            <option key={g.index} value={g.index} disabled={g.resultStatus === 'confirmed'}>
+              第 {g.index} 局{g.resultStatus === 'confirmed' ? '（已确认）' : ''}
+            </option>
+          ))}
+        </select>
+        <span className="operator-field__hint">
+          BO3 每局换边，红蓝方按局号自动交替（本局：{nameOf(redId)} 红方 · {nameOf(blueId)} 蓝方）。
+        </span>
+      </div>
+
+      {/* 本局红蓝方提示：让裁判一眼看清谁在哪一侧 */}
+      <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }} data-testid="side-banner">
+        <strong>本局红蓝方（自动维护，每局交替）</strong>
+        <div className="row" style={{ gap: 'var(--sp-3)', marginTop: 4 }}>
+          <span>
+            <span className="badge badge--danger" style={{ marginRight: 6 }}>
+              红方
+            </span>
+            {nameOf(redId)}
+          </span>
+          <span>
+            <span className="badge badge--info" style={{ marginRight: 6 }}>
+              蓝方
+            </span>
+            {nameOf(blueId)}
+          </span>
         </div>
       </div>
 
       <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
         <div className="operator-field">
-          <label htmlFor="bo3-index">第几局</label>
-          <select id="bo3-index" className="select" value={effectiveIndex} onChange={(e) => setGameIndex(Number(e.target.value))}>
-            {series.games.map((g) => (
-              <option key={g.index} value={g.index} disabled={g.resultStatus === 'confirmed'}>
-                第 {g.index} 局{g.resultStatus === 'confirmed' ? '（已确认）' : ''}
-              </option>
-            ))}
-          </select>
+          <label htmlFor="bo3-blue">蓝方 {nameOf(blueId)} 积分</label>
+          <input
+            id="bo3-blue"
+            className="input"
+            value={blueId === firstTeamId ? firstScore : secondScore}
+            onChange={(e) => (blueId === firstTeamId ? setFirstScore : setSecondScore)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
         </div>
         <div className="operator-field">
-          <label htmlFor="bo3-hs">主方积分</label>
-          <input id="bo3-hs" className="input" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} inputMode="decimal" />
+          <label htmlFor="bo3-blue-sec">蓝方到达最终分时间（秒）</label>
+          <input
+            id="bo3-blue-sec"
+            className="input"
+            value={blueId === firstTeamId ? firstSeconds : secondSeconds}
+            onChange={(e) => (blueId === firstTeamId ? setFirstSeconds : setSecondSeconds)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
+          <span className="operator-field__hint">积分相同时，最后得分时间是判断胜负的重要依据</span>
+        </div>
+      </div>
+
+      <div className="operator-inline" style={{ marginBottom: 'var(--sp-3)' }}>
+        <div className="operator-field">
+          <label htmlFor="bo3-red">红方 {nameOf(redId)} 积分</label>
+          <input
+            id="bo3-red"
+            className="input"
+            value={redId === firstTeamId ? firstScore : secondScore}
+            onChange={(e) => (redId === firstTeamId ? setFirstScore : setSecondScore)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
         </div>
         <div className="operator-field">
-          <label htmlFor="bo3-as">客方积分</label>
-          <input id="bo3-as" className="input" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} inputMode="decimal" />
+          <label htmlFor="bo3-red-sec">红方到达最终分时间（秒）</label>
+          <input
+            id="bo3-red-sec"
+            className="input"
+            value={redId === firstTeamId ? firstSeconds : secondSeconds}
+            onChange={(e) => (redId === firstTeamId ? setFirstSeconds : setSecondSeconds)(e.target.value)}
+            inputMode="decimal"
+            disabled={!ready}
+          />
         </div>
       </div>
 
       <fieldset style={{ border: 'none', padding: 0, margin: '0 0 var(--sp-3)' }}>
         <legend className="small" style={{ fontWeight: 600, marginBottom: 'var(--sp-1)' }}>
-          本局胜者
+          本局胜者（必须由裁判确认，不自动推断）
         </legend>
         <div className="row">
-          {[homeTeamId, awayTeamId].filter(Boolean).map((id) => (
-            <button key={id} type="button" className="btn btn--small" aria-pressed={winnerId === id} onClick={() => setWinnerId(id)}>
-              {nameOf(id)}
-            </button>
-          ))}
+          {[
+            { id: redId, tag: '红方' },
+            { id: blueId, tag: '蓝方' },
+          ]
+            .filter((x): x is { id: string; tag: string } => Boolean(x.id))
+            .map(({ id, tag }) => (
+              <button
+                key={id}
+                type="button"
+                className="btn btn--small"
+                aria-pressed={winnerId === id}
+                onClick={() => setWinnerId(id)}
+                disabled={!ready}
+              >
+                {nameOf(id)}（{tag}）
+              </button>
+            ))}
         </div>
       </fieldset>
 
       <div className="operator-field">
         <label htmlFor="bo3-kind">异常类型</label>
-        <select id="bo3-kind" className="select" value={kind} onChange={(e) => setKind(e.target.value as ResultKind)}>
+        <select
+          id="bo3-kind"
+          className="select"
+          value={kind}
+          onChange={(e) => setKind(e.target.value as ResultKind)}
+          disabled={!ready}
+        >
           {RESULT_KINDS.map((k) => (
             <option key={k.value} value={k.value}>
               {k.label}
@@ -915,19 +1110,32 @@ function Bo3Form({
         </select>
       </div>
 
+      <div className="operator-summary" style={{ marginBottom: 'var(--sp-3)' }}>
+        <strong>提交前摘要</strong>
+        <div>
+          第 {effectiveIndex} 局 · 红方 {nameOf(redId)} {isPerformance ? (redId === firstTeamId ? firstScore : secondScore) || '—' : '（不计分）'}
+          {' : '}
+          {isPerformance ? (blueId === firstTeamId ? firstScore : secondScore) || '—' : '（不计分）'} 蓝方 {nameOf(blueId)}
+        </div>
+        <div>胜者：{winnerId ? `${nameOf(winnerId)}（${winnerId === redId ? '红方' : '蓝方'}）` : '未选择'}</div>
+        <div>类型：{RESULT_KINDS.find((k) => k.value === kind)?.label}</div>
+      </div>
+
       <button
         type="button"
         className="btn btn--primary"
-        disabled={notNeeded || !homeTeamId || !awayTeamId || homeTeamId === awayTeamId}
+        disabled={!ready || notNeeded}
         onClick={() =>
           onApply(
             applyBo3Game(draft, {
               seriesId: series.id,
               gameIndex: effectiveIndex,
-              homeTeamId,
-              awayTeamId,
-              homeScore,
-              awayScore,
+              homeTeamId: firstTeamId!,
+              awayTeamId: secondTeamId!,
+              homeScore: firstScore,
+              awayScore: secondScore,
+              homeReachedSeconds: firstSeconds,
+              awayReachedSeconds: secondSeconds,
               winnerId,
               resultKind: kind,
             }),
@@ -936,11 +1144,6 @@ function Bo3Form({
       >
         确认本局并写入草稿
       </button>
-      {homeTeamId && awayTeamId && homeTeamId === awayTeamId ? (
-        <div className="operator-errors" style={{ marginTop: 'var(--sp-2)' }}>
-          双方不能是同一支队伍。
-        </div>
-      ) : null}
     </div>
   );
 }

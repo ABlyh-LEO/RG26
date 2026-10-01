@@ -135,8 +135,35 @@ export interface Bo3GameEntry {
   awayTeamId: string;
   homeScore: string;
   awayScore: string;
+  /**
+   * 到达最终分时间（秒）。**必须记录**：
+   * 积分相同时，最后得分时间是判断本局胜负的重要依据。
+   *
+   * 类型上可省略是为了兼容既有调用点；省略等同于留空（尚未填），
+   * **绝不等于 0** —— 0 秒与"没填"是两件不同的事。
+   */
+  homeReachedSeconds?: string;
+  awayReachedSeconds?: string;
   winnerId: string | null;
   resultKind: ResultKind;
+}
+
+/**
+ * 校验并归一化「到达最终分时间」。
+ *
+ * 时间必须是非负十进制数；留空返回 null（表示尚未填）。
+ * **绝不把空值当成 0** —— 0 秒与"没填"是两件不同的事。
+ */
+function normalizeSeconds(
+  raw: string | undefined,
+  label: string,
+): { ok: true; value: string | null } | { ok: false; message: string } {
+  const text = (raw ?? '').trim();
+  if (text === '') return { ok: true, value: null };
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) {
+    return { ok: false, message: `${label}必须是非负十进制数值（秒），可留空` };
+  }
+  return { ok: true, value: text };
 }
 
 /** 录入一局 BO3。已决出胜者后的局不允许再录入（应为“不需要进行”）。 */
@@ -164,6 +191,11 @@ export function applyBo3Game(event: EventFile, entry: Bo3GameEntry): ApplyResult
     return { event, ok: false, messages: ['本局胜者必须是参赛双方之一'] };
   }
 
+  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方到达最终分时间');
+  if (!homeSec.ok) return { event, ok: false, messages: [homeSec.message] };
+  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方到达最终分时间');
+  if (!awaySec.ok) return { event, ok: false, messages: [awaySec.message] };
+
   return {
     event: {
       ...event,
@@ -183,6 +215,8 @@ export function applyBo3Game(event: EventFile, entry: Bo3GameEntry): ApplyResult
                         awayTeamId: entry.awayTeamId,
                         homeScore: entry.homeScore.trim() === '' ? null : entry.homeScore.trim(),
                         awayScore: entry.awayScore.trim() === '' ? null : entry.awayScore.trim(),
+                        homeReachedSeconds: homeSec.value,
+                        awayReachedSeconds: awaySec.value,
                         winnerId: entry.winnerId,
                         resultKind: entry.resultKind,
                         resultStatus: 'confirmed' as const,
@@ -250,6 +284,11 @@ export function applyFinalsBo1(event: EventFile, entry: Bo3GameEntry): ApplyResu
     }
   }
 
+  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方到达最终分时间');
+  if (!homeSec.ok) return { event, ok: false, messages: [homeSec.message] };
+  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方到达最终分时间');
+  if (!awaySec.ok) return { event, ok: false, messages: [awaySec.message] };
+
   return {
     event: {
       ...event,
@@ -269,6 +308,8 @@ export function applyFinalsBo1(event: EventFile, entry: Bo3GameEntry): ApplyResu
                         awayTeamId: entry.awayTeamId,
                         homeScore: entry.homeScore.trim() === '' ? null : entry.homeScore.trim(),
                         awayScore: entry.awayScore.trim() === '' ? null : entry.awayScore.trim(),
+                        homeReachedSeconds: homeSec.value,
+                        awayReachedSeconds: awaySec.value,
                         winnerId: entry.winnerId,
                         resultKind: entry.resultKind,
                         resultStatus: 'confirmed' as const,

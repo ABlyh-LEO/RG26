@@ -358,6 +358,15 @@ export const bo3GameSchema = z
     awayTeamId: z.string().min(1).nullable().default(null),
     homeScore: decimalStringSchema.nullable().default(null),
     awayScore: decimalStringSchema.nullable().default(null),
+    /**
+     * 到达最终分时间（秒）。
+     *
+     * **必须记录**：积分相同时，最后得分时间是判断本局胜负的
+     * 重要依据。早先这张表没有这两个字段，决赛成绩的时间信息
+     * 无处可存 —— 既无法据以判罚，也无法对外公开完整原始成绩。
+     */
+    homeReachedSeconds: decimalStringSchema.nullable().default(null),
+    awayReachedSeconds: decimalStringSchema.nullable().default(null),
     winnerId: z.string().min(1).nullable().default(null),
     resultKind: resultKindSchema,
     resultStatus: resultStatusSchema,

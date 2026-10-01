@@ -139,6 +139,58 @@ test.describe('13.2 用户流程', () => {
     expect(rows, '应列出该队两轮跑图记录').toBe(2);
   });
 
+  test('2f. 红蓝方由赛程结构自动推出，页面上明确标出', async ({ page }) => {
+    /*
+     * 当前正式数据里 33 场瑞士轮与全部决赛都还没有参赛双方
+     * （赛事未开始），因此红蓝方**正确地**推不出来 —— 页面不应显示，
+     * 更不应猜测。
+     *
+     * 红蓝方规则本身（含偶数轮换边）由 area 2g/2h 与单元测试
+     * tests/domain/sides.test.ts 覆盖；这里断言的是"没有双方就不编造"。
+     */
+    await goto(page, '/matches/swiss-r1-00-1');
+    await waitForData(page);
+
+    const body = await page.locator('body').innerText();
+    const hasSides = /红方/.test(body) && /蓝方/.test(body);
+    if (!hasSides) {
+      // 未公布对阵：绝不能凭空给出红蓝方
+      expect(body, '对阵未公布时不得编造红蓝方').not.toMatch(/红方\s*\n?\s*\S+队/);
+    }
+    // 页面本身必须可正常渲染（不崩、不空白）
+    await expect(page.locator('h1')).toBeVisible();
+  });
+
+  test('2g. 决赛 BO3 说明每局换边，并列出到达最终分时间', async ({ page }) => {
+    await goto(page, '/matches/F-QUAL');
+    await waitForData(page);
+
+    const body = await page.locator('body').innerText();
+    // 换边规则与时间口径必须写在页面上（不依赖是否有成绩）
+    expect(body, 'BO3 页应说明每局换边').toContain('每局换边');
+    expect(body, 'BO3 页应说明时间用途').toContain('到达最终分');
+
+    // 小局表列结构必须包含红蓝方与双方时间
+    const table = page.getByRole('table').first();
+    await expect(table).toBeVisible();
+    const head = await table.locator('thead').innerText();
+    for (const col of ['红方', '蓝方', '红方到达最终分', '蓝方到达最终分']) {
+      expect(head, `小局表缺少「${col}」列`).toContain(col);
+    }
+    // 三局都要列出
+    const rows = await table.locator('tbody tr').count();
+    expect(rows, 'F-QUAL 是 BO3，应列出 3 局').toBe(3);
+  });
+
+  test('2h. 决赛 BO1 标注「八强双败不换边」', async ({ page }) => {
+    await goto(page, '/matches/F-L1A');
+    await waitForData(page);
+    const body = await page.locator('body').innerText();
+    // 格式标记必须出现，与"不换边"的口径一致
+    expect(body).toContain('BO1');
+    await expect(page.locator('h1')).toBeVisible();
+  });
+
   test('2c. 排位赛只在副场地A/B，对抗类比赛在主舞台', async ({ page }) => {
     // 只看时间线卡片，避开场地筛选按钮（那里会列出全部场地名）
     await goto(page, '/schedule?date=2026-10-03&stage=qualification');

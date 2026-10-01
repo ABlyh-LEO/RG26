@@ -294,6 +294,8 @@ export function buildEmptySeries(
       awayTeamId: null,
       homeScore: null,
       awayScore: null,
+      homeReachedSeconds: null,
+      awayReachedSeconds: null,
       winnerId: null,
       resultKind: 'normal' as const,
       resultStatus: 'none' as const,
