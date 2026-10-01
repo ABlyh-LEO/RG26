@@ -151,17 +151,33 @@ export interface Bo3GameEntry {
 /**
  * 校验并归一化「到达最终分时间」。
  *
- * 时间必须是非负十进制数；留空返回 null（表示尚未填）。
- * **绝不把空值当成 0** —— 0 秒与"没填"是两件不同的事。
+ * **有效比赛的时间是强制必填**（组委会确认）：积分相同时，
+ * 最后得分时间是判断本局胜负的重要依据，缺了它就无法判罚。
+ *
+ * 唯一的例外是**零分局**：积分为 0 时沿用 360 秒约定
+ * （与瑞士轮 `t_k` 的口径一致），调用方传 `scoreIsZero` 即可。
+ *
+ * **绝不把空值当成 0** —— 「没填」与「0 秒」是两件不同的事。
  */
 function normalizeSeconds(
   raw: string | undefined,
   label: string,
+  options: { required: boolean; scoreIsZero?: boolean } = { required: true },
 ): { ok: true; value: string | null } | { ok: false; message: string } {
   const text = (raw ?? '').trim();
-  if (text === '') return { ok: true, value: null };
+  if (text === '') {
+    // 零分局：按 360 秒约定补上，而不是留空
+    if (options.scoreIsZero) return { ok: true, value: '360' };
+    if (options.required) {
+      return {
+        ok: false,
+        message: `${label}必须填写（积分相同时它决定胜负；积分为 0 时记 360 秒）`,
+      };
+    }
+    return { ok: true, value: null };
+  }
   if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) {
-    return { ok: false, message: `${label}必须是非负十进制数值（秒），可留空` };
+    return { ok: false, message: `${label}必须是非负十进制数值（秒）` };
   }
   return { ok: true, value: text };
 }
@@ -191,9 +207,22 @@ export function applyBo3Game(event: EventFile, entry: Bo3GameEntry): ApplyResult
     return { event, ok: false, messages: ['本局胜者必须是参赛双方之一'] };
   }
 
-  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方到达最终分时间');
+  /*
+   * 有效比赛的时间**强制必填**（积分相同时决定胜负）；
+   * 零分局沿用 360 秒约定，与瑞士轮口径一致。
+   * 弃权/行政中止不计表现分，因此不要求时间。
+   */
+  const countsPerformance = entry.resultKind === 'normal' || entry.resultKind === 'early-end';
+
+  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方（第一个席位）到达最终分时间', {
+    required: countsPerformance,
+    scoreIsZero: countsPerformance && Number(entry.homeScore) === 0,
+  });
   if (!homeSec.ok) return { event, ok: false, messages: [homeSec.message] };
-  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方到达最终分时间');
+  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方（第二个席位）到达最终分时间', {
+    required: countsPerformance,
+    scoreIsZero: countsPerformance && Number(entry.awayScore) === 0,
+  });
   if (!awaySec.ok) return { event, ok: false, messages: [awaySec.message] };
 
   return {
@@ -284,9 +313,15 @@ export function applyFinalsBo1(event: EventFile, entry: Bo3GameEntry): ApplyResu
     }
   }
 
-  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方到达最终分时间');
+  const homeSec = normalizeSeconds(entry.homeReachedSeconds, '本方（第一个席位）到达最终分时间', {
+    required: performanceKinds.includes(entry.resultKind),
+    scoreIsZero: performanceKinds.includes(entry.resultKind) && Number(entry.homeScore) === 0,
+  });
   if (!homeSec.ok) return { event, ok: false, messages: [homeSec.message] };
-  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方到达最终分时间');
+  const awaySec = normalizeSeconds(entry.awayReachedSeconds, '对方（第二个席位）到达最终分时间', {
+    required: performanceKinds.includes(entry.resultKind),
+    scoreIsZero: performanceKinds.includes(entry.resultKind) && Number(entry.awayScore) === 0,
+  });
   if (!awaySec.ok) return { event, ok: false, messages: [awaySec.message] };
 
   return {

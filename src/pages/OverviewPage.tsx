@@ -16,6 +16,7 @@ import {
   todayInEventTz,
 } from '../data/view-model';
 import { EmptyState, MatchCard, PublicationBadge, Section, TeamName } from '../components/ui';
+import { FullJourneyBracket } from './ProgressPage';
 
 export function OverviewPage() {
   const { derived, loading } = useData();
@@ -185,6 +186,22 @@ export function OverviewPage() {
           </div>
         </Section>
       ) : null}
+
+      {/* 完整晋级图 */}
+      <Section
+        title="完整晋级图"
+        action={
+          <Link to="/progress?view=journey" className="small">
+            打开完整页面 →
+          </Link>
+        }
+      >
+        <p className="xsmall muted" style={{ marginBottom: 'var(--sp-2)' }}>
+          瑞士轮 5 轮与决赛的全部对阵在一张图上，可左右滑动查看全部阶段。
+          已结算的场次显示胜者、比分与到达最终分时间。
+        </p>
+        <FullJourneyBracket legend={false} />
+      </Section>
 
       {/* 赛事结束后：最终结果与归档 */}
       {phase === 'after' ? <FinalResults /> : null}

@@ -241,7 +241,7 @@ function playFiveRounds(base: EventFile): EventFile {
   return e;
 }
 
-/** 录入一场决赛 BO1（gameIndex 1）。 */
+/** 录入一场决赛 BO1（gameIndex 1）。时间必填，这里给固定值。 */
 function playFinalsBo1(ev: EventFile, seriesId: string, winnerIsHome = true): EventFile {
   const [home, away] = requireParticipants(ev, seriesId);
   const res = applyFinalsBo1(ev, {
@@ -251,6 +251,8 @@ function playFinalsBo1(ev: EventFile, seriesId: string, winnerIsHome = true): Ev
     awayTeamId: away,
     homeScore: '16',
     awayScore: '5',
+    homeReachedSeconds: '90',
+    awayReachedSeconds: '145',
     winnerId: winnerIsHome ? home : away,
     resultKind: 'normal',
   });
@@ -282,6 +284,8 @@ function playBo3(ev: EventFile, seriesId: string, homeWins: boolean): EventFile 
       awayTeamId: away,
       homeScore: '16',
       awayScore: '6',
+      homeReachedSeconds: String(80 + idx * 5),
+      awayReachedSeconds: String(130 + idx * 5),
       winnerId: homeWins ? home : away,
       resultKind: 'normal',
     });
@@ -677,7 +681,9 @@ section('E. 边界情形');
   ] as const) {
     const res = applyBo3Game(e, {
       seriesId: 'F-QUAL', gameIndex: idx, homeTeamId: qp[0], awayTeamId: qp[1],
-      homeScore: '16', awayScore: '9', winnerId: winner, resultKind: 'normal',
+      homeScore: '16', awayScore: '9',
+      homeReachedSeconds: String(70 + idx * 5), awayReachedSeconds: String(120 + idx * 5),
+      winnerId: winner, resultKind: 'normal',
     });
     if (!res.ok) throw new Error(`F-QUAL 第 ${idx} 局失败：${res.messages.join('；')}`);
     e = res.event;
@@ -689,18 +695,24 @@ section('E. 边界情形');
 
   const again = applyBo3Game(e, {
     seriesId: 'F-QUAL', gameIndex: 3, homeTeamId: qp[0], awayTeamId: qp[1],
-    homeScore: '16', awayScore: '1', winnerId: qp[1], resultKind: 'normal',
+    homeScore: '16', awayScore: '1',
+    homeReachedSeconds: '80', awayReachedSeconds: '130',
+    winnerId: qp[1], resultKind: 'normal',
   });
   check('E6 已结束的系列赛拒绝继续录入', !again.ok, again.messages.join('；').slice(0, 100) || '（却成功了）');
 
   const gp = requireParticipants(e, 'F-GF');
   const gf2 = applyBo3Game(e, {
     seriesId: 'F-GF', gameIndex: 1, homeTeamId: gp[0], awayTeamId: gp[1],
-    homeScore: '16', awayScore: '4', winnerId: gp[0], resultKind: 'normal',
+    homeScore: '16', awayScore: '4',
+    homeReachedSeconds: '80', awayReachedSeconds: '130',
+    winnerId: gp[0], resultKind: 'normal',
   });
   const gf3 = applyBo3Game(gf2.event, {
     seriesId: 'F-GF', gameIndex: 2, homeTeamId: gp[0], awayTeamId: gp[1],
-    homeScore: '16', awayScore: '4', winnerId: gp[0], resultKind: 'normal',
+    homeScore: '16', awayScore: '4',
+    homeReachedSeconds: '85', awayReachedSeconds: '135',
+    winnerId: gp[0], resultKind: 'normal',
   });
   check('E6 2:0 后系列赛结束', seriesWins(gf3.event.finals.series.find((s) => s.id === 'F-GF')!).home === 2);
   const gf4 = applyBo3Game(gf3.event, {
@@ -908,22 +920,47 @@ section('G. 红蓝方：自动维护与换边');
 }
 
 {
-  // G7. 时间字段：必须存下来，且空值不等于 0
+  // G7. 时间字段：**必填**、空值不等于 0、原样保存
   // F-QUAL 的参赛双方依赖上游 8 场 BO1，因此这里跑完整链路再测。
   let ev = playFiveRounds(playQualification(loadEvent()));
   ev = publishFinalsSeeding(ev).event;
   ev = playAllFinalsBo1(ev);
   const p = requireParticipants(ev, 'F-QUAL');
 
+  // 有效比赛必须填时间 —— 留空要被拒绝，而不是静默存成 null
   const missing = applyBo3Game(ev, {
     seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
     homeScore: '16', awayScore: '9', homeReachedSeconds: '', awayReachedSeconds: '',
     winnerId: p[0], resultKind: 'normal',
   });
-  check('G7 时间留空可以保存（记为 null，不是 0）', missing.ok);
-  const g = missing.event.finals.series.find((s) => s.id === 'F-QUAL')!.games[0]!;
-  check('G7 留空时间为 null 而非 "0"', g.homeReachedSeconds === null && g.awayReachedSeconds === null,
-    `${JSON.stringify(g.homeReachedSeconds)}/${JSON.stringify(g.awayReachedSeconds)}`);
+  check('G7 有效比赛缺时间被拒绝（强制必填）', !missing.ok,
+    missing.messages.join('；').slice(0, 90) || '（却成功了）');
+
+  const halfMissing = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '16', awayScore: '9', homeReachedSeconds: '80', awayReachedSeconds: '',
+    winnerId: p[0], resultKind: 'normal',
+  });
+  check('G7 只填一方时间也被拒绝', !halfMissing.ok);
+
+  // 零分局按 360 秒约定，不需要手填
+  const zero = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '0', awayScore: '16', homeReachedSeconds: '', awayReachedSeconds: '90',
+    winnerId: p[1], resultKind: 'normal',
+  });
+  check('G7 零分局可省略时间（记 360 秒）', zero.ok, zero.messages.join('；').slice(0, 80));
+  const zg = zero.event.finals.series.find((s) => s.id === 'F-QUAL')!.games[0]!;
+  check('G7 零分一方存为 360 而非 null', zg.homeReachedSeconds === '360',
+    String(zg.homeReachedSeconds));
+
+  // 弃权不计表现分，因此不要求时间
+  const wo = applyBo3Game(ev, {
+    seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
+    homeScore: '', awayScore: '', homeReachedSeconds: '', awayReachedSeconds: '',
+    winnerId: p[0], resultKind: 'walkover-before-start',
+  });
+  check('G7 弃权不要求时间', wo.ok, wo.messages.join('；').slice(0, 80));
 
   const bad = applyBo3Game(ev, {
     seriesId: 'F-QUAL', gameIndex: 1, homeTeamId: p[0], awayTeamId: p[1],
@@ -947,6 +984,44 @@ section('G. 红蓝方：自动维护与换边');
   const g2 = ok.event.finals.series.find((s) => s.id === 'F-QUAL')!.games[0]!;
   check('G7 时间原样保存（含小数）', g2.homeReachedSeconds === '95.5' && g2.awayReachedSeconds === '120',
     `${g2.homeReachedSeconds}/${g2.awayReachedSeconds}`);
+}
+
+{
+  // G8. 瑞士轮与决赛 BO1 的时间同样必填
+  let e = playQualification(loadEvent());
+  e = publishNextRound(e, 1);
+  const mid = e.swiss.rounds.find((r) => r.index === 1)!.matchIds[0]!;
+  const mm = e.swiss.matches.find((m) => m.id === mid)!;
+  const [h] = mm.participantSnapshot!;
+
+  check('G8 瑞士轮有效比赛缺时间被拒绝',
+    !applyBo1Entry(e, {
+      matchId: mid, homeScore: '16', awayScore: '4', homeSeconds: '', awaySeconds: '',
+      winnerId: h, resultKind: 'normal', note: null,
+    }).ok);
+
+  check('G8 瑞士轮零分局可省略时间',
+    applyBo1Entry(e, {
+      matchId: mid, homeScore: '0', awayScore: '16', homeSeconds: '', awaySeconds: '90',
+      winnerId: mm.participantSnapshot![1], resultKind: 'normal', note: null,
+    }).ok);
+
+  // 决赛 BO1
+  let f = playFiveRounds(playQualification(loadEvent()));
+  f = publishFinalsSeeding(f).event;
+  const fp = requireParticipants(f, 'F-L1A');
+  check('G8 决赛 BO1 缺时间被拒绝',
+    !applyFinalsBo1(f, {
+      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
+      homeScore: '16', awayScore: '4', homeReachedSeconds: '', awayReachedSeconds: '',
+      winnerId: fp[0], resultKind: 'normal',
+    }).ok);
+  check('G8 决赛 BO1 填了时间可以保存',
+    applyFinalsBo1(f, {
+      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
+      homeScore: '16', awayScore: '4', homeReachedSeconds: '85', awayReachedSeconds: '140',
+      winnerId: fp[0], resultKind: 'normal',
+    }).ok);
 }
 
 report();

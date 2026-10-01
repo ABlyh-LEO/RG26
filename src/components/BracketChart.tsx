@@ -28,12 +28,21 @@ import {
   type LayoutColumn,
   type LayoutConnection,
 } from '../domain/bracket-layout';
+import { SideBadge } from './ui';
+import type { Side } from '../domain/sides';
 
 export interface BracketNodeContent {
   /** 卡片主体。 */
   title: string;
   /** 主行（对阵双方）。 */
-  rows: { label: string; team: string | null; isWinner?: boolean; dim?: boolean }[];
+  rows: {
+    label: string;
+    team: string | null;
+    isWinner?: boolean;
+    dim?: boolean;
+    /** 该行的红蓝方；未确定对阵时为 null，**不猜测**。 */
+    side?: Side | null;
+  }[];
   /** 次要行（比分、状态）。 */
   meta?: string | null;
   status?: 'upcoming' | 'live' | 'done';
@@ -725,6 +734,7 @@ function NodeCard({
       <div className="bracket-card__rows">
         {content.rows.map((row, i) => (
           <div key={i} className={`bracket-card__row${row.isWinner ? ' is-winner' : ''}`}>
+            {row.side ? <SideBadge side={row.side} /> : null}
             <span className={`bracket-card__team${row.dim ? ' is-dim' : ''}`} title={row.team ?? row.label}>
               {row.team ?? <span className="muted">{row.label}</span>}
             </span>

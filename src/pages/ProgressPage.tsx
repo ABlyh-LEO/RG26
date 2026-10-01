@@ -19,6 +19,7 @@ import { toSeriesView } from '../data/view-model';
 import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
 import { BracketChart, type BracketNodeContent } from '../components/BracketChart';
 import { buildFinalsModel, buildFullModel, nodeParticipants } from '../data/bracket-model';
+import { sidesForFinals, sidesForSwiss } from '../domain/sides';
 import { FINALS_MATCH_ORDER } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
@@ -714,11 +715,23 @@ function useSeriesNode() {
             : 'upcoming';
 
       // 未确定的对阵显示"在等什么"，绝不显示一个看起来像真的名次
-      const sideRow = (side: typeof home): BracketNodeContent['rows'][number] => ({
+      /*
+       * 决赛红蓝方：八强双败不换边（第一席位蓝、第二红）。
+       * BO3 的每一局各自换边，系列赛层面不给单一归属，
+       * 因此 BO3 卡片不标颜色 —— 逐局红蓝方在比赛详情页看。
+       */
+      const finalsSides = series.format === 'BO3' ? null : sidesForFinals();
+      const sideRow = (side: typeof home, index: number): BracketNodeContent['rows'][number] => ({
         label: '',
         team: side?.team ? side.team.name : (side?.sourceLabel ?? '待定'),
         isWinner: side?.isWinner ?? false,
         dim: !side?.team,
+        side:
+          !side?.team || finalsSides === null
+            ? null
+            : index === 0
+              ? finalsSides.first
+              : finalsSides.second,
       });
 
       const parts: string[] = [];
@@ -735,7 +748,7 @@ function useSeriesNode() {
 
       return {
         title: view.title,
-        rows: [sideRow(home), sideRow(away)],
+        rows: [sideRow(home, 0), sideRow(away, 1)],
         meta: parts.length > 0 ? parts.join(' · ') : null,
         status,
         to: `/matches/${nodeId}`,
@@ -781,12 +794,13 @@ function BracketView() {
 }
 
 /**
- * 完整晋级图：排位赛 → 瑞士轮 R1–R5 → 决赛，一张图看完全部流程。
+ * 完整晋级图的**图本体**（不含页签与说明文字）。
  *
- * 排位赛与瑞士轮之间不画线：两者的关系是"排位前 16 名进入瑞士轮"，
- * 跨列连线只会变成一团乱麻，用列标题表达更清楚。
+ * 抽成独立组件是为了让「总览」页也能放同一张图，
+ * 而不必复制那套节点渲染逻辑 —— 复制必然导致两处行为分叉
+ * （例如胜者标记只在一处修好）。
  */
-function FullJourneyView() {
+export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
   const { derived } = useData();
   const renderSeriesNode = useSeriesNode();
 
@@ -805,9 +819,19 @@ function FullJourneyView() {
       const match = swissById.get(nodeId);
       if (match) {
         const { home, away, pending } = nodeParticipants(nodeId, event, finals);
-        const decided = match.participantSnapshot
-          ? match.attempts.some((a) => a.resultStatus === 'confirmed')
-          : false;
+
+        /**
+         * 本次结算的 attempt（只认 effectiveAttemptId，重赛的旧记录不算）。
+         * 用它判断胜者与比分 —— 早先这里只塞了队名，
+         * 于是**瑞士轮卡片从来不标胜者、也不显示比分**，
+         * 图上分不出每场谁赢了。
+         */
+        const effective =
+          match.effectiveAttemptId === null
+            ? null
+            : match.attempts.find((a) => a.id === match.effectiveAttemptId) ?? null;
+        const decided = effective !== null && effective.resultStatus === 'confirmed';
+        const winnerId = decided ? effective.winnerId : null;
 
         /**
          * 待公布时两侧是同一句"在等什么"，重复两遍只会把卡片撑高。
@@ -841,13 +865,57 @@ function FullJourneyView() {
           };
         }
 
+        /** 表现统计只在有效比赛上有意义；弃权/行政中止无比分。 */
+        const isPerformance =
+          effective !== null &&
+          (effective.resultKind === 'normal' || effective.resultKind === 'early-end');
+        const scoreOf = (teamId: string | null): string | null => {
+          if (!isPerformance || !effective || teamId === null) return null;
+          if (teamId === effective.homeTeamId) return effective.homeScore;
+          if (teamId === effective.awayTeamId) return effective.awayScore;
+          return null;
+        };
+        const secsOf = (teamId: string | null): string | null => {
+          if (!isPerformance || !effective || teamId === null) return null;
+          if (teamId === effective.homeTeamId) return effective.homeReachedSeconds;
+          if (teamId === effective.awayTeamId) return effective.awayReachedSeconds;
+          return null;
+        };
+
+        /**
+         * 每行末尾附上该队的比分与到达最终分时间，让图上能看出谁赢、赢多少；
+         * 同时标出红蓝方（瑞士轮偶数轮换边，由轮次推出）。
+         */
+        const sideColor = sidesForSwiss(match.roundIndex);
+        const rowOf = (teamId: string | null, index: number): BracketNodeContent['rows'][number] => {
+          const score = scoreOf(teamId);
+          const secs = secsOf(teamId);
+          const suffix =
+            score !== null
+              ? ` ${score} 分${secs !== null && secs !== '' ? ` · ${secs} 秒` : ''}`
+              : '';
+          return {
+            label: '',
+            team: `${label(teamId, index)}${suffix}`,
+            isWinner: winnerId !== null && teamId === winnerId,
+            dim: teamId === null,
+            // 对阵未确定时不给颜色 —— 不猜
+            side: teamId === null ? null : index === 0 ? sideColor.first : sideColor.second,
+          };
+        };
+
+        const metaParts: string[] = [`${match.groupRecord} 战绩组`];
+        if (decided) {
+          metaParts.push('已结算');
+          if (effective && !isPerformance) {
+            metaParts.push(effective.resultKind === 'walkover-before-start' ? '未开赛弃权' : '行政判负中止');
+          }
+        }
+
         return {
           title: `R${match.roundIndex}`,
-          rows: [
-            { label: '', team: label(home, 0), dim: home === null },
-            { label: '', team: label(away, 1), dim: away === null },
-          ],
-          meta: `${match.groupRecord} 战绩组${decided ? ' · 已结算' : ''}`,
+          rows: [rowOf(home, 0), rowOf(away, 1)],
+          meta: metaParts.join(' · '),
           status: decided ? 'done' : 'upcoming',
           to: `/matches/${nodeId}`,
         };
@@ -863,7 +931,7 @@ function FullJourneyView() {
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-2)' }}>
-      <BracketLegend />
+      {legend ? <BracketLegend /> : null}
       <BracketChart
         columns={model.columns}
         connections={model.connections}
@@ -872,6 +940,20 @@ function FullJourneyView() {
         minColumnWidth={176}
         ariaLabel="完整晋级图：瑞士轮与决赛，可横向滚动"
       />
+    </div>
+  );
+}
+
+/**
+ * 完整晋级图：瑞士轮 R1–R5 → 决赛，一张图看完全部流程。
+ *
+ * 排位赛不在本图内：两者的关系是"排位前 16 名进入瑞士轮"，
+ * 跨列连线只会变成一团乱麻，用文字说明更清楚。
+ */
+function FullJourneyView() {
+  return (
+    <div className="stack" style={{ gap: 'var(--sp-2)' }}>
+      <FullJourneyBracket />
       <p className="xsmall muted">
         瑞士轮 5 轮后 3 胜晋级八强；八强之后的连线表示胜者与败者的去向。
         排位赛不在本图内 —— 它是 44 次单队跑图，与瑞士轮没有逐场对应关系，

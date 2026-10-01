@@ -398,6 +398,8 @@ section('13. 决赛 BO1（第 1–8 场）可完整录入');
       awayTeamId: b.teamId,
       homeScore: '16',
       awayScore: '6',
+      homeReachedSeconds: '85',
+      awayReachedSeconds: '140',
       winnerId: a.teamId,
       resultKind: 'normal',
     });
@@ -420,7 +422,9 @@ section('14. 决赛 BO3（第 9–10 场）与冠军');
       if (!game || game.resultStatus === 'confirmed') continue;
       const result = applyBo3Game(event, {
         seriesId, gameIndex: idx, homeTeamId: a.teamId, awayTeamId: b.teamId,
-        homeScore: '16', awayScore: '8', winnerId: a.teamId, resultKind: 'normal',
+        homeScore: '16', awayScore: '8',
+        homeReachedSeconds: String(80 + idx * 5), awayReachedSeconds: String(130 + idx * 5),
+        winnerId: a.teamId, resultKind: 'normal',
       });
       if (!result.ok) fail(`${seriesId} 第 ${idx} 局失败：${result.messages.join('；')}`);
       event = result.event;

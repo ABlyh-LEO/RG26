@@ -287,6 +287,27 @@ a.bracket-card:hover {
   flex: 1;
 }
 
+/*
+ * 红蓝方徽章：固定尺寸且不参与压缩，
+ * 否则窄列下会被队名的换行挤扁，红蓝之分就看不出来了。
+ */
+.side-badge {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 3px;
+}
+
+.bracket-card__row > .side-badge {
+  margin-right: 2px;
+}
 /* 未确定的对阵用浅色，与已确定队名区分 */
 .bracket-card__team.is-dim {
   color: var(--text-muted);

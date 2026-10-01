@@ -21,6 +21,7 @@ import {
 } from '../domain/standings';
 import { describeGroup, groupStakes, ROUND_GROUP_ORDER } from '../domain/swiss';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
+import { type Sides, sidesForFinals, sidesForSwiss } from '../domain/sides';
 import {
   type Awards,
   type FinalsResolution,
@@ -167,6 +168,15 @@ export interface MatchView {
   resultStatus: 'none' | 'provisional' | 'confirmed';
   /** 双方已确定队伍时才有值，用于自我对阵等异常提示。 */
   sides: [MatchSideView, MatchSideView] | null;
+  /**
+   * 本场红蓝方归属（第一个席位 / 第二个席位的颜色）。
+   *
+   * 由赛程结构推出（`domain/sides.ts`），不落库：
+   * 默认第一席位蓝、第二红；瑞士轮偶数轮反向；八强双败不反向。
+   * 对阵未确定时为 null —— **不猜测**颜色。
+   * BO3 的每一局另有归属，见比赛详情页。
+   */
+  sidesInfo: Sides | null;
   homeWins: number | null;
   awayWins: number | null;
   /** BO3 中标记为“不需要进行”的小局序号。 */
@@ -245,6 +255,8 @@ export function toQualificationRunView(
   return {
     id: run.id,
     kind: 'run',
+    // 单队跑图没有对手，因此没有红蓝方
+    sidesInfo: null,
     title: `排位赛第 ${run.round} 轮 · ${view?.displayName ?? run.teamId}`,
     stage: 'qualification',
     groupRecord: null,
@@ -308,6 +320,8 @@ export function toSwissMatchView(
     executionStatus: match.executionStatus,
     resultStatus: effective?.resultStatus ?? 'none',
     sides: sides ?? fallbackSides,
+    // 瑞士轮：偶数轮换边，由轮次推出
+    sidesInfo: snapshot ? sidesForSwiss(match.roundIndex) : null,
     homeWins: null,
     awayWins: null,
     notNeededGames: [],
@@ -398,6 +412,12 @@ export function toSeriesView(
     executionStatus: series.executionStatus,
     resultStatus,
     sides,
+    /*
+     * 决赛红蓝方：八强双败**不换边**，一律第一席位蓝、第二红。
+     * BO3 的每一局各自换边，因此系列赛层面不给单一归属 ——
+     * 那种情况在比赛详情页按局展示，避免把"第 1 局的归属"误当成整个系列赛的。
+     */
+    sidesInfo: sides && series.format !== 'BO3' ? sidesForFinals() : null,
     homeWins: res?.homeWins ?? null,
     awayWins: res?.awayWins ?? null,
     notNeededGames: res?.notNeededGameIndexes ?? [],

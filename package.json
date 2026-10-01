@@ -26,7 +26,8 @@
     "screenshots": "node scripts/capture-screenshots.mjs",
     "build": "npm run validate:data && npm run data:build && tsc -b --pretty false && vite build",
     "build:only": "tsc -b --pretty false && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "snapshot:full-season": "tsx scripts/make-full-season-snapshot.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

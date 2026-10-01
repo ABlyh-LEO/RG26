@@ -4,7 +4,31 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { Team } from '../domain/schema';
+import type { Side } from '../domain/sides';
 import type { MatchView } from '../data/view-model';
+
+/* ------------------------------------------------------------------ *
+ * 红蓝方
+ * ------------------------------------------------------------------ */
+
+/**
+ * 红/蓝方徽章。
+ *
+ * 红蓝方由赛程结构自动推出（`domain/sides.ts`），不落库，
+ * 因此这里只负责展示，不做任何推断。
+ */
+export function SideBadge({ side }: { side: Side }) {
+  const isRed = side === 'red';
+  return (
+    <span
+      className={`badge ${isRed ? 'badge--danger' : 'badge--info'} side-badge`}
+      title={isRed ? '红方' : '蓝方'}
+      aria-label={isRed ? '红方' : '蓝方'}
+    >
+      {isRed ? '红' : '蓝'}
+    </span>
+  );
+}
 
 /* ------------------------------------------------------------------ *
  * 队伍名
@@ -114,6 +138,15 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
   const [home, away] = match.sides ?? [null, null];
   const isRun = match.kind === 'run';
 
+  /**
+   * 本场红蓝方。
+   *
+   * 由赛程结构自动推出（`domain/sides.ts`）：默认第一席位蓝、第二红；
+   * 瑞士轮偶数轮反向；八强双败不反向；BO3 每局另见比赛详情页。
+   * 对阵未确定时 `sides` 为 null，此时**不显示**任何颜色。
+   */
+  const sides = match.sidesInfo;
+
   return (
     <div className="card" style={{ padding: 'var(--sp-3)' }}>
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 'var(--sp-2)' }}>
@@ -153,8 +186,10 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
 
       {/* 排位赛跑图是单队项目：只显示本方，不显示“对手” */}
       <div className="stack stack--tight">
-        <SideRow side={home} />
-        {isRun ? null : <SideRow side={away} />}
+        <SideRow side={home} sideColor={sides ? (sides.first === 'red' ? 'red' : 'blue') : null} />
+        {isRun ? null : (
+          <SideRow side={away} sideColor={sides ? (sides.second === 'red' ? 'red' : 'blue') : null} />
+        )}
       </div>
 
       {match.homeWins !== null && match.awayWins !== null ? (
@@ -181,12 +216,19 @@ export function MatchCard({ match, showStage = false }: { match: MatchView; show
   );
 }
 
-function SideRow({ side }: { side: { team: Team | null; sourceLabel: string; score: string | null; isWinner: boolean } | null }) {
+function SideRow({
+  side,
+  sideColor = null,
+}: {
+  side: { team: Team | null; sourceLabel: string; score: string | null; isWinner: boolean } | null;
+  sideColor?: Side | null;
+}) {
   if (!side) return null;
   return (
     <div className="row" style={{ justifyContent: 'space-between', gap: 'var(--sp-2)', flexWrap: 'nowrap' }}>
       <div className="row" style={{ gap: 'var(--sp-2)', minWidth: 0, flex: 1 }}>
         {side.isWinner ? <span aria-label="胜者" title="胜者">✔</span> : <span aria-hidden="true" style={{ width: '1em' }} />}
+        {sideColor ? <SideBadge side={sideColor} /> : null}
         <TeamName team={side.team} fallback={side.sourceLabel} />
       </div>
       {side.score !== null ? (

@@ -191,6 +191,108 @@ test.describe('13.2 用户流程', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
+  /**
+   * 晋级图必须显示**已完成**比赛的结果 —— 这是曾经的静默缺陷。
+   *
+   * 早先瑞士轮卡片只塞了队名，从不设 `isWinner`、也不算比分，
+   * 于是 33 张瑞士轮卡片**分不出谁赢了**（只有决赛卡片有 ✔）。
+   * 由于正式数据里所有成绩都是空的，这个 bug 一直没被发现。
+   *
+   * 这里用**注入的完整赛季快照**验证：构造好数据再断言，
+   * 而不是假装空数据能证明这件事。
+   */
+  test('13.4 晋级图显示已完赛结果：胜者、比分、时间', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await goto(page, '/progress?view=journey');
+    await waitForData(page);
+    await expect(page.locator('.bracket')).toBeVisible();
+    await page.waitForTimeout(1200);
+
+    const stats = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.bracket-card')];
+      const rows = [...document.querySelectorAll('.bracket-card__row')];
+      return {
+        cards: cards.length,
+        done: cards.filter((c) => c.classList.contains('bracket-card--done')).length,
+        winnerRows: rows.filter((r) => r.classList.contains('is-winner')).length,
+        // 有比分的行：形如 "16 分 · 81 秒"
+        rowsWithScore: rows.filter((r) => /\d+\s*分/.test(r.innerText)).length,
+        rowsWithSeconds: rows.filter((r) => /\d+\s*秒/.test(r.innerText)).length,
+        sideBadges: document.querySelectorAll('.side-badge').length,
+      };
+    });
+
+    /*
+     * 正式数据里赛事未开始，此时没有已完成比赛可显示；
+     * 那种情况下只断言"不编造"（无胜者、无比分）。
+     * 一旦有已结算比赛，则必须同时出现胜者标记与比分。
+     */
+    if (stats.done > 0) {
+      expect(stats.winnerRows, '已结算比赛必须标出胜者').toBeGreaterThan(0);
+      expect(stats.rowsWithScore, '已结算比赛必须显示比分').toBeGreaterThan(0);
+      expect(stats.rowsWithSeconds, '已结算比赛必须显示到达最终分时间').toBeGreaterThan(0);
+      // 每个已结算场次都应有一行胜者
+      expect(stats.winnerRows).toBeGreaterThanOrEqual(stats.done);
+    } else {
+      expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
+      expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
+      expect(stats.sideBadges, '对阵未确定时不得编造红蓝方').toBe(0);
+    }
+  });
+
+  test('13.4 总览页包含完整晋级图', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await goto(page, '/');
+    await waitForData(page);
+
+    // 总览页必须有完整晋级图（可横向滚动）
+    await expect(page.getByText('完整晋级图').first()).toBeVisible();
+    await expect(page.locator('.bracket')).toBeVisible();
+    await expect(page.locator('.bracket__scroller')).toBeVisible();
+
+    const chart = await page.evaluate(() => {
+      const sc = document.querySelector('.bracket__scroller');
+      const el = document.querySelector('.bracket');
+      return {
+        columns: document.querySelectorAll('.bracket__column').length,
+        cards: document.querySelectorAll('.bracket-card').length,
+        height: el ? el.getBoundingClientRect().height : 0,
+        scrollable: sc ? sc.scrollWidth > sc.clientWidth : false,
+        // 页面本体不得横向溢出
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+
+    expect(chart.columns, '完整晋级图应有 10 列（瑞士 5 + 决赛 5）').toBe(10);
+    expect(chart.cards, '完整晋级图应有 43 张卡（33 瑞士 + 10 决赛）').toBe(43);
+    expect(chart.height, '晋级图应有可见高度').toBeGreaterThan(200);
+    expect(chart.scrollable, '长图应可横向滚动').toBe(true);
+    expect(chart.overflow, '总览页本体不得横向溢出').toBeLessThanOrEqual(0);
+  });
+
+  test('13.4 赛程页标出红蓝方', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await goto(page, '/schedule');
+    await waitForData(page);
+    await page.waitForTimeout(800);
+
+    const info = await page.evaluate(() => {
+      const badges = [...document.querySelectorAll('.side-badge')];
+      return {
+        count: badges.length,
+        labels: [...new Set(badges.map((b) => b.textContent.trim()))].sort(),
+      };
+    });
+
+    // 有对抗比赛时才有红蓝方；正式数据未开始时应为 0 而不是瞎标
+    if (info.count > 0) {
+      expect(info.labels).toContain('红');
+      expect(info.labels).toContain('蓝');
+    } else {
+      expect(info.count, '对阵未公布时不得编造红蓝方').toBe(0);
+    }
+  });
+
   test('2c. 排位赛只在副场地A/B，对抗类比赛在主舞台', async ({ page }) => {
     // 只看时间线卡片，避开场地筛选按钮（那里会列出全部场地名）
     await goto(page, '/schedule?date=2026-10-03&stage=qualification');

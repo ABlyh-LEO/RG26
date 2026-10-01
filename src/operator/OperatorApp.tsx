@@ -621,6 +621,16 @@ function FinalsBo1Form({
   const blueId = ready ? resolvedIds[0]! : null;
   const redId = ready ? resolvedIds[1]! : null;
 
+  /** 红=第二席位、蓝=第一席位（八强双败不换边），因此可直接对应。 */
+  const blueSeconds = firstSeconds;
+  const redSeconds = secondSeconds;
+  const blueZero = firstScore.trim() !== '' && Number(firstScore) === 0;
+  const redZero = secondScore.trim() !== '' && Number(secondScore) === 0;
+
+  /** 有效比赛的时间强制必填；零分一方按 360 秒约定。 */
+  const timeReady =
+    !isPerformance || ((blueZero || blueSeconds.trim() !== '') && (redZero || redSeconds.trim() !== ''));
+
   return (
     <div className="card operator-draft">
       <div className="card__head">
@@ -682,16 +692,20 @@ function FinalsBo1Form({
           />
         </div>
         <div className="operator-field">
-          <label htmlFor="fb-blue-sec">蓝方到达最终分时间（秒）</label>
+          <label htmlFor="fb-blue-sec">蓝方到达最终分时间（秒）{isPerformance && !blueZero ? ' *' : ''}</label>
           <input
             id="fb-blue-sec"
             className="input"
-            value={blueId === resolvedIds[0] ? firstSeconds : secondSeconds}
-            onChange={(e) => (blueId === resolvedIds[0] ? setFirstSeconds : setSecondSeconds)(e.target.value)}
+            value={blueSeconds}
+            onChange={(e) => setFirstSeconds(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
+            required={isPerformance}
+            placeholder={isPerformance && blueZero ? '零分记 360 秒' : '必填'}
           />
-          <span className="operator-field__hint">积分相同时，最后得分时间是判断胜负的重要依据</span>
+          <span className="operator-field__hint">
+            必填：积分相同时，最后得分时间是判断胜负的重要依据
+          </span>
         </div>
       </div>
 
@@ -708,14 +722,16 @@ function FinalsBo1Form({
           />
         </div>
         <div className="operator-field">
-          <label htmlFor="fb-red-sec">红方到达最终分时间（秒）</label>
+          <label htmlFor="fb-red-sec">红方到达最终分时间（秒）{isPerformance && !redZero ? ' *' : ''}</label>
           <input
             id="fb-red-sec"
             className="input"
-            value={redId === resolvedIds[0] ? firstSeconds : secondSeconds}
-            onChange={(e) => (redId === resolvedIds[0] ? setFirstSeconds : setSecondSeconds)(e.target.value)}
+            value={redSeconds}
+            onChange={(e) => setSecondSeconds(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
+            required={isPerformance}
+            placeholder={isPerformance && redZero ? '零分记 360 秒' : '必填'}
           />
         </div>
       </div>
@@ -782,7 +798,7 @@ function FinalsBo1Form({
       <button
         type="button"
         className="btn btn--primary"
-        disabled={!ready}
+        disabled={!ready || !timeReady}
         onClick={() =>
           onApply(
             applyFinalsBo1(draft, {
@@ -802,6 +818,12 @@ function FinalsBo1Form({
       >
         确认并写入草稿
       </button>
+      {!timeReady ? (
+        <div className="operator-errors" style={{ marginTop: 'var(--sp-2)' }}>
+          有效比赛必须填写双方**到达最终分时间** —— 积分相同时，它是判断胜负的依据。
+          积分为 0 的一方自动记 360 秒，无需填写。
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -941,9 +963,28 @@ function Bo3Form({
   const notNeeded = w.winnerId !== null;
   const isPerformance = kind === 'normal' || kind === 'early-end';
 
+  /**
+   * 有效比赛的时间**强制必填**（积分相同时决定胜负）。
+   * 零分一方按 360 秒约定，因此不需要手填。
+   */
+  const firstZero = firstScore.trim() !== '' && Number(firstScore) === 0;
+  const secondZero = secondScore.trim() !== '' && Number(secondScore) === 0;
+
   /** 本局红蓝方：每局交替，由局号推出，不需要人工维护。 */
   const blueId = ready ? assignSides(firstTeamId!, secondTeamId!, sidesForSeriesGame(effectiveIndex)).blue : null;
   const redId = ready ? assignSides(firstTeamId!, secondTeamId!, sidesForSeriesGame(effectiveIndex)).red : null;
+
+  /** 按红/蓝取对应的积分与时间，避免在 JSX 里反复三元。 */
+  const blueIsFirst = blueId === firstTeamId;
+  const blueScore = blueIsFirst ? firstScore : secondScore;
+  const redScore = blueIsFirst ? secondScore : firstScore;
+  const blueSeconds = blueIsFirst ? firstSeconds : secondSeconds;
+  const redSeconds = blueIsFirst ? secondSeconds : firstSeconds;
+  const blueZero = blueIsFirst ? firstZero : secondZero;
+  const redZero = blueIsFirst ? secondZero : firstZero;
+
+  const timeReady =
+    !isPerformance || ((blueZero || blueSeconds.trim() !== '') && (redZero || redSeconds.trim() !== ''));
 
   return (
     <div className="card operator-draft">
@@ -1023,23 +1064,29 @@ function Bo3Form({
           <input
             id="bo3-blue"
             className="input"
-            value={blueId === firstTeamId ? firstScore : secondScore}
+            value={blueScore}
             onChange={(e) => (blueId === firstTeamId ? setFirstScore : setSecondScore)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
           />
         </div>
         <div className="operator-field">
-          <label htmlFor="bo3-blue-sec">蓝方到达最终分时间（秒）</label>
+          <label htmlFor="bo3-blue-sec">
+            蓝方到达最终分时间（秒）{isPerformance && !blueZero ? ' *' : ''}
+          </label>
           <input
             id="bo3-blue-sec"
             className="input"
-            value={blueId === firstTeamId ? firstSeconds : secondSeconds}
+            value={blueSeconds}
             onChange={(e) => (blueId === firstTeamId ? setFirstSeconds : setSecondSeconds)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
+            required={isPerformance}
+            placeholder={isPerformance && blueZero ? '零分记 360 秒' : '必填'}
           />
-          <span className="operator-field__hint">积分相同时，最后得分时间是判断胜负的重要依据</span>
+          <span className="operator-field__hint">
+            必填：积分相同时，最后得分时间是判断胜负的重要依据
+          </span>
         </div>
       </div>
 
@@ -1049,21 +1096,25 @@ function Bo3Form({
           <input
             id="bo3-red"
             className="input"
-            value={redId === firstTeamId ? firstScore : secondScore}
+            value={redScore}
             onChange={(e) => (redId === firstTeamId ? setFirstScore : setSecondScore)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
           />
         </div>
         <div className="operator-field">
-          <label htmlFor="bo3-red-sec">红方到达最终分时间（秒）</label>
+          <label htmlFor="bo3-red-sec">
+            红方到达最终分时间（秒）{isPerformance && !redZero ? ' *' : ''}
+          </label>
           <input
             id="bo3-red-sec"
             className="input"
-            value={redId === firstTeamId ? firstSeconds : secondSeconds}
+            value={redSeconds}
             onChange={(e) => (redId === firstTeamId ? setFirstSeconds : setSecondSeconds)(e.target.value)}
             inputMode="decimal"
             disabled={!ready}
+            required={isPerformance}
+            placeholder={isPerformance && redZero ? '零分记 360 秒' : '必填'}
           />
         </div>
       </div>
@@ -1124,7 +1175,7 @@ function Bo3Form({
       <button
         type="button"
         className="btn btn--primary"
-        disabled={!ready || notNeeded}
+        disabled={!ready || notNeeded || !timeReady}
         onClick={() =>
           onApply(
             applyBo3Game(draft, {
@@ -1144,6 +1195,12 @@ function Bo3Form({
       >
         确认本局并写入草稿
       </button>
+      {!timeReady ? (
+        <div className="operator-errors" style={{ marginTop: 'var(--sp-2)' }}>
+          有效比赛必须填写双方**到达最终分时间** —— 积分相同时，它是判断本局胜负的依据。
+          积分为 0 的一方自动记 360 秒，无需填写。
+        </div>
+      ) : null}
     </div>
   );
 }

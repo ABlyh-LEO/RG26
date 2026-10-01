@@ -55,6 +55,34 @@ function players(ev: EventFile, id: string): [string, string] | null {
 
 const EIGHT_BO1 = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-LSF', 'F-WSF'];
 
+/**
+ * 构造一次决赛 BO1 录入。
+ *
+ * 有效比赛的**到达最终分时间现在是强制必填**，所以默认带上，
+ * 需要测「缺时间被拒」时显式传空串覆盖。
+ */
+function entry(
+  seriesId: string,
+  home: string,
+  away: string,
+  winnerId: string | null,
+  over: Partial<Parameters<typeof applyFinalsBo1>[1]> = {},
+) {
+  return {
+    seriesId,
+    gameIndex: 1,
+    homeTeamId: home,
+    awayTeamId: away,
+    homeScore: '16',
+    awayScore: '4',
+    homeReachedSeconds: '90',
+    awayReachedSeconds: '140',
+    winnerId,
+    resultKind: 'normal' as const,
+    ...over,
+  };
+}
+
 describe('决赛 BO1 录入', () => {
   it('第 1–8 场都是 BO1，且计数入排名', () => {
     for (const id of EIGHT_BO1) {
@@ -84,16 +112,7 @@ describe('决赛 BO1 录入', () => {
   it('新入口可以录入第 1 场并决出胜者', () => {
     const ev = withSeeds(BASE);
     const [home, away] = players(ev, 'F-L1A')!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A',
-      gameIndex: 1,
-      homeTeamId: home,
-      awayTeamId: away,
-      homeScore: '16',
-      awayScore: '4',
-      winnerId: home,
-      resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry('F-L1A', home, away, home));
     expect(r.ok).toBe(true);
 
     const s = r.event.finals.series.find((x) => x.id === 'F-L1A')!;
@@ -104,37 +123,76 @@ describe('决赛 BO1 录入', () => {
     expect(g.winnerId).toBe(home);
     expect(g.homeScore).toBe('16');
     expect(g.confirmedAt).not.toBeNull();
+    // 时间必须被保存下来（积分相同时决定胜负）
+    expect(g.homeReachedSeconds).toBe('90');
+    expect(g.awayReachedSeconds).toBe('140');
 
     const w = seriesWins(s);
     expect(w.winnerId).toBe(home);
     expect(w.need).toBe(1);
   });
 
+  it('有效比赛缺到达最终分时间被拒绝（强制必填）', () => {
+    const ev = withSeeds(BASE);
+    const [home, away] = players(ev, 'F-L1A')!;
+    const r = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, home, { homeReachedSeconds: '', awayReachedSeconds: '140' }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.messages.join()).toContain('必须填写');
+  });
+
+  it('零分局的时间按 360 秒约定自动补上', () => {
+    const ev = withSeeds(BASE);
+    const [home, away] = players(ev, 'F-L1A')!;
+    const r = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, away, {
+        homeScore: '0',
+        awayScore: '16',
+        homeReachedSeconds: '',
+        awayReachedSeconds: '95',
+      }),
+    );
+    expect(r.ok).toBe(true);
+    const g = r.event.finals.series.find((x) => x.id === 'F-L1A')!.games[0]!;
+    // 0 分一方的 360 秒是**约定**，不是"没填"
+    expect(g.homeReachedSeconds).toBe('360');
+    expect(g.awayReachedSeconds).toBe('95');
+  });
+
+  it('弃权不计表现分，因此不要求时间', () => {
+    const ev = withSeeds(BASE);
+    const [home, away] = players(ev, 'F-L1A')!;
+    const r = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, home, {
+        homeScore: '',
+        awayScore: '',
+        homeReachedSeconds: '',
+        awayReachedSeconds: '',
+        resultKind: 'walkover-before-start',
+      }),
+    );
+    expect(r.ok).toBe(true);
+    const g = r.event.finals.series.find((x) => x.id === 'F-L1A')!.games[0]!;
+    expect(g.homeReachedSeconds).toBeNull();
+  });
+
   it('胜利者沿依赖图流向第 5 场', () => {
     let ev = withSeeds(BASE);
     // 第 1 场：L1 vs L4 → L1 胜
     const p1 = players(ev, 'F-L1A')!;
-    ev = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: p1[0], awayTeamId: p1[1],
-      homeScore: '16', awayScore: '4', winnerId: p1[0], resultKind: 'normal',
-    }).event;
+    ev = applyFinalsBo1(ev, entry('F-L1A', p1[0], p1[1], p1[0])).event;
     // 第 2 场：L2 vs L3 → L2 胜
     const p2 = players(ev, 'F-L1B')!;
-    ev = applyFinalsBo1(ev, {
-      seriesId: 'F-L1B', gameIndex: 1, homeTeamId: p2[0], awayTeamId: p2[1],
-      homeScore: '16', awayScore: '4', winnerId: p2[0], resultKind: 'normal',
-    }).event;
+    ev = applyFinalsBo1(ev, entry('F-L1B', p2[0], p2[1], p2[0])).event;
     // 第 3、4 场：胜者组
     const p3 = players(ev, 'F-W1A')!;
-    ev = applyFinalsBo1(ev, {
-      seriesId: 'F-W1A', gameIndex: 1, homeTeamId: p3[0], awayTeamId: p3[1],
-      homeScore: '16', awayScore: '4', winnerId: p3[0], resultKind: 'normal',
-    }).event;
+    ev = applyFinalsBo1(ev, entry('F-W1A', p3[0], p3[1], p3[0])).event;
     const p4 = players(ev, 'F-W1B')!;
-    ev = applyFinalsBo1(ev, {
-      seriesId: 'F-W1B', gameIndex: 1, homeTeamId: p4[0], awayTeamId: p4[1],
-      homeScore: '16', awayScore: '4', winnerId: p4[0], resultKind: 'normal',
-    }).event;
+    ev = applyFinalsBo1(ev, entry('F-W1B', p4[0], p4[1], p4[0])).event;
 
     // 第 5 场 = 第 3 场败者 vs 第 2 场胜者
     const p5 = players(ev, 'F-L2A');
@@ -151,16 +209,7 @@ describe('决赛 BO1 录入', () => {
   it('未就绪的场次不得录入', () => {
     const ev = withSeeds(BASE);
     // 第 5 场依赖第 3 场，此时还没打
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L2A',
-      gameIndex: 1,
-      homeTeamId: 'competitive-1',
-      awayTeamId: 'competitive-2',
-      homeScore: '16',
-      awayScore: '4',
-      winnerId: 'competitive-1',
-      resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry('F-L2A', 'competitive-1', 'competitive-2', 'competitive-1'));
     // 允许写入（数据层不强制依赖顺序），但解析层不得凭空造出参赛双方
     const resolved = resolveP(r.event).series.get('F-L2A');
     const slotStates = resolved?.slots.map((s) => s.state);
@@ -170,10 +219,7 @@ describe('决赛 BO1 录入', () => {
   it('缺胜者被拒绝（淘汰赛不允许平局）', () => {
     const ev = withSeeds(BASE);
     const [home, away] = players(ev, 'F-L1A')!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '16', awayScore: '4', winnerId: null, resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry('F-L1A', home, away, null));
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toContain('必须指定胜者');
   });
@@ -181,10 +227,10 @@ describe('决赛 BO1 录入', () => {
   it('有效比赛缺积分被拒绝（缺分≠0）', () => {
     const ev = withSeeds(BASE);
     const [home, away] = players(ev, 'F-L1A')!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '', awayScore: '', winnerId: home, resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, home, { homeScore: '', awayScore: '' }),
+    );
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toContain('必须填写双方积分');
   });
@@ -192,24 +238,27 @@ describe('决赛 BO1 录入', () => {
   it('弃权不需要积分', () => {
     const ev = withSeeds(BASE);
     const [home, away] = players(ev, 'F-L1A')!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '', awayScore: '', winnerId: home, resultKind: 'walkover-before-start',
-    });
+    const r = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, home, {
+        homeScore: '',
+        awayScore: '',
+        homeReachedSeconds: '',
+        awayReachedSeconds: '',
+        resultKind: 'walkover-before-start',
+      }),
+    );
     expect(r.ok).toBe(true);
   });
 
   it('已结束的场次拒绝重复录入（须走更正流程）', () => {
     let ev = withSeeds(BASE);
     const [home, away] = players(ev, 'F-L1A')!;
-    ev = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '16', awayScore: '4', winnerId: home, resultKind: 'normal',
-    }).event;
-    const again = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '1', awayScore: '16', winnerId: away, resultKind: 'normal',
-    });
+    ev = applyFinalsBo1(ev, entry('F-L1A', home, away, home)).event;
+    const again = applyFinalsBo1(
+      ev,
+      entry('F-L1A', home, away, away, { homeScore: '1', awayScore: '16' }),
+    );
     expect(again.ok).toBe(false);
     expect(again.messages.join()).toContain('已由');
   });
@@ -217,29 +266,20 @@ describe('决赛 BO1 录入', () => {
   it('双方相同被拒绝', () => {
     const ev = withSeeds(BASE);
     const [home] = players(ev, 'F-L1A')!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: home,
-      homeScore: '16', awayScore: '4', winnerId: home, resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry('F-L1A', home, home, home));
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toContain('同一支队伍');
   });
 
   it('不存在的系列赛被拒绝', () => {
-    const r = applyFinalsBo1(withSeeds(BASE), {
-      seriesId: 'F-NOPE', gameIndex: 1, homeTeamId: 'a', awayTeamId: 'b',
-      homeScore: '16', awayScore: '4', winnerId: 'a', resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(withSeeds(BASE), entry('F-NOPE', 'a', 'b', 'a'));
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toContain('找不到系列赛');
   });
 
   it('拒绝把 BO3 系列赛当 BO1 录入', () => {
     const ev = withSeeds(BASE);
-    const r = applyFinalsBo1(ev, {
-      seriesId: 'F-GF', gameIndex: 1, homeTeamId: 'a', awayTeamId: 'b',
-      homeScore: '16', awayScore: '4', winnerId: 'a', resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry('F-GF', 'a', 'b', 'a'));
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toContain('不是 BO1');
   });
@@ -247,10 +287,7 @@ describe('决赛 BO1 录入', () => {
   it('拒绝录入不计入排名的系列赛（展示赛/表演赛）', () => {
     const ev = withSeeds(BASE);
     const showcase = ev.finals.series.find((s) => !s.countsForStandings)!;
-    const r = applyFinalsBo1(ev, {
-      seriesId: showcase.id, gameIndex: 1, homeTeamId: 'a', awayTeamId: 'b',
-      homeScore: '16', awayScore: '4', winnerId: 'a', resultKind: 'normal',
-    });
+    const r = applyFinalsBo1(ev, entry(showcase.id, 'a', 'b', 'a'));
     expect(r.ok).toBe(false);
     expect(r.messages.join()).toMatch(/不是 BO1|不计入排名/);
   });
@@ -259,10 +296,7 @@ describe('决赛 BO1 录入', () => {
     const ev = withSeeds(BASE);
     const snapshot = JSON.stringify(ev);
     const [home, away] = players(ev, 'F-L1A')!;
-    applyFinalsBo1(ev, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: home, awayTeamId: away,
-      homeScore: '16', awayScore: '4', winnerId: home, resultKind: 'normal',
-    });
+    applyFinalsBo1(ev, entry('F-L1A', home, away, home));
     expect(JSON.stringify(ev)).toBe(snapshot);
   });
 });
