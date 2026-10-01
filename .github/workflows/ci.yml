@@ -48,7 +48,12 @@ jobs:
         run: npm run build
 
       - name: 安装 Playwright 浏览器
-        run: npx playwright install --with-deps chromium
+        # 必须与 playwright.config.ts 里声明的 projects **一一对应**。
+        # 配置里除了三个 Chromium 项目，还有 mobile-webkit
+        # （除非设置 E2E_SKIP_WEBKIT=1）。只装 chromium 会让全部
+        # webkit 用例以「Executable doesn't exist」失败 —— 那是假失败，
+        # 会让 CI 长期变红而失去报警能力。
+        run: npx playwright install --with-deps chromium webkit
 
       - name: 端到端测试
         run: npm run test:e2e

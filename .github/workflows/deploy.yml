@@ -91,6 +91,34 @@ jobs:
           fi
           echo "公开产物未包含维护模式入口。"
 
+      - name: 安装 Playwright 浏览器
+        # 与 ci.yml / playwright.config.ts 保持一致：配置里有 mobile-webkit，
+        # 只装 chromium 会让 webkit 用例全部假失败。
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: 端到端测试（失败则阻止部署）
+        # 部署是"观众真的会看到"的一步，必须挡住渲染类缺陷。
+        #
+        # 两个关键点：
+        # 1. **不能重新构建**。上面的构建已带 VITE_BASE_PATH（仓库子路径），
+        #    正是线上使用的 base；e2e 的 webServer 若再跑一次 build:only，
+        #    会用一个 base:'/' 的包覆盖掉它，上传到 Pages 的产物就坏了。
+        #    因此设 E2E_SKIP_BUILD=1，只启动 preview 验现有产物。
+        # 2. **base 必须带子路径**。产物里资源指向 /<repo>/assets/...，
+        #    若访问根路径会拿不到应用，测试会假失败。
+        env:
+          E2E_SKIP_BUILD: '1'
+          E2E_BASE_URL: http://127.0.0.1:4173/${{ github.event.repository.name }}/
+        run: npm run test:e2e
+
+      - name: 上传 Playwright 报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
       - name: 上传 Pages 产物
         uses: actions/upload-pages-artifact@v3
         with:
