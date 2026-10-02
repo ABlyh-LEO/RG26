@@ -255,7 +255,7 @@ export function makeEmptyEvent(teams: Team[] = makeTeams()): EventFile {
     rules: {
       version: 'test',
       qualificationRankingMode: 'official-manual',
-      swissPairingPolicy: 'same-record-adjacent',
+      swissPairingPolicy: 'manual-head-to-tail',
     },
     teams,
     venues: TEST_VENUES,

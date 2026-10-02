@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "a2fbcf8ce362f9f4a4990bcb6545b137",
-  "builtAt": "2026-10-02T20:52:41.025Z",
-  "sourceCommit": "3b763bae9adf19043167bec841c5994268d028ee",
+  "revision": "fa44a0ea19e170411c3f65288a9bd90f",
+  "builtAt": "2026-10-02T22:02:08.729Z",
+  "sourceCommit": "0287fba9465453366f6bda74e80d884ff996d0f1",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -26,7 +26,7 @@
     "rules": {
       "version": "4_6",
       "qualificationRankingMode": "official-manual",
-      "swissPairingPolicy": "same-record-adjacent"
+      "swissPairingPolicy": "manual-head-to-tail"
     },
     "teams": [
       {

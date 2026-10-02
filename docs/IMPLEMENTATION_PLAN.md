@@ -438,7 +438,8 @@ type EventFile = {
   rules: {
     version: string;
     qualificationRankingMode: 'official-manual';
-    swissPairingPolicy: 'same-record-adjacent';
+    /** 现行实现写 'manual-head-to-tail'（R1 前后两半、R2 起组内首尾）；旧的 'same-record-adjacent' 仍可解析。 */
+    swissPairingPolicy: 'manual-head-to-tail' | 'same-record-adjacent';
   };
   teams: Team[];
   venues: Venue[];

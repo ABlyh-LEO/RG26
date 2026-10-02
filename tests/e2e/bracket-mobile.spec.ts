@@ -72,8 +72,18 @@ async function geometryProblems(page: Page) {
   });
 }
 
+/**
+ * 轮询到"卡片与连线完全对齐"。
+ *
+ * 几何检查要遍历 47 个节点做两两重叠判定，在 CI/本机满并发（WebKit 与其它
+ * 项目抢 CPU）时，默认 5 秒轮询会在布局稳定前超时，报出假红——而部署门禁
+ * 正是这套 e2e。这里只放宽等待时间，判定条件一字不改。
+ */
 async function expectAligned(page: Page) {
-  await expect.poll(() => geometryProblems(page), { message: '卡片和晋级连线必须在排版后对齐' }).toEqual([]);
+  await expect.poll(() => geometryProblems(page), {
+    message: '卡片和晋级连线必须在排版后对齐',
+    timeout: 20_000,
+  }).toEqual([]);
 }
 
 test('移动晋级图首次加载、横竖屏切换及横向滚动后保持对齐', async ({ page }, testInfo) => {
@@ -116,7 +126,10 @@ test('移动晋级图收到成绩及长队名后重新测量，字体增大后�
   const firstCard = page.locator('.bracket-card').first();
   const previousHeight = await firstCard.evaluate((element) => element.getBoundingClientRect().height);
   await page.addStyleTag({ content: '.bracket-card__team { font-size: 22px !important; line-height: 1.7 !important; }' });
-  await expect.poll(() => firstCard.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThan(previousHeight);
+  await expect.poll(() => firstCard.evaluate((element) => element.getBoundingClientRect().height), {
+    message: '字体增大后卡片应重新测量并变高',
+    timeout: 20_000,
+  }).toBeGreaterThan(previousHeight);
   await expectAligned(page);
   await testInfo.attach('mobile-results-large-text', {
     body: await page.locator('[data-journey-stage="finals"]').screenshot(), contentType: 'image/png',

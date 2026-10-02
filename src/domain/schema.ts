@@ -512,7 +512,17 @@ export const rulesMetaSchema = z
   .object({
     version: z.string().min(1),
     qualificationRankingMode: z.literal('official-manual'),
-    swissPairingPolicy: z.literal('same-record-adjacent'),
+    /**
+     * 配对策略标识。**不对外展示**，仅供维护者核对数据与实现是否同口径。
+     *
+     * 历史值 `same-record-adjacent`（R1 首尾、R2 起同组相邻）与赛程手册相反；
+     * 现行为手册口径：**R1 前后两半对位（1v9…8v16）、R2 起组内首尾配对**，
+     * 记为 `manual-head-to-tail`。
+     *
+     * 这里用 union 同时接受旧值：浏览器可能仍持有发布过的旧快照，
+     * 收紧成单一字面量会让旧快照解析失败、页面报"schema 不兼容"。
+     */
+    swissPairingPolicy: z.union([z.literal('manual-head-to-tail'), z.literal('same-record-adjacent')]),
   })
   .strict();
 

@@ -21,7 +21,7 @@
   "rules": {
     "version": "4_6",
     "qualificationRankingMode": "official-manual",
-    "swissPairingPolicy": "same-record-adjacent"
+    "swissPairingPolicy": "manual-head-to-tail"
   },
   "teams": [
     {
@@ -2503,7 +2503,12 @@
       "confirmedAt": null,
       "sourceNote": null,
       "publicationStatus": "draft",
-      "publishedAt": null
+      "publishedAt": null,
+      "missingTeamIds": null,
+      "partialTeamIds": null,
+      "tiedTeamIds": null,
+      "reviewNote": null,
+      "overrideReason": null
     }
   },
   "swiss": {

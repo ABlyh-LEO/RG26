@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/operator-e2e', testMatch: '*.spec.ts', fullyParallel: false, workers: 1,
-  retries: 0, timeout: 45_000, forbidOnly: !!process.env.CI,
+  // CI 里允许重试一次：这些用例要起临时 Git 仓库、跑真实提交与推送，偶发超时
+  // 不应把一次绿色 CI 变成红色（重试不会掩盖断言失败，失败仍会被报出）。
+  retries: process.env.CI ? 1 : 0, timeout: 45_000, forbidOnly: !!process.env.CI,
   reporter: 'list', outputDir: 'test-results/operator',
   use: { baseURL: 'http://127.0.0.1:5399', trace: 'retain-on-failure' },
   projects: [

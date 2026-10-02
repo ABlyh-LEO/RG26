@@ -31,7 +31,7 @@ function makeEventWithSwiss(rounds: ReturnType<typeof simulateSwiss>): EventFile
       contentUpdatedAt: '2026-10-04T00:00:00+08:00',
       openItems: [],
     },
-    rules: { version: 'test', qualificationRankingMode: 'official-manual', swissPairingPolicy: 'same-record-adjacent' },
+    rules: { version: 'test', qualificationRankingMode: 'official-manual', swissPairingPolicy: 'manual-head-to-tail' },
     teams: makeTeams(),
     venues: [],
     scheduleItems: [],

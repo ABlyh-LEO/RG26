@@ -43,6 +43,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
+  /*
+    单条断言的最长等待。默认 5 秒在本机满并发（四个项目抢 CPU、WebKit 尤甚）时
+    偏紧，会出现"布局其实已经对齐、断言先超时"的假红；部署门禁就跑这套 e2e，
+    假红会直接挡住发布。这里放宽等待，判定条件不变。
+  */
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: BASE_URL,

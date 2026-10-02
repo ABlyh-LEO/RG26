@@ -6,7 +6,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useData } from '../data/DataProvider';
-import { formatDate } from '../data/view-model';
+import { formatDate, pendingOpenItems } from '../data/view-model';
 import { Icon } from '../components/Icon';
 
 export function RulesPage() {
@@ -22,7 +22,7 @@ export function RulesPage() {
   const rulesVersion = derived?.event.rules.version ?? '—';
   const sourceSha = derived?.event.event.sourceDocumentSha256 ?? '—';
   const updatedAt = derived?.event.event.contentUpdatedAt ?? null;
-  const openItems = derived?.event.event.openItems ?? [];
+  const openItems = derived ? pendingOpenItems(derived.event) : [];
 
   return (
     <div className="stack reference-page" style={{ gap: 'var(--sp-4)' }}>

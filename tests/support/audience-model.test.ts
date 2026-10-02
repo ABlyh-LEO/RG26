@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { audienceEvent } from '../fixtures/audience-scenarios';
-import { deriveEvent, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, effectiveStart } from '../../src/data/view-model';
+import { deriveEvent, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, effectiveStart, pendingOpenItems } from '../../src/data/view-model';
 import { describeEventUpdate } from '../../src/data/updates';
 import { buildSwissConnections, nodeParticipants } from '../../src/data/bracket-model';
 import { validateEvent } from '../../src/domain/validation';
@@ -87,6 +87,19 @@ describe('观众派生数据', () => {
     // 第二个席位是"单队展示"占位，不是对手。
     expect(next?.sides?.[1].team).toBeNull();
     expect(next?.sides?.[1].sourceLabel).toBe('单队展示');
+  });
+  it('展示组抽签登记后「仍待补齐的资料」不再列出抽签顺序', () => {
+    const before = audienceEvent('before');
+    expect(before.event.openItems.some((item) => item.includes('抽签顺序'))).toBe(true);
+    expect(pendingOpenItems(before).some((item) => item.includes('抽签顺序'))).toBe(true);
+
+    const teams = before.teams.filter((team) => team.division === 'showcase');
+    const drawn = applyShowcaseDraw(before, teams.map((team) => team.id));
+    expect(drawn.ok).toBe(true);
+
+    const pending = pendingOpenItems(drawn.event);
+    expect(pending.some((item) => item.includes('抽签顺序'))).toBe(false);
+    expect(pending).toHaveLength(before.event.openItems.length - 1);
   });
   it('未公布的瑞士轮候选不产生确定参赛队伍或晋级线', () => {
     const event = audienceEvent('swiss');

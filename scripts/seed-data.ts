@@ -739,7 +739,8 @@ export function buildSeedEvent(now: string): EventFile {
     rules: {
       version: RULES_VERSION,
       qualificationRankingMode: 'official-manual',
-      swissPairingPolicy: 'same-record-adjacent',
+      // 赛程手册口径：R1 前后两半对位，R2 起组内首尾配对。
+      swissPairingPolicy: 'manual-head-to-tail',
     },
     teams,
     venues,

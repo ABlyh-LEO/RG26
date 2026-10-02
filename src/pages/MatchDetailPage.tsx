@@ -15,7 +15,23 @@ export function MatchDetailPage() {
   const swiss = event.swiss.matches.find((match) => match.id === matchId);
   const series = event.finals.series.find((match) => match.id === matchId);
   const view: MatchView | null = swiss ? toSwissMatchView(swiss, event, teamMap, venueLabels) : series ? toSeriesView(series, event, teamMap, venueLabels, finals) : null;
-  if (!view) return <EmptyState title="找不到这场比赛" hint="该链接可能已经调整，请从赛程重新选择比赛。" action={<Link to="/schedule" className="btn">返回赛程</Link>} />;
+  if (!view) {
+    /*
+     * 无效链接（旧分享、手改 URL）的兜底页。刻意与队伍详情页用同一形态：
+     * 有 `page-head` 与一级标题，而不是一张孤立的空状态卡片——页面结构一致，
+     * 读屏与浏览器大纲也才有明确的页面标题。
+     */
+    return (
+      <div className="card">
+        <div className="eyebrow">MATCH DETAIL</div>
+        <h1 className="page-head__title">找不到这场比赛</h1>
+        <p className="muted">比赛 ID「{matchId}」不存在，该链接可能已经调整。请从赛程重新选择比赛。</p>
+        <Link to="/schedule" className="btn">
+          返回赛程
+        </Link>
+      </div>
+    );
+  }
   if (view.stage === 'showcase') return <ShowcaseMatchDetail view={view} />;
   const schedule = view.schedule;
   const sideNote = swiss ? `第 ${swiss.roundIndex} 轮${swiss.roundIndex % 2 === 0 ? ' · 偶数轮换边' : ''}` : series?.format === 'BO3' ? '全系列赛不换边' : '八强双败不换边';

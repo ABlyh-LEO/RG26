@@ -144,6 +144,20 @@ export function formatDateTime(iso: string): string {
   return `${formatDate(iso)} ${formatTime(iso)}`;
 }
 
+/**
+ * 面向观众的「仍待补齐的资料」：把已经落实的事项去掉。
+ *
+ * 目前唯一能从数据判断的是展示组抽签顺序——`showcase.drawOrder` 登记后即已补齐，
+ * 否则观众会在抽签结束后仍然看到"待补齐"。其余条目属于赛事行政信息（例如共享
+ * 文档地址），无法从数据推断，保持原样展示。
+ */
+export function pendingOpenItems(event: EventFile): string[] {
+  const drawRegistered = event.showcase.drawOrder !== null;
+  return event.event.openItems.filter(
+    (item) => !(drawRegistered && item.includes('抽签顺序')),
+  );
+}
+
 /* ------------------------------------------------------------------ *
  * 比赛卡视图
  * ------------------------------------------------------------------ */
