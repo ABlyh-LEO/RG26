@@ -5,6 +5,8 @@
    ========================================================================== */
 
 .bracket {
+  min-width: 0;
+  max-width: 100%;
   --bc-gap: 12px;
   --bc-radius: 10px;
   --bc-title-size: var(--text-sm);

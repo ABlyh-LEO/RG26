@@ -43,8 +43,10 @@ test('完整晋级图可定位阶段并高亮队伍真实参赛路径', async ({
   await page.goto(`./#/progress?view=journey&team=${team}`); await waitForData(page);
   await expect(page.locator('.bracket__node.is-highlighted')).not.toHaveCount(0);
   await expect(page.locator('.bracket__link.is-highlighted')).not.toHaveCount(0);
-  await page.getByRole('group', { name: '定位晋级图阶段' }).getByRole('button', { name: '总决赛', exact: true }).click();
-  await expect.poll(() => page.locator('.bracket__scroller').evaluate(element => element.scrollLeft)).toBeGreaterThan(500);
+  await page.getByRole('group', { name: '定位完整晋级图', exact: true }).getByRole('button', { name: '八强决赛', exact: true }).click();
+  await expect(page.locator('[data-journey-stage="finals"] h2').first()).toBeInViewport();
+  await page.getByRole('group', { name: '定位决赛分区', exact: true }).getByRole('button', { name: '冠军争夺', exact: true }).click();
+  await expect(page.locator('[data-bracket-zone="championship"]')).toBeInViewport();
   await page.getByRole('button', { name: '返回轮次视图' }).click();
   await expect(page.locator('.bracket')).toHaveCount(0);
   await expect(page.getByLabel('定位队伍')).toHaveValue(team);

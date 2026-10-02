@@ -55,6 +55,8 @@ export interface BracketChartProps {
   connections: LayoutConnection[];
   /** 渲染单个节点。 */
   renderNode: (nodeId: string) => BracketNodeContent;
+  /** 节点内的补充操作，放在详情链接外，避免交互控件嵌套。 */
+  renderNodeFooter?: (nodeId: string) => ReactNode;
   /** 分区标题（例如战绩组）。 */
   sectionLabel?: (section: string) => string;
   /** 每列最少宽度。 */
@@ -116,6 +118,7 @@ export function BracketChart({
   columns,
   connections,
   renderNode,
+  renderNodeFooter,
   sectionLabel,
   minColumnWidth = 190,
   ariaLabel,
@@ -772,6 +775,7 @@ export function BracketChart({
                       style={{ top }}
                     >
                       <NodeCard content={content} showSecondary={showSecondary} linkable={Boolean(content.to)} />
+                      {renderNodeFooter?.(node.id)}
                     </div>
                   );
                 })}

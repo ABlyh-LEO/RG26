@@ -31,39 +31,43 @@ function fixture(withResult: boolean) {
 }
 
 async function geometryProblems(page: Page) {
-  return page.locator('.bracket__board').evaluate((board) => {
+  return page.locator('.bracket__board').evaluateAll((boards) => {
     const issues: string[] = [];
-    const bounds = board.getBoundingClientRect();
-    const nodes = new Map([...board.querySelectorAll<HTMLElement>('[data-node-id]')]
-      .map((node) => [node.dataset.nodeId!, node.getBoundingClientRect()]));
-    const paths = [...board.querySelectorAll<SVGPathElement>('.bracket__link')];
-    if (paths.length === 0) issues.push('尚无连线');
-    for (const path of paths) {
-      const from = nodes.get(path.dataset.fromId ?? '');
-      const to = nodes.get(path.dataset.toId ?? '');
-      if (!from || !to) { issues.push('连线缺少来源或目标卡片'); continue; }
-      const start = path.getPointAtLength(0);
-      const end = path.getPointAtLength(path.getTotalLength());
-      for (const [label, point, rect, edge] of [
-        ['起点', start, from, from.right], ['终点', end, to, to.left],
-      ] as const) {
-        const x = point.x + bounds.left;
-        const y = point.y + bounds.top;
-        if (Math.abs(x - edge) > 2 || y < rect.top - 2 || y > rect.bottom + 2) {
-          issues.push(`${path.dataset.fromId}→${path.dataset.toId} ${label}离开卡片边缘`);
+    if (boards.length !== 4) issues.push('完整晋级图应有四个独立画布');
+    for (const [boardIndex, board] of boards.entries()) {
+      const bounds = board.getBoundingClientRect();
+      const nodes = new Map([...board.querySelectorAll<HTMLElement>('[data-node-id]')]
+        .map((node) => [node.dataset.nodeId!, node.getBoundingClientRect()]));
+      const paths = [...board.querySelectorAll<SVGPathElement>('.bracket__link')];
+      // 未公布的瑞士轮没有固定连线；三个决赛区域必须实际绘制区内路径。
+      if (board.closest('[data-bracket-zone]') && paths.length === 0) issues.push(`决赛画布${boardIndex}尚无连线`);
+      for (const path of paths) {
+        const from = nodes.get(path.dataset.fromId ?? '');
+        const to = nodes.get(path.dataset.toId ?? '');
+        if (!from || !to) { issues.push('连线跨越分区或缺少来源、目标卡片'); continue; }
+        const start = path.getPointAtLength(0);
+        const end = path.getPointAtLength(path.getTotalLength());
+        for (const [label, point, rect, edge] of [
+          ['起点', start, from, from.right], ['终点', end, to, to.left],
+        ] as const) {
+          const x = point.x + bounds.left;
+          const y = point.y + bounds.top;
+          if (Math.abs(x - edge) > 2 || y < rect.top - 2 || y > rect.bottom + 2) {
+            issues.push(`${path.dataset.fromId}→${path.dataset.toId} ${label}离开卡片边缘`);
+          }
         }
       }
-    }
-    for (const [id, rect] of nodes) {
-      if (rect.bottom > bounds.bottom + 1) issues.push(`${id}超出画布底边`);
-    }
-    for (const column of board.querySelectorAll('.bracket__column')) {
-      const cards = [...column.querySelectorAll('[data-node-id]')]
-        .map((node) => node.getBoundingClientRect()).sort((a, b) => a.top - b.top);
-      for (let i = 1; i < cards.length; i += 1) {
-        if (cards[i]!.top < cards[i - 1]!.bottom - 1) issues.push('同一列卡片重叠');
+      for (const [id, rect] of nodes) {
+        if (rect.bottom > bounds.bottom + 1 || rect.top < bounds.top - 1) issues.push(`${id}超出画布上下边界`);
+        if (rect.left < bounds.left - 1 || rect.right > bounds.right + 1) issues.push(`${id}超出画布左右边界`);
+      }
+      const cards = [...nodes.entries()];
+      for (let i = 0; i < cards.length; i += 1) for (let j = i + 1; j < cards.length; j += 1) {
+        const [aId, a] = cards[i]!, [bId, b] = cards[j]!;
+        if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1) issues.push(`${aId}与${bId}卡片重叠`);
       }
     }
+    if (document.documentElement.scrollWidth - document.documentElement.clientWidth > 1) issues.push('页面本体横向溢出');
     return issues;
   });
 }
@@ -85,11 +89,11 @@ test('移动晋级图首次加载、横竖屏切换及横向滚动后保持对�
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     await expectAligned(page);
   }
-  await page.locator('.bracket__scroller').evaluate((element) => { element.scrollLeft = element.scrollWidth; });
+  await page.locator('.bracket__scroller').evaluateAll((elements) => elements.forEach(element => { element.scrollLeft = element.scrollWidth; }));
   await expectAligned(page);
   await expect(page.locator('.bracket__node[data-node-id="F-GF"]')).toBeVisible();
   await testInfo.attach('mobile-finals-after-rotation', {
-    body: await page.locator('.bracket').screenshot(), contentType: 'image/png',
+    body: await page.locator('[data-journey-stage="finals"]').screenshot(), contentType: 'image/png',
   });
 });
 
@@ -115,6 +119,6 @@ test('移动晋级图收到成绩及长队名后重新测量，字体增大后�
   await expect.poll(() => firstCard.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThan(previousHeight);
   await expectAligned(page);
   await testInfo.attach('mobile-results-large-text', {
-    body: await page.locator('.bracket').screenshot(), contentType: 'image/png',
+    body: await page.locator('[data-journey-stage="finals"]').screenshot(), contentType: 'image/png',
   });
 });

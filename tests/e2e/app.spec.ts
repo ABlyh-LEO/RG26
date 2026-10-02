@@ -222,12 +222,12 @@ test.describe('13.2 用户流程', () => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await goto(page, '/progress?view=journey');
     await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
+    await expect(page.locator('.bracket').first()).toBeVisible();
     await page.waitForTimeout(1200);
 
     const stats = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.bracket-card')];
-      const rows = [...document.querySelectorAll('.bracket-card__row')];
+      const rows = [...document.querySelectorAll<HTMLElement>('.bracket-card__row')];
       return {
         cards: cards.length,
         done: cards.filter((c) => c.classList.contains('bracket-card--done')).length,
@@ -252,9 +252,9 @@ test.describe('13.2 用户流程', () => {
     await waitForData(page);
     await expect(page.locator('.bracket')).toHaveCount(0);
     await page.getByRole('link', { name: /完整晋级图/ }).first().click();
-    await expect(page.locator('.bracket__scroller')).toBeVisible();
+    await expect(page.locator('.bracket__scroller').first()).toBeVisible();
     await expect(page.locator('.bracket-card')).toHaveCount(47);
-    await expect(page.locator('.bracket__column')).toHaveCount(11);
+    await expect(page.locator('.bracket__column')).toHaveCount(13);
   });
 
   test('13.4 赛程页标出红蓝方', async ({ page }) => {
@@ -479,494 +479,222 @@ test.describe('13.3 视觉与设备检查', () => {
   });
 });
 
-test.describe('13.4 列式赛程图', () => {
-  /** 量一下图的规模，避免每个用例重复 evaluate。 */
-  async function bracketStats(page: Page) {
-    return page.evaluate(() => {
-      const scroller = document.querySelector('.bracket__scroller');
-      const board = document.querySelector('.bracket__board');
-      return {
-        columns: document.querySelectorAll('.bracket__column').length,
-        cards: document.querySelectorAll('.bracket-card').length,
-        paths: document.querySelectorAll('.bracket__link').length,
-        loserPaths: document.querySelectorAll('.bracket__link--loser').length,
-        columnTitles: [...document.querySelectorAll('.bracket__column-title')].map((e) => e.textContent ?? ''),
-        boardWidth: board?.clientWidth ?? 0,
-        scrollWidth: scroller?.scrollWidth ?? 0,
-        clientWidth: scroller?.clientWidth ?? 0,
-      };
-    });
-  }
-
-  test('决赛图有列、卡片与连线，连线坐标已实测', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+test.describe('13.4 分区晋级图', () => {
+  test('决赛分成胜者、败者、冠军三个区域，全部场次恰好出现一次', async ({ page }) => {
     await goto(page, '/progress?view=finals&mode=bracket');
     await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const stats = await bracketStats(page);
-
-    // 5 列：八强赛 / 败者组第二轮 / 半决赛 / 名额争夺战 / 总决赛
-    // 八强首轮四场必须在**同一列**：胜者组与败者组交叉向前喂给败者组第二轮，
-    // 拆成两列会让四条连线各横穿一整列无关卡片。
-    expect(stats.columns).toBe(6);
-    expect(stats.columnTitles).toEqual([
-      '双败首轮',
-      '八强赛',
-      '败者组第二轮',
-      '半决赛',
-      '名额争夺战',
-      '总决赛',
-    ]);
-    // 10 场计入排名的系列赛
-    expect(stats.cards).toBe(14);
-    // 连线必须真的画出来，而不是只有一个空 svg
-    expect(stats.paths).toBeGreaterThan(0);
-    expect(stats.loserPaths).toBeGreaterThan(0);
-
-    // 连线坐标来自实测 DOM：出现天文数字说明发生了自反馈
-    const d = await page.locator('.bracket__link').first().getAttribute('d');
-    expect(d).toBeTruthy();
-    const coords = (d ?? '').match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
-    expect(coords.length).toBeGreaterThan(0);
-    for (const c of coords) {
-      expect(Number.isFinite(c)).toBe(true);
-      expect(Math.abs(c), `连线坐标 ${c} 超出合理范围`).toBeLessThan(100_000);
+    const expected = {
+      winners: ['F-M1', 'F-M4', 'F-M2', 'F-M3', 'F-W1A', 'F-W1B', 'F-WSF'],
+      losers: ['F-L1A', 'F-L1B', 'F-L2B', 'F-L2A', 'F-LSF'],
+      championship: ['F-QUAL', 'F-GF'],
+    };
+    for (const [zone, ids] of Object.entries(expected)) {
+      const section = page.locator(`[data-bracket-zone="${zone}"]`);
+      await expect(section).toBeVisible();
+      expect(await section.locator('[data-node-id]').evaluateAll(nodes => nodes.map(n => (n as HTMLElement).dataset.nodeId))).toEqual(ids);
+      await expect(section.locator('.bracket__column')).toHaveCount(zone === 'championship' ? 2 : 3);
+    }
+    await expect(page.locator('.bracket-card')).toHaveCount(14);
+    await expect(page.locator('.bracket__board')).toHaveCount(3);
+    await expect(page.locator('.bracket__link')).toHaveCount(11);
+    // 跨区去向通过可点击的场次引用表达，不再画贯穿无关卡片的长虚线。
+    await expect(page.locator('.bracket__link--loser')).toHaveCount(0);
+    const paths = await page.locator('.bracket__link').evaluateAll(links => links.map(link => link.getAttribute('d')));
+    for (const path of paths) {
+      const coords = path?.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
+      expect(coords.length).toBeGreaterThan(0);
+      expect(coords.every(c => Number.isFinite(c) && Math.abs(c) < 100_000)).toBe(true);
     }
   });
 
-  test('连线不重叠：每条竖直转折各自占一条车道', async ({ page }) => {
+  test('同一画布不同路径的竖直段不会共线重叠', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=finals&mode=bracket');
     await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const verticals = await page.evaluate(() => {
-      const xs: number[] = [];
-      document.querySelectorAll('.bracket__link').forEach((p) => {
-        const m = (p.getAttribute('d') ?? '').match(/^M [\d.]+ [\d.]+ H ([\d.]+) V /);
-        if (m) xs.push(Math.round(Number(m[1])));
+    const result = await page.locator('.bracket__board').evaluateAll(boards => {
+      let total = 0;
+      const bad: string[] = [];
+      boards.forEach((board, boardIndex) => {
+        const segments: { x: number; low: number; high: number; path: number }[] = [];
+        board.querySelectorAll('.bracket__link').forEach((link, path) => {
+          let x = 0, y = 0;
+          for (const t of (link.getAttribute('d') ?? '').matchAll(/([MHV])\s*(-?[\d.]+)(?:\s+(-?[\d.]+))?/g)) {
+            const n = Number(t[2]);
+            if (t[1] === 'M') { x = n; y = Number(t[3]); }
+            else if (t[1] === 'H') x = n;
+            else { if (Math.abs(n - y) > 2) segments.push({ x, low: Math.min(y, n), high: Math.max(y, n), path }); y = n; }
+          }
+        });
+        total += segments.length;
+        for (let i = 0; i < segments.length; i += 1) for (let j = i + 1; j < segments.length; j += 1) {
+          const a = segments[i]!, b = segments[j]!;
+          if (a.path !== b.path && Math.abs(a.x - b.x) < 1 && Math.min(a.high, b.high) - Math.max(a.low, b.low) > 2) bad.push(`画布${boardIndex}，路径${a.path}/${b.path}，x=${a.x}`);
+        }
       });
-      return xs;
+      return { total, bad };
     });
-
-    expect(verticals.length).toBeGreaterThan(0);
-
-    // 同一条通道里的多条线若共用同一个 x，会重叠成一条，
-    // 看起来就像"少了几条线、连错了地方"
-    const counts = new Map<number, number>();
-    for (const x of verticals) counts.set(x, (counts.get(x) ?? 0) + 1);
-    const overlapped = [...counts.entries()].filter(([, n]) => n > 1);
-    expect(
-      overlapped,
-      `这些 x 上有重叠的竖直线段：${JSON.stringify(overlapped)}`,
-    ).toHaveLength(0);
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.bad).toEqual([]);
   });
 
-  /**
-   * 同 y 共线重叠：**这是曾经的测试盲区**。
-   *
-   * 上一个用例只断言"同一 x 不得有两条竖直段"，于是这个 bug 一直
-   * 没被测出来：两条不同晋级路径的**水平段**落在同一个 y 上、
-   * 区间还互相覆盖，图上看起来只有一条线。
-   * 基线实测 12 处，最长一处重叠 250px
-   * （`F-W1A→F-WSF` 与 `F-L2B→F-LSF` 在 y≈371 的通道里）。
-   *
-   * 判据按**语义**：不同晋级路径在图上必须各自可追踪，
-   * 不能靠"元素存不存在"来判定。
-   *
-   * 允许的例外只有一种：**同一张卡片发出的两条边**（胜者与败者）
-   * 共用一个起点、**指向同一张卡片的两条边**共用一个终点。
-   * 几何上它们必须共用那个边缘中点，无法分开。
-   * 除这种"同一端点扇出/汇聚"外，任何共线重叠都算缺陷。
-   */
-  test('连线不重叠：不同路径的水平段不得共线重叠', async ({ page }) => {
+  test('同一画布不同路径的水平段不重叠，也不穿过无关比赛卡片', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await goto(page, '/progress?view=journey');
     await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const horizontals = await page.evaluate(() => {
-      const board = document.querySelector('.bracket__board');
-      const boardRect = board?.getBoundingClientRect();
-
-      /** 卡片 id → 左右边缘中点 x（用来识别"同一端点"扇出）。 */
-      const nodeEdges: { id: string; left: number; right: number }[] = [];
-      document.querySelectorAll('[data-node-id]').forEach((el) => {
-        const r = el.getBoundingClientRect();
-        nodeEdges.push({
-          id: (el as HTMLElement).dataset.nodeId ?? '',
-          left: boardRect ? r.left - boardRect.left : r.left,
-          right: boardRect ? r.right - boardRect.left : r.right,
+    const result = await page.locator('.bracket__board').evaluateAll(boards => {
+      let total = 0;
+      const bad: string[] = [];
+      boards.forEach((board, boardIndex) => {
+        const bounds = board.getBoundingClientRect();
+        const nodes = [...board.querySelectorAll<HTMLElement>('[data-node-id]')].map(node => ({ id: node.dataset.nodeId, rect: node.getBoundingClientRect() }));
+        const segments: { y: number; left: number; right: number; path: number; from: string | undefined; to: string | undefined }[] = [];
+        board.querySelectorAll<SVGPathElement>('.bracket__link').forEach((link, path) => {
+          let x = 0, y = 0;
+          for (const t of (link.getAttribute('d') ?? '').matchAll(/([MHV])\s*(-?[\d.]+)(?:\s+(-?[\d.]+))?/g)) {
+            const n = Number(t[2]);
+            if (t[1] === 'M') { x = n; y = Number(t[3]); }
+            else if (t[1] === 'V') y = n;
+            else {
+              const segment = { y, left: Math.min(x, n), right: Math.max(x, n), path, from: link.dataset.fromId, to: link.dataset.toId };
+              segments.push(segment);
+              for (const node of nodes) {
+                if (node.id === segment.from || node.id === segment.to) continue;
+                if (y > node.rect.top - bounds.top + 2 && y < node.rect.bottom - bounds.top - 2 && Math.min(segment.right, node.rect.right - bounds.left) - Math.max(segment.left, node.rect.left - bounds.left) > 2) bad.push(`画布${boardIndex}，路径${path}穿过${node.id}`);
+              }
+              x = n;
+            }
+          }
         });
-      });
-
-      const segs: { y: number; x1: number; x2: number; pathId: string }[] = [];
-      document.querySelectorAll('.bracket__link').forEach((p, pathIndex) => {
-        const d = p.getAttribute('d') ?? '';
-        const toks = [
-          ...d.matchAll(/([MHV])\s*(-?[\d.]+)(?:\s+(-?[\d.]+))?/g),
-        ].map((m) => ({
-          c: m[1],
-          a: Number(m[2]),
-          b: m[3] !== undefined ? Number(m[3]) : null,
-        }));
-        let x = 0;
-        let y = 0;
-        for (const t of toks) {
-          if (t.c === 'M') {
-            x = t.a;
-            y = t.b ?? 0;
-          } else if (t.c === 'H') {
-            segs.push({
-              y: Math.round(y * 100) / 100,
-              x1: Math.min(x, t.a),
-              x2: Math.max(x, t.a),
-              pathId: `${pathIndex}`,
-            });
-            x = t.a;
-          } else if (t.c === 'V') {
-            y = t.a;
-          }
+        total += segments.length;
+        for (let i = 0; i < segments.length; i += 1) for (let j = i + 1; j < segments.length; j += 1) {
+          const a = segments[i]!, b = segments[j]!;
+          if (a.path === b.path || Math.abs(a.y - b.y) > 0.1) continue;
+          const lo = Math.max(a.left, b.left), hi = Math.min(a.right, b.right);
+          if (hi - lo <= 2) continue;
+          // 只允许同一实际起点的扇出或同一实际终点的汇入；任意卡片边缘不算例外。
+          const sharedFrom = a.from && a.from === b.from && nodes.find(n => n.id === a.from);
+          const sharedTo = a.to && a.to === b.to && nodes.find(n => n.id === a.to);
+          const fansOut = sharedFrom && Math.abs(lo - (sharedFrom.rect.right - bounds.left)) <= 3;
+          const merges = sharedTo && Math.abs(hi - (sharedTo.rect.left - bounds.left)) <= 3;
+          if (!fansOut && !merges) bad.push(`画布${boardIndex}，路径${a.path}/${b.path}在y=${a.y}重叠${hi - lo}px`);
         }
       });
-
-      /** 该 x 是否落在某张卡片的左右边缘（±3px 视为同一端点）。 */
-      const nearEdge = (px: number): boolean =>
-        nodeEdges.some((n) => Math.abs(px - n.left) <= 3 || Math.abs(px - n.right) <= 3);
-
-      const byY = new Map<number, typeof segs>();
-      for (const s of segs) {
-        const list = byY.get(s.y) ?? [];
-        list.push(s);
-        byY.set(s.y, list);
-      }
-
-      const bad: { y: number; overlap: number; a: string; b: string }[] = [];
-      for (const [y, list] of byY) {
-        for (let i = 0; i < list.length; i += 1) {
-          for (let j = i + 1; j < list.length; j += 1) {
-            const a = list[i]!;
-            const b = list[j]!;
-            if (a.pathId === b.pathId) continue;
-            const lo = Math.max(a.x1, b.x1);
-            const hi = Math.min(a.x2, b.x2);
-            const overlap = hi - lo;
-            // 2px 容差：抗锯齿与浮点噪声
-            if (overlap <= 2) continue;
-            /**
-             * 例外：**同一张卡片发出的两条边，或汇聚到同一张卡的两条边**。
-             *
-             * 这两种情况下两段横线共用同一个端点，而那个端点固定在
-             * 卡片的边缘中点上（`x1` 取右边缘中点、`x2` 取左边缘中点），
-             * 几何上无法分开——规则本身就要求胜者与败者从同一场比赛分出。
-             * 例如 `F-W1A→F-L2A`（败）与 `F-W1A→F-WSF`（胜）都从
-             * 第 3 场的右边缘中点出发，于是共享开头那 17px。
-             *
-             * 判据：两段**共用的那个端点**（重叠区的一端）落在卡片边缘上，
-             * 且两段在重叠处朝**同一个方向**离开（都是起点或都是终点）。
-             * 只判"共用端点贴卡片"是不够的：还要确认它们不是在同一段
-             * 通道里各走各的、只是碰巧同高——那才是真缺陷。
-             */
-            const sharedAtCardEdge = nearEdge(lo) || nearEdge(hi);
-            if (!sharedAtCardEdge) {
-              bad.push({
-                y,
-                overlap: Math.round(overlap),
-                a: `${Math.round(a.x1)}-${Math.round(a.x2)}`,
-                b: `${Math.round(b.x1)}-${Math.round(b.x2)}`,
-              });
-              continue;
-            }
-            /**
-             * 共用端点必须在两段的**同一侧**（都从那里出发，或都到那里），
-             * 否则只是首尾相接式的偶然共线，仍算缺陷。
-             */
-            const aStartsAt = (px: number) => Math.abs(px - a.x1) <= 2;
-            const bStartsAt = (px: number) => Math.abs(px - b.x1) <= 2;
-            const sameSide =
-              (aStartsAt(lo) && bStartsAt(lo)) || (aStartsAt(hi) && bStartsAt(hi));
-            if (!sameSide) {
-              bad.push({
-                y,
-                overlap: Math.round(overlap),
-                a: `${Math.round(a.x1)}-${Math.round(a.x2)}`,
-                b: `${Math.round(b.x1)}-${Math.round(b.x2)}`,
-              });
-            }
-          }
-        }
-      }
-      return { total: segs.length, bad };
+      return { total, bad };
     });
-
-    expect(horizontals.total).toBeGreaterThan(0);
-    expect(
-      horizontals.bad,
-      `这些 y 上有共线重叠的水平段（除同一卡片扇出/汇聚外不允许）：${JSON.stringify(horizontals.bad)}`,
-    ).toHaveLength(0);
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.bad).toEqual([]);
   });
 
   test('对外文案用场次序号，绝不出现内部 ID', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-
-    const routes = [
-      '/progress?view=finals&mode=bracket',
-      '/progress?view=finals&mode=list',
-      '/progress?view=journey',
-      '/matches/F-L2A',
-      '/schedule',
-      '/',
-    ];
-
-    for (const route of routes) {
-      await goto(page, route);
-      await waitForData(page);
-      const body = await page.locator('body').innerText();
-      const leaked = [...new Set(body.match(/F-[A-Z0-9]+/g) ?? [])];
-      expect(leaked, `${route} 泄漏了内部系列赛 ID：${leaked.join(', ')}`).toHaveLength(0);
+    for (const route of ['/progress?view=finals&mode=bracket', '/progress?view=finals&mode=list', '/progress?view=journey', '/matches/F-L2A', '/schedule', '/']) {
+      await goto(page, route); await waitForData(page);
+      expect(await page.locator('body').innerText(), `${route} 泄漏内部系列赛 ID`).not.toMatch(/F-[A-Z0-9]+/);
     }
   });
 
-  test('未决出名额显示为「第 N 场胜者/败者」，可与卡片上的场次号对上', async ({ page }) => {
+  test('未决出名额使用可对应比赛卡片的胜者或败者场次号', async ({ page }) => {
     await usePreEventSnapshot(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=finals&mode=bracket');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const text = await page.locator('.bracket').innerText();
-
-    // 每张竞技组卡片标题都带场次序号
-    for (const no of [1, 5, 10]) {
-      expect(text, `缺少第 ${no} 场的标题`).toContain(`第 ${no} 场·`);
-    }
-
-    // 未决出的名额用场次序号表述
+    await goto(page, '/progress?view=finals&mode=bracket'); await waitForData(page);
+    const text = await page.locator('main').innerText();
+    for (const no of [1, 5, 10, 13, 14]) expect(text).toContain(`第 ${no} 场`);
     expect(text).toMatch(/第 \d+ 场(胜者|败者)/);
-    expect(text).not.toMatch(/F-[A-Z0-9]+\s*(胜者|败者)/);
+    expect(text).not.toMatch(/F-[A-Z0-9]+/);
   });
 
-  test('完整晋级图是瑞士轮→决赛一条线', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const stats = await bracketStats(page);
-
-    // 瑞士轮 5 列 + 决赛 5 列，共 10 列
-    expect(stats.columns).toBe(11);
-    expect(stats.columnTitles).toEqual([
-      'R1',
-      'R2',
-      'R3',
-      'R4',
-      'R5',
-      '双败首轮',
-      '八强赛',
-      '败者组第二轮',
-      '半决赛',
-      '名额争夺战',
-      '总决赛',
-    ]);
-    // 33 场瑞士轮 + 10 场决赛
-    expect(stats.cards).toBe(47);
-
-    // 排位赛**不应**出现在这张图里：
-    // 44 次单队跑图会把一列撑到 5000px，整张图糊成一团
-    const chartText = await page.locator('.bracket').innerText();
-    expect(chartText).not.toContain('单独跑图');
-    expect(chartText).not.toMatch(/排位赛第 \d+ 轮/);
+  test('完整晋级图将瑞士轮与分区决赛顺序展示，所有比赛完整且无重复', async ({ page }) => {
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    await expect(page.locator('[data-journey-stage="swiss"] .bracket-card')).toHaveCount(33);
+    await expect(page.locator('[data-journey-stage="finals"] .bracket-card')).toHaveCount(14);
+    await expect(page.locator('.bracket__board')).toHaveCount(4);
+    await expect(page.locator('.bracket__column')).toHaveCount(13);
+    const ids = await page.locator('.bracket__node').evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.nodeId));
+    expect(new Set(ids).size).toBe(47);
+    const text = (await page.locator('.bracket').allInnerTexts()).join('\n');
+    expect(text).not.toContain('单独跑图');
+    expect(text).not.toMatch(/排位赛第 \d+ 轮/);
   });
 
-  test('瑞士轮与决赛并排在同一条纵向带，且整体紧凑', async ({ page }) => {
+  test('每个分区内从左向右推进，独立画布保持紧凑', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const cols = await page.evaluate(() =>
-      [...document.querySelectorAll('.bracket__column')].map((c) => ({
-        title: c.querySelector('.bracket__column-title')?.textContent ?? '',
-        left: Number.parseFloat((c as HTMLElement).style.left) || 0,
-        top: Number.parseFloat((c as HTMLElement).style.top) || 0,
-      })),
-    );
-
-    // 瑞士轮 5 列 + 决赛 5 列
-    expect(cols).toHaveLength(11);
-    // 所有列 top 相同 —— 同一条纵向带，不上下错开
-    expect([...new Set(cols.map((c) => c.top))]).toEqual([0]);
-
-    // left 严格递增 —— 从左到右依次推进
-    for (let i = 1; i < cols.length; i += 1) {
-      expect(
-        cols[i]!.left,
-        `${cols[i]!.title} 未排在 ${cols[i - 1]!.title} 右侧`,
-      ).toBeGreaterThan(cols[i - 1]!.left);
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    const layouts = await page.locator('.bracket__board').evaluateAll(boards => boards.map(board => ({
+      height: board.clientHeight,
+      columns: [...board.querySelectorAll<HTMLElement>('.bracket__column')].map(column => ({ left: parseFloat(column.style.left), top: parseFloat(column.style.top) })),
+    })));
+    expect(layouts).toHaveLength(4);
+    for (const layout of layouts) {
+      expect(layout.height).toBeGreaterThan(0);
+      expect(layout.height).toBeLessThan(1600);
+      expect(new Set(layout.columns.map(c => c.top)).size).toBe(1);
+      for (let i = 1; i < layout.columns.length; i += 1) expect(layout.columns[i]!.left).toBeGreaterThan(layout.columns[i - 1]!.left);
     }
-
-    // 整体高度必须紧凑：某一列过高就会"糊成一团"
-    const boardHeight = await page.evaluate(() => {
-      const el = document.querySelector('.bracket__board') as HTMLElement | null;
-      return el ? el.clientHeight : 0;
-    });
-    expect(boardHeight, `赛程图高 ${boardHeight}px，过高`).toBeLessThan(1600);
   });
 
-  test('纵向高度不被最长列撑爆（列 body 用本列高度）', async ({ page }) => {
+  test('各分区按自身内容定高，短分区不会继承最长列的高度', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const m = await page.evaluate(() => {
-      const board = document.querySelector('.bracket__board') as HTMLElement | null;
-      const scroller = document.querySelector('.bracket__scroller') as HTMLElement | null;
-      const bodies = [...document.querySelectorAll('.bracket__column-body')].map((b) =>
-        Number.parseFloat((b as HTMLElement).style.height) || 0,
-      );
-      return {
-        boardH: board?.clientHeight ?? 0,
-        scrollH: scroller?.scrollHeight ?? 0,
-        bodyHeights: [...new Set(bodies)].sort((a, b) => a - b),
-      };
-    });
-
-    // 各列 body 高度必须**不同**（按本列内容），而不是统一等于全局最大值
-    expect(m.bodyHeights.length, '所有列 body 高度相同，说明用了全局 maxHeight').toBeGreaterThan(1);
-
-    // 滚动高度不能显著超过画布高度（超出说明有列溢出了画布）
-    expect(m.scrollH - m.boardH).toBeLessThan(120);
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    const metrics = await page.locator('.bracket').evaluateAll(charts => charts.map(chart => {
+      const board = chart.querySelector<HTMLElement>('.bracket__board')!;
+      const scroller = chart.querySelector<HTMLElement>('.bracket__scroller')!;
+      const bodies = [...chart.querySelectorAll<HTMLElement>('.bracket__column-body')].map(body => parseFloat(body.style.height));
+      return { board: board.clientHeight, scroll: scroller.scrollHeight, bodies: [...new Set(bodies)] };
+    }));
+    expect(metrics).toHaveLength(4);
+    expect(metrics[0]!.bodies.length).toBeGreaterThan(1);
+    expect(metrics[1]!.bodies.length).toBeGreaterThan(1);
+    expect(metrics[3]!.board).toBeLessThan(metrics[1]!.board);
+    for (const metric of metrics) expect(metric.scroll - metric.board).toBeLessThan(120);
   });
 
-  /*
-    最下方一场比赛必须可见。
-
-    这里断言的是**真实内容底边**，不是 scrollHeight 与 clientHeight 的差：
-    窄屏下 columnWidth 收敛到 minColumnWidth，卡片变窄、队名多换一行，
-    节点会比宽屏更高。如果画布高度只认上一帧的实测值，多出来的部分
-    会被 overflow-y 直接裁掉（overflow-x: auto 会把 overflow-y 提升成 auto，
-    裁掉就再也滚不到），而 scrollHeight 差值恰好也会跟着变大，
-    用差值判断会漏掉这条错误。必须逐个节点比对它的底边与画布底边。
-  */
-  for (const [width, height] of [
-    [1440, 900],
-    [390, 844],
-    [768, 1024],
-  ] as const) {
-    test(`最下方比赛不被裁掉（${width}x${height}）`, async ({ page }) => {
+  for (const [width, height] of [[1440, 900], [390, 844], [768, 1024]] as const) {
+    test(`所有画布最下方比赛及连线不被裁切（${width}x${height}）`, async ({ page }) => {
       await page.setViewportSize({ width, height });
-      await goto(page, '/progress?view=journey');
-      await waitForData(page);
-      await expect(page.locator('.bracket')).toBeVisible();
-
-      const m = await page.evaluate(() => {
-        const board = document.querySelector('.bracket__board') as HTMLElement | null;
-        const scroller = document.querySelector('.bracket__scroller') as HTMLElement | null;
-        if (!board || !scroller) return null;
-        const boardRect = board.getBoundingClientRect();
-        const boardBottom = boardRect.top + board.clientHeight;
-
-        // 有任何节点越过画布底边就是被裁了
-        const clipped = [...document.querySelectorAll<HTMLElement>('.bracket__node')]
-          .map((n) => ({
-            id: n.dataset.nodeId ?? '',
-            overflow: Math.round(n.getBoundingClientRect().bottom - boardBottom),
-          }))
-          .filter((x) => x.overflow > 1);
-
-        const svg = document.querySelector('.bracket__connectors');
-        return {
-          clipped,
-          boardH: board.clientHeight,
-          scrollerClientH: scroller.clientHeight,
-          scrollerScrollH: scroller.scrollHeight,
-          // 连线层必须覆盖整个画布，否则最下面的连线会被 SVG 高度切掉
-          svgHeight: svg ? Number(svg.getAttribute('height')) : 0,
-        };
-      });
-
-      expect(m, '赛程图未渲染').not.toBeNull();
-      expect(
-        m!.clipped.map((c) => `${c.id}(+${c.overflow}px)`),
-        `${width}px 下有比赛被画布裁掉`,
-      ).toEqual([]);
-
-      // 画布高度必须容得下连线层
-      expect(m!.svgHeight, '连线层矮于画布，底部连线会被切掉').toBeGreaterThanOrEqual(
-        m!.boardH,
-      );
-
-      // 纵向不应出现"裁掉且滚不到"的情况
-      expect(
-        m!.scrollerScrollH - m!.scrollerClientH,
-        `${width}px 下滚动区与可视区不一致，说明有内容被裁`,
-      ).toBeLessThanOrEqual(1);
+      await goto(page, '/progress?view=journey'); await waitForData(page);
+      await expect.poll(() => page.locator('.bracket').evaluateAll(charts => charts.flatMap((chart, index) => {
+        const board = chart.querySelector<HTMLElement>('.bracket__board')!;
+        const scroller = chart.querySelector<HTMLElement>('.bracket__scroller')!;
+        const bounds = board.getBoundingClientRect();
+        const issues = [...board.querySelectorAll<HTMLElement>('.bracket__node')].filter(node => node.getBoundingClientRect().bottom > bounds.bottom + 1).map(node => `${node.dataset.nodeId}超出画布${index}`);
+        const svg = board.querySelector('.bracket__connectors');
+        if (Number(svg?.getAttribute('height')) < board.clientHeight) issues.push(`画布${index}连线层偏矮`);
+        if (scroller.scrollHeight - scroller.clientHeight > 1) issues.push(`画布${index}纵向被裁`);
+        return issues;
+      }))).toEqual([]);
     });
   }
 
-  test('对阵未确定时说明在等什么，不编造名次', async ({ page }) => {
+  test('瑞士轮对阵未公布时解释等待条件，不编造名次或固定晋级关系', async ({ page }) => {
     await usePreEventSnapshot(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const chartText = await page.locator('.bracket').innerText();
-
-    // 尚未公布的对阵必须说明等待原因
-    expect(chartText).toMatch(/等待第 \d 轮结果确认后公布/);
-
-    // 这是本次修复的核心：不能整列都是"排位赛第 N 名 vs 排位赛第 N+1 名"的假配对
-    const fakePairs = chartText.match(/排位赛第 \d+ 名\s*\n\s*排位赛第 \d+ 名/g) ?? [];
-    expect(fakePairs, `出现了 ${fakePairs.length} 组编造的排位赛名次配对`).toHaveLength(0);
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    const swiss = page.locator('[data-journey-stage="swiss"]');
+    expect(await swiss.innerText()).toMatch(/等待第 \d 轮结果确认后公布/);
+    expect(await swiss.innerText()).not.toMatch(/排位赛第 \d+ 名\s*\n\s*排位赛第 \d+ 名/);
+    await expect(swiss.locator('.bracket__link')).toHaveCount(0);
   });
 
-  test('窄屏横向滚动，页面本体不溢出', async ({ page }) => {
+  test('窄屏每个分区独立横向滚动，页面本体不溢出', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-    await expect(page.locator('.bracket')).toBeVisible();
-
-    const stats = await bracketStats(page);
-
-    // 图比视口宽，必须靠滚动容器承载
-    expect(stats.scrollWidth).toBeGreaterThan(stats.clientWidth);
-    // board 宽度要合理（不能是自反馈放大后的天文数字）
-    expect(stats.boardWidth).toBeLessThan(20_000);
-
-    // 页面本体不出现横向溢出
-    const overflow = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      clientWidth: document.documentElement.clientWidth,
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    await expect(page.locator('.bracket__scroller')).toHaveCount(4);
+    const metrics = await page.locator('.bracket__scroller').evaluateAll(scrollers => scrollers.map(scroller => {
+      scroller.scrollLeft = 400;
+      return { width: scroller.clientWidth, content: scroller.scrollWidth, moved: scroller.scrollLeft };
     }));
-    expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(1);
-
-    // 真的能横向滚动
-    const scrolled = await page.evaluate(() => {
-      const el = document.querySelector('.bracket__scroller') as HTMLElement | null;
-      if (!el) return -1;
-      el.scrollLeft = 400;
-      return el.scrollLeft;
-    });
-    expect(scrolled).toBeGreaterThan(0);
+    for (const metric of metrics) {
+      expect(metric.content).toBeGreaterThan(metric.width);
+      expect(metric.content).toBeLessThan(20_000);
+      expect(metric.moved).toBeGreaterThan(0);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   });
 
-  test('图例与可访问性标签齐备', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await goto(page, '/progress?view=journey');
-    await waitForData(page);
-
-    await expect(page.getByRole('group', { name: /完整晋级图/ })).toBeVisible();
-    const legend = page.locator('.bracket__legend');
-    await expect(legend).toBeVisible();
-    await expect(legend).toContainText('胜者晋级方向');
-    await expect(legend).toContainText('败者落位方向');
-
-    // 连线是装饰，不应被读屏念出来
-    await expect(page.locator('.bracket__connectors')).toHaveAttribute('aria-hidden', 'true');
+  test('分区标题、场次引用和装饰性连线具备可访问性语义', async ({ page }) => {
+    await goto(page, '/progress?view=journey'); await waitForData(page);
+    const navigation = page.getByRole('group', { name: '定位决赛分区', exact: true });
+    for (const name of ['胜者组', '败者组', '冠军争夺']) await expect(navigation.getByRole('button', { name, exact: true })).toBeVisible();
+    for (const svg of await page.locator('.bracket__connectors').all()) await expect(svg).toHaveAttribute('aria-hidden', 'true');
+    for (const reference of await page.locator('.finals-transfer').all()) expect((await reference.innerText()).trim()).toMatch(/第 \d+ 场/);
+    expect(await page.locator('.finals-transfer').count()).toBeGreaterThan(0);
   });
 });
 
