@@ -149,15 +149,22 @@ https://<owner>.github.io/<repo>/
 
 ## 4 工作流说明
 
-### `ci.yml`（PR 与 main push）
+两个工作流**职责分开**，避免同一次 push 把整套测试跑两遍：
 
-按顺序执行，任一失败会使检查失败；要强制阻止合并，须将该检查设为分支保护的必需检查：
+### `ci.yml`（PR 与 main push）——完整的质量门禁
 
 ```
-npm ci → typecheck → lint → test → validate:data → build → 观众端 e2e → 维护端 e2e
+npm ci → 类型检查 → Lint → 领域测试 → 数据校验 → 构建 → 观众端 e2e → 维护端 e2e
 ```
 
-### `deploy.yml`（main push 或手动）
+要强制阻止合并，须将该检查设为分支保护的必需检查。
+
+### `deploy.yml`（main push 或手动）——只验"即将上线的东西"
+
+```
+npm ci → 领域测试 → configure-pages → build（含数据校验与类型检查）
+       → 快照/产物检查 → 观众端 e2e（验证 dist 本身）→ 上传 → 部署 → 核验公开版本
+```
 
 - **权限**：`contents: read`、`pages: write`、`id-token: write`
 - **environment**：`github-pages`
@@ -165,7 +172,24 @@ npm ci → typecheck → lint → test → validate:data → build → 观众端
   —— 同一站点**串行化部署**，避免旧版本后完成而覆盖新版本
 - **产物检查**：显式拒绝 `dist/operator.html` 存在
 
-> **数据校验或规则测试失败必须阻止部署** —— 这是刻意的设计。
+> **发布门禁**：构建（含数据校验与类型检查）、领域测试或**观众端 e2e** 失败都会阻止部署——这是刻意的设计。
+> **不再在部署路径上重复的检查**：类型检查与数据校验已包含在 `npm run build` 内；
+> Lint 与**维护端 e2e** 只在 `ci.yml` 跑（维护端 e2e 验证的是本地工作台与临时 Git 仓库，
+> 与 Pages 产物无关，在部署路径上重复跑会白占 2–3 分钟）。
+
+### 加速措施
+
+| 措施 | 效果 |
+| --- | --- |
+| `actions/cache` 缓存 `~/.cache/ms-playwright`（两个工作流共用同一键） | 首次之后不再下载 chromium/webkit（约 100–180 秒）；`package-lock.json` 变化时自动换新缓存 |
+| `npm ci --prefer-offline --no-audit --no-fund` | 省去审计与元数据请求 |
+| 部署路径只列**影响公开产物**的文件（不再包含 `tests/**`） | 纯测试提交不再触发一次部署 |
+| `ci.yml` 的 `dist` 产物只在失败时上传 | 省去每次约 10–20 秒的上传 |
+| 部署侧不再重复 Lint / 类型检查 / 数据校验 / 维护端 e2e | 部署路径缩短约 3–5 分钟 |
+
+> 首次运行（缓存未命中）会比后续慢；若要看真实耗时，打开 Actions 里对应 run 的
+> 步骤时间线。`concurrency: group: pages` 是串行的：连续两次推送时后一次会等前一次部署
+> 结束，这是为了避免旧版本覆盖新版本。
 
 ### 依赖版本
 

@@ -6,19 +6,19 @@ on:
   push:
     branches: ['main']
     paths:
+      # 只列**会影响公开产物**的路径。改 tests/** 不再触发部署：
+      # 它不改变 dist，纯测试提交不该占用 3–5 分钟部署。
       - 'data/event.json'
-      - 'src/**'
       - 'public/**'
+      - 'src/**'
       - 'index.html'
       - 'vite.config.ts'
       - 'playwright.config.ts'
-      - 'playwright.operator.config.ts'
       - 'vitest.config.ts'
       - 'eslint.config.js'
       - 'tsconfig*.json'
       - '.nvmrc'
       - 'scripts/**'
-      - 'tests/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/deploy.yml'
@@ -53,25 +53,25 @@ jobs:
           cache: npm
 
       - name: 安装锁定依赖
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-fund
 
-      - name: 类型检查
-        run: npm run typecheck
+      - name: 缓存 Playwright 浏览器
+        # 与 ci.yml 同一缓存键：两个工作流共享，首次之后不再下载浏览器。
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
-      - name: Lint
-        run: npm run lint
-
-      - name: 领域测试
+      - name: 领域测试（发布门禁：评分/配对/排名的规则回归）
         run: npm run test
-
-      - name: 数据校验（失败则阻止部署）
-        run: npm run validate:data
 
       - name: 配置 Pages
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: 构建（base 使用仓库子路径）
+      - name: 构建（含数据校验与公开快照生成）
+        # `npm run build` = validate:data → data:build → tsc -b → vite build：
+        # 数据校验与类型检查都在这一条命令里，不再单列重复步骤。
         env:
           # 项目站是 https://<owner>.github.io/<repo>/，因此用仓库名作为 base。
           # 若改用用户站或自定义域名，把这里改成 '/'.
@@ -106,6 +106,7 @@ jobs:
       - name: 安装 Playwright 浏览器
         # 与 ci.yml / playwright.config.ts 保持一致：配置里有 mobile-webkit，
         # 只装 chromium 会让 webkit 用例全部假失败。
+        # 上面的缓存命中时这一步只补齐系统依赖，不再下载浏览器。
         run: npx playwright install --with-deps chromium webkit
 
       - name: 端到端测试（失败则阻止部署）
@@ -118,14 +119,15 @@ jobs:
         #    因此设 E2E_SKIP_BUILD=1，只启动静态服务验证现有产物。
         # 2. **base 必须带子路径**。产物里资源指向 /<repo>/assets/...，
         #    静态服务和浏览器导航都必须保留该前缀；缺失资源如实返回 404。
+        #
+        # 这里只跑观众端 e2e：它验证的正是即将上传的 dist。
+        # 维护端 e2e（playwright.operator.config.ts）验证的是本地工作台与临时
+        # Git 仓库，与 Pages 产物无关，跑在 ci.yml 里即可——原先在部署路径上
+        # 重复跑它，白占了 2–3 分钟。
         env:
           E2E_SKIP_BUILD: '1'
           E2E_BASE_URL: http://127.0.0.1:4173/${{ github.event.repository.name }}/
         run: npm run test:e2e
-
-      - name: 本地维护工作台端到端测试（Chromium 与 WebKit）
-        # 临时仓库隔离发布测试；通过后继续上传此前已验证的公开 dist。
-        run: npx playwright test --config playwright.operator.config.ts
 
       - name: 上传 Playwright 报告（失败时）
         if: failure()

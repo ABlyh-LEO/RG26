@@ -30,7 +30,15 @@ jobs:
           cache: npm
 
       - name: 安装锁定依赖
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: 缓存 Playwright 浏览器
+        # 浏览器包体大（chromium + webkit 约数百 MB），缓存后无需每次重新下载。
+        # 键与实际安装的版本绑定：package-lock.json 变化时自动换新缓存。
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: 类型检查
         run: npm run typecheck
@@ -75,7 +83,8 @@ jobs:
             test-results/operator/
           retention-days: 7
 
-      - name: 上传构建产物
+      - name: 上传构建产物（仅在失败时，便于排查）
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: dist
