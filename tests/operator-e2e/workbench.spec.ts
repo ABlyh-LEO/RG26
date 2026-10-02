@@ -69,6 +69,20 @@ test('校验定位缺失字段，预览不改变正式文件、暂存区和提�
   const frame = page.frameLocator('iframe[title="本地草稿观众预览"]');
   await expect(frame.getByText('本地草稿预览 · 尚未发布')).toBeVisible();
   await expect(frame.getByRole('heading', { level: 1 })).toBeVisible();
+  /*
+   * 用户报告的核心问题：确认一组成绩后，预览里就出现了"晋级十六强/优秀奖"。
+   * 这里守住"预览也不得断言晋级"——只显示「当前排行」。
+   * 先切到桌面宽度，用顶部导航进入晋级页（手机底栏固定在 iframe 视口底部，
+   * 在嵌套预览里不可点击）。
+   */
+  await page.getByRole('button', { name: '桌面 1200px' }).click();
+  await frame.getByRole('link', { name: '晋级', exact: true }).click();
+  await frame.getByRole('button', { name: '排位赛', exact: true }).click();
+  await expect(frame.getByText('当前排行', { exact: true })).toBeVisible();
+  await expect(frame.locator('main')).toContainText('不作为晋级依据');
+  await expect(frame.locator('main')).not.toContainText('晋级十六强');
+  await expect(frame.locator('main')).not.toContainText('优秀奖');
+  await expect(frame.locator('main')).not.toContainText('晋级状态');
   const after = await (await request.get('/__test/state')).json(); expect(after).toEqual(before);
   await testInfo.attach('operator-preview.png', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
   await mkdir('.tmp-operator-screenshots', { recursive: true });

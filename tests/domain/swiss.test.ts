@@ -249,6 +249,7 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
       teamIds: TEAM_IDS,
       matches: [],
       qualification: ranking16(),
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [],
     });
     expect(proposal.blockers).toEqual([]);
@@ -269,6 +270,7 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
       teamIds: TEAM_IDS,
       matches: r1,
       qualification: ranking16(),
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [makeRound(1, r1)],
     });
 
@@ -297,6 +299,7 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
       teamIds: TEAM_IDS,
       matches: incomplete,
       qualification: ranking16(),
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [makeRound(1, incomplete)],
     });
     expect(gate.ok).toBe(false);
@@ -309,9 +312,26 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
       teamIds: TEAM_IDS,
       matches: [],
       qualification: { ...ranking16(), status: 'none' },
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [],
     });
     expect(gate.ok).toBe(false);
+    expect(gate.reason).toContain('尚未确认');
+  });
+
+  it('R1 门禁拒绝"已确认但成绩不完整、且未人工定榜"的排名', () => {
+    const gate = checkRoundGate({
+      roundIndex: 1,
+      teamIds: TEAM_IDS,
+      matches: [],
+      qualification: ranking16(),
+      qualificationOfficial: { ok: false, reason: '成绩不完整且未人工定榜：19 / 22 支队伍尚无已确认的积分成绩：测试队' },
+      rounds: [],
+    });
+    expect(gate.ok).toBe(false);
+    expect(gate.reason).toContain('正式名次尚未成立');
+    expect(gate.reason).toContain('成绩不完整');
+    expect(gate.reason).toContain('19 / 22');
   });
 });
 
@@ -326,6 +346,7 @@ describe('D10 R3 跨日冻结', () => {
       teamIds: TEAM_IDS,
       matches: throughR2,
       qualification: ranking16(),
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [makeRound(1, throughR2.filter((m) => m.roundIndex === 1)), makeRound(2, throughR2.filter((m) => m.roundIndex === 2))],
     });
     expect(r3Proposal.blockers).toEqual([]);
@@ -363,6 +384,7 @@ describe('D10 R3 跨日冻结', () => {
       teamIds: TEAM_IDS,
       matches: [...throughR2, ...r3Matches],
       qualification: ranking16(),
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [
         makeRound(1, throughR2.filter((m) => m.roundIndex === 1)),
         makeRound(2, throughR2.filter((m) => m.roundIndex === 2)),
@@ -412,7 +434,10 @@ describe('D11 全赛程合成结果', () => {
     expect(g22.entries.length).toBe(6);
     expect(g22.entries.length % 2).toBe(0);
     const active = determineActiveTeams(
-      { roundIndex: 5, teamIds: TEAM_IDS, matches: scenario.matches, qualification: ranking16(), rounds: scenario.rounds },
+      {
+        roundIndex: 5, teamIds: TEAM_IDS, matches: scenario.matches, qualification: ranking16(),
+        rounds: scenario.rounds, qualificationOfficial: { ok: true, reason: null },
+      },
       standingsBeforeR5,
     );
     expect([...active].filter((id) => g22.entries.some((e) => e.teamId === id))).toHaveLength(6);
@@ -442,6 +467,7 @@ describe('D18 退赛造成分组奇数', () => {
       teamIds: subset,
       matches,
       qualification: { ...ranking16(), orderedTeamIds: subset },
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [makeRound(1, matches)],
     });
 
@@ -463,6 +489,7 @@ describe('D17 三审排名与排位赛名次不同', () => {
       teamIds: TEAM_IDS,
       matches: [],
       qualification: qual,
+      qualificationOfficial: { ok: true, reason: null },
       rounds: [],
     });
     // 首尾配对基于 reversed：第 1 名是 t16，对第 16 名（t1）

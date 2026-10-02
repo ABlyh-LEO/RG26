@@ -13,6 +13,7 @@ import type {
 import { calculateSwissStandings } from '../domain/standings';
 import { generateSwissPairings, proposalToMatchSkeletons, ROUND_GROUP_ORDER } from '../domain/swiss';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
+import { assessQualificationCompleteness, officialQualificationRanking } from '../domain/qualification-completeness';
 import { validateEvent } from '../domain/validation';
 import { qualifiedTeamIds } from '../data/view-model';
 import { ONE_HALF, mul, THREE_FIFTHS } from '../domain/rational';
@@ -411,8 +412,9 @@ const NON_NEGATIVE_DECIMAL = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
  * **积分高者优；积分相同时，到达最终分时间早者优。**
  * 成绩文字只作展示，不参与比较。
  *
- * 本函数只负责**写入**这一条记录；调用方在 `confirm` 为真时
- * 接着调用 `applyQualificationAutoRanking` 重排名次。
+ * 本函数只负责**写入**这一条记录；它**不会**改动排位赛名次——
+ * 定榜是显式动作（`confirmQualificationRanking` / `applyQualificationRanking`），
+ * 因为单条成绩不构成"完整成绩"，自动定榜会把未定结论写成正式名次。
  * 未确认（provisional）的成绩**不影响**对外名次。
  */
 export function applyQualificationRun(event: EventFile, entry: QualificationRunEntry): ApplyResult {
@@ -526,37 +528,39 @@ export function qualificationProgress(event: EventFile): {
  * ------------------------------------------------------------------ */
 
 /**
- * 按「积分高者优，同分时到达最终分时间早者优」自动重排排位赛 1–22 名。
+ * 按「积分高者优，同分时到达最终分时间早者优」**定榜**排位赛 1–22 名。
  *
  * 口径由组委会确认，见 `domain/qualification-ranking.ts`。
  *
  * 与 `applyQualificationRanking` 的区别：
- * - 本函数**从成绩推算**名次，用于单场成绩更新后自动重排；
+ * - 本函数**从成绩推算**名次，用于成绩收齐后由维护者显式定榜；
  * - `applyQualificationRanking` 是**人工覆盖**，用于数据无法区分的并列
- *   （积分与用时完全相同）或组委会特批的调整。
+ *   （积分与用时完全相同）、组委会特批的调整，或裁判组直接核分录入。
  *
- * 存在并列或成绩不全时依然写入，但会在 messages 里明确提示需人工复核，
- * 绝不假装名次已经确定。
+ * **本函数不会被任何一次成绩录入隐式调用**：成绩不完整时直接失败并列出
+ * 缺哪些队伍。想给观众看排名请用 `liveQualificationRanking`（派生，不落库）。
  */
-export function applyQualificationAutoRanking(event: EventFile): ApplyResult {
+export function confirmQualificationRanking(event: EventFile): ApplyResult {
+  const completeness = assessQualificationCompleteness(event);
+  if (!completeness.ok) {
+    return {
+      event,
+      ok: false,
+      messages: [
+        `排位赛成绩不完整，不能定榜：${completeness.reason ?? '仍有队伍没有已确认的积分成绩'}`,
+        '未定榜前观众端只显示「当前排行」，不会据此断言任何队伍晋级。',
+      ],
+    };
+  }
+
   const result = computeQualificationRanking(event);
   const messages: string[] = [];
 
-  if (result.incompleteTeamIds.length > 0) {
-    const names = result.incompleteTeamIds
-      .map((id) => event.teams.find((t) => t.id === id)?.name ?? id)
-      .slice(0, 5);
-    messages.push(
-      `${result.incompleteTeamIds.length} 支队伍暂无积分成绩，已排在榜尾：${names.join('、')}${
-        result.incompleteTeamIds.length > names.length ? ' 等' : ''
-      }`,
-    );
+  if (completeness.partialTeamIds.length > 0) {
+    messages.push(`${completeness.partialTeamIds.length} 支队伍只录到一轮成绩，名次按该轮最优计算。`);
   }
-  if (result.partialTeamIds.length > 0) {
-    messages.push(`${result.partialTeamIds.length} 支队伍只录到一轮成绩，名次基于现有数据。`);
-  }
-  if (result.tiedTeamIds.length > 0) {
-    const names = result.tiedTeamIds
+  if (completeness.tiedTeamIds.length > 0) {
+    const names = completeness.tiedTeamIds
       .map((id) => event.teams.find((t) => t.id === id)?.name ?? id)
       .slice(0, 5);
     messages.push(
@@ -587,11 +591,11 @@ export function applyQualificationAutoRanking(event: EventFile): ApplyResult {
       event: { ...event.event, contentUpdatedAt: now },
     },
     ok: true,
-    messages,
+    messages: ['排位赛名次已定榜并写入草稿。', ...messages],
   };
 }
 
-/** 录入裁判确认的排位赛最终排名（1–22）。 */
+/** 录入裁判确认的排位赛最终排名（人工覆盖 / 裁判组核分表）。 */
 export function applyQualificationRanking(
   event: EventFile,
   orderedTeamIds: string[],
@@ -615,6 +619,23 @@ export function applyQualificationRanking(
     if (!competitive.some((t) => t.id === id)) {
       return { event, ok: false, messages: [`${id} 不是竞技组队伍`] };
     }
+  }
+
+  // 人工名次可以覆盖不完整的数据，但必须有人为来源说明——不完整的名次
+  // 只能由人负责，不能看起来像是算出来的。
+  const completeness = assessQualificationCompleteness(event);
+  if (!completeness.ok) {
+    if (sourceNote === null || sourceNote.trim() === '') {
+      return {
+        event,
+        ok: false,
+        messages: [
+          `排位赛成绩不完整（${completeness.reason ?? '仍有队伍没有已确认的积分成绩'}），`,
+          '人工定榜必须填写「来源说明」，说明名次依据（例如：裁判组核分表）。',
+        ],
+      };
+    }
+    messages.push(`注意：成绩尚不完整，本名次按人工来源「${sourceNote.trim()}」定榜，观众端会同时显示该来源。`);
   }
 
   const now = new Date().toISOString();
@@ -654,12 +675,21 @@ export interface PairingOutcome extends ApplyResult {
  */
 export function generateNextRound(event: EventFile, roundIndex: number): PairingOutcome {
   const teamIds = qualifiedTeamIds(event);
+  const official = officialQualificationRanking(event);
   const proposal = generateSwissPairings({
     roundIndex,
     teamIds,
     matches: event.swiss.matches,
     qualification: event.qualification.ranking,
     rounds: event.swiss.rounds,
+    qualificationOfficial: official.official
+      ? { ok: true, reason: null }
+      : {
+          ok: false,
+          reason: official.completeness.ok
+            ? '排位赛名次尚未定榜'
+            : `成绩不完整且未人工定榜：${official.completeness.reason ?? '仍有队伍没有已确认的积分成绩'}`,
+        },
   });
 
   return {

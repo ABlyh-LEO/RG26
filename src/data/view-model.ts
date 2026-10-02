@@ -20,7 +20,8 @@ import {
   calculateSwissStandings,
 } from '../domain/standings';
 import { describeGroup, groupStakes, ROUND_GROUP_ORDER } from '../domain/swiss';
-import { computeQualificationRanking } from '../domain/qualification-ranking';
+import { computeQualificationRanking, liveQualificationRanking, type LiveQualificationRanking } from '../domain/qualification-ranking';
+import { type QualificationCompleteness, officialQualificationRanking } from '../domain/qualification-completeness';
 import { type Sides, sidesForFinals, sidesForSwiss } from '../domain/sides';
 import {
   type Awards,
@@ -456,11 +457,29 @@ export interface DerivedEvent {
   venueLabels: Map<string, string>;
   /** 正式排位赛排名（未确认时 status 为 none，UI 显示待公布）。 */
   qualification: {
+    /**
+     * **正式名次**。未定榜时恒为空数组——展示"当前排行"请用 `live`。
+     */
     orderedTeamIds: string[];
     status: EventFile['qualification']['ranking']['status'];
     bestResultLabels: string[] | null;
     confirmedAt: string | null;
     publishedAt: string | null;
+    /** 正式名次是否成立（已确认 且（成绩完整 或 有人为来源说明））。 */
+    official: boolean;
+    /** 成绩不完整但有来源说明（人工定榜）。 */
+    overridden: boolean;
+    /** 完整性判定：缺成绩 / 只录一轮 / 并列名单。 */
+    completeness: QualificationCompleteness;
+    /** 人工定榜的来源说明。 */
+    sourceNote: string | null;
+    /**
+     * **实时排行（「当前排行」）**：由已确认成绩现场派生。
+     *
+     * 允许在成绩不完整时展示，但必须标注"当前排行 · 未确认"，
+     * 且**不得**据此断言谁晋级。绝不落库、绝不参与业务判定。
+     */
+    live: LiveQualificationRanking;
     /**
      * 每队计入名次的那一轮（1 或 2），由**已确认成绩**按
      * 「积分高者优，同分时用时短者优」算出。
@@ -483,13 +502,33 @@ export interface DerivedEvent {
   swissTotalCount: number;
 }
 
-/** 参赛十六强：正式排位前 16。 */
+/**
+ * 参赛十六强：**正式名次**的前 16 名。
+ *
+ * 只有定榜成立（已确认 + 成绩完整，或有人为来源说明）才返回名单；
+ * 其余情况返回空数组——"谁晋级了"在定榜前没有答案，不能拿当前排行
+ * 或三审顺序顶上（历史缺陷正是如此：确认一条成绩就把按队号排出来的
+ * 前 16 支当成了晋级名单）。
+ *
+ * 需要在赛前展示"可能参赛的队伍池"时，请用 `displayPoolTeamIds`。
+ */
 export function qualifiedTeamIds(event: EventFile): string[] {
-  const ranking = event.qualification.ranking;
-  if (ranking.status === 'confirmed' && ranking.orderedTeamIds.length >= 16) {
-    return ranking.orderedTeamIds.slice(0, 16);
+  const official = officialQualificationRanking(event);
+  if (official.official && official.orderedTeamIds.length >= 16) {
+    return official.orderedTeamIds.slice(0, 16);
   }
-  // 未确认时：若瑞士轮已有实际参赛队伍，用它们；否则用全部竞技组队伍（仅用于展示空状态）
+  return [];
+}
+
+/**
+ * **仅供展示**的队伍池：定榜前回退到"瑞士轮已有参赛队，否则全部竞技组队伍"，
+ * 让页面能显示参考战绩与空状态。
+ *
+ * **不得**作为晋级判定、配对输入或种子依据——那些只能读 `qualifiedTeamIds`。
+ */
+export function displayPoolTeamIds(event: EventFile): string[] {
+  const official = qualifiedTeamIds(event);
+  if (official.length > 0) return official;
   const fromSwiss = new Set<string>();
   for (const m of event.swiss.matches) {
     if (m.participantSnapshot) {
@@ -504,11 +543,14 @@ export function qualifiedTeamIds(event: EventFile): string[] {
 export function deriveEvent(event: EventFile): DerivedEvent {
   const teamMap = buildTeamMap(event);
   const venueLabels = new Map(event.venues.map((v) => [v.id, v.label]));
-  const teamIds = qualifiedTeamIds(event);
+  // 战绩展示用队伍池：定榜前为"参考战绩"，不等于参赛名单。
+  const teamIds = displayPoolTeamIds(event);
 
   const standings = calculateSwissStandings(teamIds, event.swiss.matches, event.qualification.ranking);
 
-  const extras = deriveExtras(standings, event.qualification.ranking.orderedTeamIds);
+  const official = officialQualificationRanking(event);
+  // 优秀奖只能来自**正式名次**：实时排行绝不产生奖项。
+  const extras = deriveExtras(standings, official.official ? official.orderedTeamIds : []);
   const finals = resolveFinals(event.finals.series, event.finals.seeding, extras);
 
   const swissConfirmedCount = event.swiss.matches.filter((m) =>
@@ -520,11 +562,16 @@ export function deriveEvent(event: EventFile): DerivedEvent {
     teamMap,
     venueLabels,
     qualification: {
-      orderedTeamIds: event.qualification.ranking.orderedTeamIds,
+      orderedTeamIds: official.orderedTeamIds,
       status: event.qualification.ranking.status,
-      bestResultLabels: event.qualification.ranking.bestResultLabels,
+      bestResultLabels: official.bestResultLabels,
       confirmedAt: event.qualification.ranking.confirmedAt,
       publishedAt: event.qualification.ranking.publishedAt,
+      official: official.official,
+      overridden: official.overridden,
+      completeness: official.completeness,
+      sourceNote: official.sourceNote,
+      live: liveQualificationRanking(event),
       bestByTeam: computeBestRounds(event),
     },
     standings,
@@ -722,13 +769,19 @@ function teamStatus(
     }
   }
 
-  if (derived.qualification.status === 'confirmed') {
+  if (derived.qualification.official) {
     const rank = derived.qualification.orderedTeamIds.indexOf(teamId);
     if (rank >= 0) {
       return rank < 16
         ? { status: 'advanced', statusLabel: `排位赛第 ${rank + 1} 名 · 晋级十六强` }
         : { status: 'eliminated', statusLabel: `排位赛第 ${rank + 1} 名 · 优秀奖` };
     }
+  }
+
+  // 未定榜：最多只能说"当前第 N 位（未确认）"，绝不出现晋级/淘汰/优秀奖。
+  const live = derived.qualification.live.entries.find((candidate) => candidate.teamId === teamId);
+  if (live && !live.incomplete) {
+    return { status: 'qualification', statusLabel: `排位赛阶段 · 当前第 ${live.position} 位（未确认）` };
   }
 
   return { status: 'qualification', statusLabel: '排位赛阶段' };
@@ -776,7 +829,7 @@ export function deriveRounds(derived: DerivedEvent): RoundView[] {
       return m.attempts.some((a) => a.id === m.effectiveAttemptId && a.resultStatus === 'confirmed');
     });
     const standingsForRound = calculateSwissStandings(
-      qualifiedTeamIds(event),
+      displayPoolTeamIds(event),
       settledUpToRound,
       event.qualification.ranking,
     );

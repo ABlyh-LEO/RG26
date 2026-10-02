@@ -14,6 +14,7 @@
 import type { Correction, CorrectionDisposition, EventFile, SwissMatch } from './schema';
 import type { QualificationRanking } from './schema';
 import { type StandingsEntry, calculateSwissStandings } from './standings';
+import { officialQualificationRanking } from './qualification-completeness';
 
 /** 单次更正的影响面。 */
 export interface CorrectionImpact {
@@ -55,10 +56,12 @@ export interface CorrectionChange {
 export function previewCorrection(event: EventFile, change: CorrectionChange): CorrectionImpact {
   const qualification: QualificationRanking = event.qualification.ranking;
 
-  // 参赛十六强 = 排位赛前 16（未确认时回退到全部竞技组队伍，仅用于预览）
+  // 参赛十六强 = **正式名次**前 16（定榜前回退到全部竞技组队伍，仅用于预览
+  // 影响面；不代表参赛名单，也不对外展示）。
+  const official = officialQualificationRanking(event);
   const qualifiedIds =
-    qualification.status === 'confirmed' && qualification.orderedTeamIds.length >= 16
-      ? qualification.orderedTeamIds.slice(0, 16)
+    official.official && official.orderedTeamIds.length >= 16
+      ? official.orderedTeamIds.slice(0, 16)
       : event.teams.filter((t) => t.division === 'competitive').map((t) => t.id);
 
   const before = calculateSwissStandings(qualifiedIds, event.swiss.matches, qualification);

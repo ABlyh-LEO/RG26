@@ -247,3 +247,82 @@ export function computeQualificationRanking(
     tiedTeamIds,
   };
 }
+
+/* ------------------------------------------------------------------ *
+ * 实时排行（「当前排行」）
+ * ------------------------------------------------------------------ */
+
+/** 实时排行中的一行。 */
+export interface LiveQualificationStanding {
+  teamId: string;
+  /** 1 起的「当前位次」。展示措辞必须是「当前第 N 位」，不能写成「第 N 名」。 */
+  position: number;
+  label: string;
+  score: number | null;
+  elapsedSeconds: number | null;
+  round: 1 | 2 | null;
+  /** 该队没有任何已确认且可比较的成绩。 */
+  incomplete: boolean;
+  /** 只录到一轮可比成绩。 */
+  partial: boolean;
+  /** 与上一位成绩完全相同，名次无法由数据区分。 */
+  tiedWithPrevious: boolean;
+}
+
+/**
+ * 实时排行：由已确认成绩现场算出，**绝不落库、绝不参与业务判定**。
+ *
+ * 观众端允许在成绩不完整时看排名（以「当前排行」名义），但必须同时
+ * 标注未确认与不完整，且**不得据此断言谁晋级**。业务判定
+ * （`qualifiedTeamIds`、八强种子、R1 配对、奖项结算）只能读
+ * `officialQualificationRanking`。
+ */
+export interface LiveQualificationRanking {
+  entries: LiveQualificationStanding[];
+  /** 已确认且积分可比较的跑图次数，用于「已确认 N / 44 次」的规模标注。 */
+  scoredRunCount: number;
+  confirmedRunCount: number;
+  totalRunCount: number;
+  teamCount: number;
+  /** 是否有任何可比成绩；为假时不应显示实时榜。 */
+  hasAnyScore: boolean;
+  incompleteTeamIds: string[];
+  partialTeamIds: string[];
+  tiedTeamIds: string[];
+}
+
+/** 现场派生实时排行。本函数不写入任何数据。 */
+export function liveQualificationRanking(event: EventFile): LiveQualificationRanking {
+  const result = computeQualificationRanking(event);
+  const entries: LiveQualificationStanding[] = result.standings.map((standing) => {
+    const best = standing.best;
+    return {
+      teamId: standing.teamId,
+      position: standing.rank,
+      label: best?.label ?? '—',
+      score: best?.score ?? null,
+      elapsedSeconds: best?.elapsedSeconds ?? null,
+      round: best?.round ?? null,
+      incomplete: best === null || best.incomplete,
+      partial: best?.partial ?? false,
+      tiedWithPrevious: standing.tiedWithPrevious,
+    };
+  });
+
+  const runs = event.qualification.runs;
+  const scoredRunCount = runs.filter(
+    (run) => run.resultStatus === 'confirmed' && toNumber(run.score) !== null,
+  ).length;
+
+  return {
+    entries,
+    scoredRunCount,
+    confirmedRunCount: runs.filter((run) => run.resultStatus === 'confirmed').length,
+    totalRunCount: runs.length,
+    teamCount: entries.length,
+    hasAnyScore: scoredRunCount > 0,
+    incompleteTeamIds: result.incompleteTeamIds,
+    partialTeamIds: result.partialTeamIds,
+    tiedTeamIds: result.tiedTeamIds,
+  };
+}

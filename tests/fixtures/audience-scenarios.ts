@@ -2,9 +2,9 @@
 import { buildSeedEvent } from '../../scripts/seed-data';
 import { FINALS_MATCH_ORDER, resolveFinals } from '../../src/domain/finals';
 import type { EventFile, PublicSnapshot } from '../../src/domain/schema';
-import { applyBo1Entry, applyBo3Game, applyFinalsBo1, applyQualificationAutoRanking, applyQualificationRun, confirmRound, generateNextRound, publishFinalsSeeding, publishRound } from '../../src/operator/draft';
+import { applyBo1Entry, applyBo3Game, applyFinalsBo1, applyQualificationRun, confirmQualificationRanking, confirmRound, generateNextRound, publishFinalsSeeding, publishRound } from '../../src/operator/draft';
 
-export type AudienceScenario = 'before' | 'qualification' | 'swiss' | 'bo3' | 'after' | 'rescheduled';
+export type AudienceScenario = 'before' | 'qualification' | 'qualification-partial' | 'swiss' | 'bo3' | 'after' | 'rescheduled';
 export function audienceEvent(scenario: AudienceScenario): EventFile {
   let event = buildSeedEvent('2026-10-02T12:00:00+08:00');
   if (scenario === 'before') return event;
@@ -20,13 +20,30 @@ export function audienceEvent(scenario: AudienceScenario): EventFile {
     }
     return event;
   }
+  if (scenario === 'qualification-partial') {
+    // 只确认 7 条成绩（3 支队伍两轮齐全 + 1 支只跑了一轮，其余 18 支没有成绩），
+    // 且**不定榜**。用于验证观众端只显示「当前排行」、绝不断言晋级。
+    // 索引 0–21 为第 1 轮，22–43 为第 2 轮，同一队伍同序号。
+    for (const [order, index] of [0, 22, 1, 23, 2, 24, 3].entries()) {
+      const run = event.qualification.runs[index]!;
+      const result = applyQualificationRun(event, {
+        runId: run.id, score: String(20 - order), elapsedSeconds: String(40 + order),
+        rawResult: '测试成绩', judgeNote: null, confirm: true,
+      });
+      if (!result.ok) throw new Error(result.messages.join('；'));
+      event = result.event;
+    }
+    return event;
+  }
   for (const run of event.qualification.runs) {
     const rank = event.teams.find(t => t.id === run.teamId)!.thirdReviewRank!;
     const result = applyQualificationRun(event, { runId: run.id, score: String(24 - rank), elapsedSeconds: String(30 + rank), rawResult: '测试成绩', judgeNote: null, confirm: true });
     if (!result.ok) throw new Error(result.messages.join('；'));
     event = result.event;
   }
-  event = applyQualificationAutoRanking(event).event;
+  const ranked = confirmQualificationRanking(event);
+  if (!ranked.ok) throw new Error(ranked.messages.join('；'));
+  event = ranked.event;
   for (let index = 1; index <= 5; index += 1) {
     const proposal = generateNextRound(event, index);
     if (!proposal.ok || !proposal.proposal) throw new Error(proposal.messages.join('；'));

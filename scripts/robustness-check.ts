@@ -31,9 +31,9 @@ import {
   applyBo1Entry,
   applyBo3Game,
   applyFinalsBo1,
-  applyQualificationAutoRanking,
   applyQualificationRanking,
   applyQualificationRun,
+  confirmQualificationRanking,
   confirmRound,
   generateNextRound,
   preflight,
@@ -143,6 +143,8 @@ function playQualification(
     tieFirstTwo?: boolean;
     onlyOneRoundFor?: string | null;
     unconfirmedFor?: string | null;
+    /** 故意留下不完整成绩时设为 false：此时**不应该**也不能定榜。 */
+    confirmRanking?: boolean;
   } = {},
 ): EventFile {
   const ids = base.teams.filter((t) => t.division === 'competitive').map((t) => t.id);
@@ -168,7 +170,15 @@ function playQualification(
       cur = res.event;
     }
   });
-  return applyQualificationAutoRanking(cur).event;
+  if (opts.confirmRanking === false) return cur;
+  return confirmRankingOrThrow(cur, '排位赛');
+}
+
+/** 定榜：成绩必须完整，失败即为脚本自身的错误（不能静默返回旧数据）。 */
+function confirmRankingOrThrow(event: EventFile, label: string): EventFile {
+  const ranked = confirmQualificationRanking(event);
+  if (!ranked.ok) throw new Error(`${label}定榜失败：${ranked.messages.join('；')}`);
+  return ranked.event;
 }
 
 /** 录入一场 BO1（默认主队胜，16:4）。 */
@@ -569,7 +579,7 @@ section('E. 边界情形');
   const e = playQualification(loadEvent(), { tieFirstTwo: true });
   const r = computeQualificationRanking(e);
   check('E1 检出并列', r.tiedTeamIds.length >= 1, `${r.tiedTeamIds.length} 支并列`);
-  const auto = applyQualificationAutoRanking(e);
+  const auto = confirmQualificationRanking(e);
   check('E1 并列仍可写入（不阻断）', auto.ok);
   check('E1 并列有明确提示', auto.messages.some((m) => m.includes('并列')), auto.messages.join(' / ').slice(0, 120));
   check('E1 名次仍连续', r.standings.every((s, i) => s.rank === i + 1));
@@ -584,7 +594,7 @@ section('E. 边界情形');
   check('E2 只录一轮的队伍排在榜首（成绩最好）', r.standings[0]!.teamId === first, r.standings[0]!.teamId);
   check('E2 只录一轮不算 incomplete', !r.incompleteTeamIds.includes(first));
   check('E2 标为 partial', r.partialTeamIds.includes(first));
-  const auto = applyQualificationAutoRanking(e);
+  const auto = confirmQualificationRanking(e);
   check('E2 有 partial 提示', auto.messages.some((m) => m.includes('只录到一轮')), auto.messages.join(' / ').slice(0, 100));
   check('E2 名次仍覆盖 22 队', r.standings.length === 22);
 }
@@ -593,7 +603,15 @@ section('E. 边界情形');
 {
   const first = competitiveOf(loadEvent())[0]!.id;
   const confirmedAll = playQualification(loadEvent());
-  const withUnconfirmed = playQualification(loadEvent(), { unconfirmedFor: first });
+  const withUnconfirmed = playQualification(loadEvent(), { unconfirmedFor: first, confirmRanking: false });
+
+  // 成绩不完整时不得定榜：正式名次必须仍为空（这正是被修复的历史缺陷）。
+  check(
+    'E3 成绩不完整时不自动定榜',
+    withUnconfirmed.qualification.ranking.status === 'none' &&
+      withUnconfirmed.qualification.ranking.orderedTeamIds.length === 0,
+    `status=${withUnconfirmed.qualification.ranking.status}，名单=${withUnconfirmed.qualification.ranking.orderedTeamIds.length} 队`,
+  );
 
   const ra = computeQualificationRanking(confirmedAll);
   const rb = computeQualificationRanking(withUnconfirmed);

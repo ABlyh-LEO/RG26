@@ -17,8 +17,8 @@ import {
   applyBo1Entry,
   applyBo3Game,
   applyFinalsBo1,
-  applyQualificationAutoRanking,
   applyQualificationRun,
+  confirmQualificationRanking,
   confirmRound,
   generateNextRound,
   publishFinalsSeeding,
@@ -61,7 +61,9 @@ ids.forEach((teamId, i) => {
     e = res.event;
   }
 });
-e = applyQualificationAutoRanking(e).event;
+const rankedQualification = confirmQualificationRanking(e);
+if (!rankedQualification.ok) throw new Error(`排位赛定榜失败：${rankedQualification.messages.join('；')}`);
+e = rankedQualification.event;
 
 // 2. 瑞士轮 5 轮：主队（第一个席位）胜，制造确定的战绩
 for (let r = 1; r <= 5; r += 1) {

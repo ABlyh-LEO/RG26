@@ -2,8 +2,10 @@
 import { eventFileSchema, type CorrectionDisposition, type EventFile, type ResultKind, type Series } from '../domain/schema';
 import { buildCorrection, previewCorrection, type CorrectionImpact } from '../domain/corrections';
 import { resolveFinals } from '../domain/finals';
-import { applyBo1Entry, applyBo3Game, applyFinalsBo1, applyQualificationAutoRanking,
+import { applyBo1Entry, applyBo3Game, applyFinalsBo1,
   applyQualificationRun, seriesWins, type ApplyResult } from './draft';
+import { liveQualificationRanking } from '../domain/qualification-ranking';
+import { officialQualificationRanking } from '../domain/qualification-completeness';
 
 export type ResultTarget = { kind: 'qualification' | 'swiss' | 'finals'; id: string; gameIndex: number };
 export interface ResultInput {
@@ -15,6 +17,28 @@ export interface ResultInput {
 export interface ResultProposal extends ApplyResult {
   fields: Record<string, string>;
   impact: CorrectionImpact | null;
+}
+
+/**
+ * 确认一条排位赛成绩后给维护者的提示。
+ *
+ * 排位赛名次**不会**因为一条成绩而自动定榜；这里只说清当前状态与下一步，
+ * 避免维护者以为"确认了成绩就等于公布了名次"。
+ */
+function qualificationRankingNotes(event: EventFile): string[] {
+  const official = officialQualificationRanking(event);
+  if (official.confirmed) {
+    return ['排位赛名次此前已定榜：正式名次不随单条成绩自动更新，请在「对阵与排名 → 排位赛排名」重新核对并重新定榜。'];
+  }
+  const { missingTeamIds, partialTeamIds } = official.completeness;
+  const notes: string[] = [];
+  if (missingTeamIds.length > 0) {
+    notes.push(`排位赛还有 ${missingTeamIds.length} 支队伍没有已确认的积分成绩，尚未定榜；观众端目前只显示「当前排行」，不会据此断言任何队伍晋级。`);
+  } else {
+    notes.push('排位赛成绩已完整，可在「对阵与排名 → 排位赛排名」核对后定榜。');
+  }
+  if (partialTeamIds.length > 0) notes.push(`${partialTeamIds.length} 支队伍只录到一轮成绩，定榜前请复核。`);
+  return notes;
 }
 
 export function resultParticipants(event: EventFile, target: ResultTarget): [string, string] | null {
@@ -59,14 +83,19 @@ export function resultImpact(event: EventFile, next: EventFile, target: ResultTa
     });
     if (target.kind === 'qualification') {
       impact.changedIds = [target.id];
-      const before = event.qualification.ranking.orderedTeamIds;
-      const after = next.qualification.ranking.orderedTeamIds;
-      impact.rankingChanges = after.flatMap((teamId, index) => {
-        const previous = before.indexOf(teamId);
-        return previous >= 0 && previous !== index ? [{ teamId, before: previous + 1, after: index + 1,
+      // 用**实时排行**比较，而不是存储的正式名次：正式名次只由显式定榜动作
+      // 写入，单条成绩更正不会（也不应该）自动改写它。若已定榜，另行提示重定。
+      const before = liveQualificationRanking(event).entries;
+      const after = liveQualificationRanking(next).entries;
+      impact.rankingChanges = after.flatMap((entry, index) => {
+        const previous = before.findIndex((candidate) => candidate.teamId === entry.teamId);
+        return previous >= 0 && previous !== index ? [{ teamId: entry.teamId, before: previous + 1, after: index + 1,
           recordBefore: '排位赛', recordAfter: '排位赛' }] : [];
       });
-      if (impact.rankingChanges.length) impact.warnings.push(`${impact.rankingChanges.length} 支队伍的排位名次发生变化，已公布后续对阵需要一并核对。`);
+      if (impact.rankingChanges.length) impact.warnings.push(`${impact.rankingChanges.length} 支队伍的当前排位发生变化，已公布后续对阵需要一并核对。`);
+      if (officialQualificationRanking(event).confirmed) {
+        impact.warnings.push('排位赛名次此前已定榜：本次更正后正式名次与成绩可能不一致，请在「对阵与排名 → 排位赛排名」重新核对并重新定榜。');
+      }
       impact.affectedSeries = event.finals.seeding ? event.finals.series.filter((s) => s.countsForStandings).map((s) => s.id) : [];
       if (event.finals.series.some((s) => impact.affectedSeries.includes(s.id) && hasStarted(s))) {
         impact.requiredDisposition = 'committee-revision-recorded';
@@ -122,8 +151,11 @@ export function proposeResult(event: EventFile, target: ResultTarget, input: Res
     applied = applyQualificationRun(event, { runId: target.id, rawResult: input.rawResult,
       score: input.homeScore || null, elapsedSeconds: input.homeSeconds || null, judgeNote: input.note || null, confirm });
     if (applied.ok && confirm) {
-      const ranked = applyQualificationAutoRanking(applied.event);
-      applied = { ...applied, event: ranked.event, messages: ranked.messages };
+      // 名次**不在这里**自动生成。单条成绩不构成完整成绩，直接定榜会把
+      // 尚未确定的结论写成正式名次（历史缺陷）。定榜是显式动作：
+      // 「对阵与排名 → 排位赛排名」的 confirmQualificationRanking /
+      // applyQualificationRanking。观众端在此期间只看到「当前排行」。
+      applied = { ...applied, messages: [...applied.messages, ...qualificationRankingNotes(applied.event)] };
     }
   } else if (target.kind === 'swiss') {
     applied = applyBo1Entry(event, { matchId: target.id, homeScore: input.homeScore, awayScore: input.awayScore,
@@ -206,6 +238,12 @@ export function proposeResult(event: EventFile, target: ResultTarget, input: Res
       }) } };
     }
   }
-  return { event: next, ok: true, fields, impact,
-    messages: [correcting ? `${input.operation === 'replay' ? '重赛' : '更正'}已写入草稿，旧值、新值和原因已保留。` : '结果已保存到待发布草稿。'] };
+  // 保留各 applyXxx 自己的提示（例如"待确认"、"重赛追加"、"尚未定榜"），
+  // 不要再被一句通用文案覆盖掉——维护者需要知道这次保存到底发生了什么。
+  const messages = [
+    ...applied.messages,
+    ...(correcting ? [`${input.operation === 'replay' ? '重赛' : '更正'}已写入草稿，旧值、新值和原因已保留。`] : []),
+  ];
+  if (messages.length === 0) messages.push('结果已保存到待发布草稿。');
+  return { event: next, ok: true, fields, impact, messages };
 }

@@ -6,6 +6,7 @@
  */
 import type { EventFile, SwissMatch } from './schema';
 import { EXPECTED_MATCH_COUNTS, ROUND_GROUP_ORDER } from './swiss';
+import { assessQualificationCompleteness } from './qualification-completeness';
 import { FINALS_NODES, validateFinalsGraph } from './finals';
 import { toApproxNumber } from './rational';
 
@@ -215,6 +216,23 @@ export function validateEvent(event: EventFile): ValidationResult {
           'bestResultLabels',
           'label-length-mismatch',
           `最优成绩标签数量 ${ranking.bestResultLabels.length} 与排名队数 ${ordered.length} 不一致`,
+        ),
+      );
+    }
+    // 名次只有在成绩完整时才谈得上"确定"。不完整却已确认的排名，
+    // 必须有人为来源说明（裁判组核分表 / 组委会决定）才能发布——
+    // 否则就是"用部分数据断言了完整结论"。
+    const completeness = assessQualificationCompleteness(event);
+    if (!completeness.ok && (ranking.sourceNote ?? '').trim() === '') {
+      errors.push(
+        err(
+          'qualification-ranking',
+          null,
+          'orderedTeamIds',
+          'ranking-confirmed-incomplete',
+          `已确认的排位赛名次缺少完整成绩：${
+            completeness.reason ?? '仍有队伍没有已确认的积分成绩'
+          }。请先补齐成绩，或改由人工名次录入并填写来源说明。`,
         ),
       );
     }

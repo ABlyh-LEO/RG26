@@ -154,35 +154,51 @@ function QualificationView() {
   if (!derived) return null;
   const { event, qualification, teamMap } = derived;
 
-  const status = qualification.status;
-  const confirmed = status === 'confirmed';
+  /**
+   * 三态展示（决策：成绩不完整时允许看实时排行，但必须标注为「当前排行」，
+   * 且不得据此断言谁晋级）：
+   * 1. 已定榜 → 正式排名 + 晋级状态；
+   * 2. 未定榜但有已确认成绩 → 当前排行（实时、未确认、无晋级结论）；
+   * 3. 完全没有已确认成绩 → 空状态，不推测名次。
+   */
+  const official = qualification.official;
+  const live = qualification.live;
+  const showLive = !official && live.hasAnyScore;
+  const missingCount = qualification.completeness.missingTeamIds.length;
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-4)' }}>
       <div className="card">
         <div className="card__head">
-          <span className="card__title">正式排名</span>
+          <span className="card__title">{official ? '正式排名' : showLive ? '当前排行' : '正式排名'}</span>
           <span className="row" style={{ gap: 'var(--sp-1)' }}>
             <PublicationBadge status={event.qualification.ranking.publicationStatus} />
-            {confirmed ? (
-              <span className="badge badge--advanced">已确认</span>
+            {official ? (
+              <>
+                <span className="badge badge--advanced">已确认</span>
+                {qualification.overridden ? <span className="badge badge--pending">人工定榜</span> : null}
+              </>
+            ) : showLive ? (
+              <span className="badge badge--pending">实时 · 未确认</span>
             ) : (
               <span className="badge badge--pending">待裁判确认</span>
             )}
           </span>
         </div>
 
-        {!confirmed ? (
-          <EmptyState
-            title="正式排名尚未公布"
-            hint="排位赛两轮结束后，由裁判组核分确认 1–22 名的最终排名。确认前不推测名次。"
-          />
-        ) : (
+        {official ? (
           <>
             <p className="xsmall muted">
               第 1–16 名晋级十六强，第 17–22 名结算优秀奖。两轮取最优成绩，同分规则由裁判确认。
-              {event.qualification.ranking.sourceNote ? ` 来源：${event.qualification.ranking.sourceNote}` : ''}
+              {qualification.sourceNote ? ` 来源：${qualification.sourceNote}` : ''}
             </p>
+            {qualification.overridden ? (
+              <div className="inline-notice">
+                <strong>本次名次由人工录入。</strong>
+                成绩尚不完整（{missingCount} 支队伍没有可比成绩），名次依据：
+                {qualification.sourceNote ?? '未填写来源说明'}
+              </div>
+            ) : null}
             <div className="table-wrap">
               <table className="table">
                 <caption className="visually-hidden">排位赛正式排名</caption>
@@ -221,6 +237,64 @@ function QualificationView() {
               </table>
             </div>
           </>
+        ) : showLive ? (
+          <>
+            <div className="inline-notice">
+              <strong>实时 · 成绩不完整，未确认，不作为晋级依据。</strong>
+              已确认 {live.confirmedRunCount} / {live.totalRunCount} 次跑图；
+              {live.teamCount} 支队伍中 {missingCount} 支尚无成绩。
+            </div>
+            <p className="xsmall muted">
+              两轮取最优成绩，积分高者优、同分时到达最终分时间早者优。
+              名次待裁判组核分确认后才会成为正式排名。
+            </p>
+            <div className="table-wrap">
+              <table className="table">
+                <caption className="visually-hidden">排位赛当前排行（实时，未确认）</caption>
+                <thead>
+                  <tr>
+                    <th className="num">当前位次</th>
+                    <th className="table__team">队伍</th>
+                    <th className="num">编号</th>
+                    <th>最优成绩</th>
+                    <th>数据状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {live.entries.map((entry) => {
+                    if (selectedTeam && entry.teamId !== selectedTeam) return null;
+                    const team = teamMap.get(entry.teamId)?.team ?? null;
+                    return (
+                      <tr key={entry.teamId}>
+                        <td className="num tabular">{entry.position}</td>
+                        <td className="table__team">
+                          <TeamName team={team} fallback={entry.teamId} />
+                        </td>
+                        <td className="num tabular">{team?.number ?? '—'}</td>
+                        <td className="tabular">{entry.label}</td>
+                        <td>
+                          {entry.incomplete ? (
+                            <span className="badge badge--neutral">无成绩</span>
+                          ) : entry.partial ? (
+                            <span className="badge badge--pending">仅一轮</span>
+                          ) : entry.tiedWithPrevious ? (
+                            <span className="badge badge--pending">与上位并列</span>
+                          ) : (
+                            <span className="xsmall muted">第 {entry.round ?? '—'} 轮成绩</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            title="正式排名尚未公布"
+            hint="排位赛两轮结束后，由裁判组核分确认 1–22 名的最终排名。确认前不推测名次。"
+          />
         )}
       </div>
 
@@ -526,9 +600,10 @@ export function StandingsMiniTable({
           </tr>
         </thead>
         <tbody>
-          {entries.map((e, i) => (
+          {entries.map((e) => (
             <tr key={e.teamId}>
-              <td className="num tabular">{e.rankWithinGroup || i + 1}</td>
+              {/* 组内名次由领域计算给出；缺失时显示「—」，绝不用数组下标冒充名次。 */}
+              <td className="num tabular">{e.rankWithinGroup > 0 ? e.rankWithinGroup : '—'}</td>
               <td className="table__team">
                 <TeamName team={derived?.teamMap.get(e.teamId)?.team ?? null} fallback="队伍待核对" />
               </td>

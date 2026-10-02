@@ -40,11 +40,20 @@ export interface PairingContext {
   matches: readonly SwissMatch[];
   qualification: QualificationRanking;
   rounds: readonly SwissRound[];
+  /**
+   * 排位赛**正式名次是否成立**（调用方用 `officialQualificationRanking` 算出后传入）。
+   *
+   * 领域层不直接读 `event`，因此把结论注入。R1 依赖的是"谁是前 16 名"这个
+   * **对外结论**，它必须已经成立：要么成绩完整算出来，要么由人登记并写明来源。
+   * 只用"已确认"这一个字段不够——历史缺陷正是"确认一条成绩就把按队号排出来的
+   * 前 16 支当成了晋级名单"。
+   */
+  qualificationOfficial: { ok: boolean; reason: string | null };
 }
 
 /**
  * 判断本轮是否可以生成候选：必须存在上一轮，且上一轮全部比赛确认完毕。
- * R1 例外：R1 依赖排位赛正式排名已确认。
+ * R1 例外：R1 依赖排位赛**正式名次**已经成立。
  */
 export function checkRoundGate(ctx: PairingContext): { ok: boolean; reason: string | null } {
   const { roundIndex, qualification, rounds } = ctx;
@@ -52,6 +61,14 @@ export function checkRoundGate(ctx: PairingContext): { ok: boolean; reason: stri
   if (roundIndex === 1) {
     if (qualification.status !== 'confirmed') {
       return { ok: false, reason: '排位赛正式排名尚未确认，无法生成第一轮对阵' };
+    }
+    if (!ctx.qualificationOfficial.ok) {
+      return {
+        ok: false,
+        reason: `排位赛正式名次尚未成立，不能据此确定瑞士轮参赛队：${
+          ctx.qualificationOfficial.reason ?? '成绩不完整且未人工定榜'
+        }`,
+      };
     }
     // 瑞士轮只取排位赛前 16 名。排位赛排名本身包含全部 22 队，这是正常的，
     // 因此这里比较的是"排名中可用于配对的前 N 名"，而不是整份排名的长度。

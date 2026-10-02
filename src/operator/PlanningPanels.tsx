@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import type { EventFile, SwissMatch } from '../domain/schema';
 import { formatTime } from '../data/view-model';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
+import { assessQualificationCompleteness } from '../domain/qualification-completeness';
 import { useFormField } from './FormDraftContext';
-import { addNotice, adjustSchedule, applyQualificationAutoRanking, applyQualificationRanking,
+import { addNotice, adjustSchedule, applyQualificationRanking, confirmQualificationRanking,
   applyShowcaseDraw, confirmRound, generateNextRound, publishFinalsSeeding, publishRound,
   type ApplyResult, type PairingOutcome } from './draft';
 
@@ -23,6 +24,8 @@ export function QualificationEntry({
 
   /** 由成绩实时推算的名次（口径：积分高者优，同分时用时短者优）。 */
   const computed = useMemo(() => computeQualificationRanking(draft), [draft]);
+  /** 定榜门禁：每支竞技组队伍都要有已确认的积分成绩。 */
+  const completeness = useMemo(() => assessQualificationCompleteness(draft), [draft]);
   const bestOf = (teamId: string) => computed.standings.find((s) => s.teamId === teamId)?.best ?? null;
 
   const move = (index: number, delta: number) => {
@@ -46,17 +49,27 @@ export function QualificationEntry({
         </div>
 
         <p className="small muted" style={{ marginTop: 0 }}>
-          这是由已确认成绩实时算出的名次。单场成绩更新后会自动重排，无需手动拉顺序。
+          这是由已确认成绩实时算出的<b>当前排行</b>。它在成绩收齐并定榜之前<b>不是正式名次</b>，
+          观众端只会看到「当前排行」标注，不会据此断言任何队伍晋级。
         </p>
 
-        {computed.incompleteTeamIds.length > 0 ? (
+        {!completeness.ok ? (
           <div className="operator-errors" style={{ marginBottom: 'var(--sp-2)' }}>
-            <strong>{computed.incompleteTeamIds.length} 支队伍暂无积分成绩，已排在榜尾：</strong>
+            <strong>成绩不完整，暂不能定榜：</strong>
+            <div className="xsmall" style={{ marginTop: 4 }}>{completeness.reason}</div>
             <div className="xsmall" style={{ marginTop: 4 }}>
-              {computed.incompleteTeamIds
-                .map((id) => draft.teams.find((t) => t.id === id)?.name ?? id)
-                .join('、')}
+              名单：{completeness.missingTeamIds.map((id) => draft.teams.find((t) => t.id === id)?.name ?? id).join('、')}
             </div>
+          </div>
+        ) : (
+          <div className="operator-warnings" style={{ marginBottom: 'var(--sp-2)' }}>
+            成绩已完整（{completeness.scoredTeamIds.length} / {completeness.teamCount} 支队伍有可比成绩），可以定榜。
+          </div>
+        )}
+        {completeness.partialTeamIds.length > 0 ? (
+          <div className="operator-warnings" style={{ marginBottom: 'var(--sp-2)' }}>
+            {completeness.partialTeamIds.length} 支队伍只录到一轮成绩：
+            {completeness.partialTeamIds.map((id) => draft.teams.find((t) => t.id === id)?.name ?? id).join('、')}
           </div>
         ) : null}
         {computed.tiedTeamIds.length > 0 ? (
@@ -102,10 +115,15 @@ export function QualificationEntry({
           type="button"
           className="btn btn--primary"
           style={{ marginTop: 'var(--sp-3)' }}
-          onClick={() => onApply(applyQualificationAutoRanking(draft))}
+          disabled={!completeness.ok}
+          onClick={() => onApply(confirmQualificationRanking(draft))}
         >
-          采用这个名次并写入草稿
+          核对无误，定榜并写入草稿
         </button>
+        <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
+          定榜后名次成为<b>正式名次</b>，观众端才会显示「晋级十六强 / 优秀奖」。
+          成绩不完整时按钮不可用；确需在成绩不全时定榜，请走下方「人工覆盖」并填写来源说明。
+        </p>
       </div>
 
       <div className="card operator-draft">
@@ -114,8 +132,9 @@ export function QualificationEntry({
           {order.length > 0 ? <span className="badge badge--pending">已启用</span> : null}
         </div>
         <p className="xsmall muted" style={{ marginTop: 0 }}>
-          仅当自动名次无法表达组委会决定时使用（例如并列需指定先后）。
+          仅当自动名次无法表达组委会决定时使用（例如并列需指定先后，或裁判组直接核分）。
           排名必须包含全部 {competitive.length} 支竞技组队伍且不重复。
+          <b>成绩不完整时，「来源说明」必填</b>——不完整的名次只能由人负责，不能看起来像是算出来的。
         </p>
 
         {order.length === 0 ? (

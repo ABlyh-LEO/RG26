@@ -224,7 +224,12 @@ function CompetitiveDetail({ journey }: { journey: NonNullable<ReturnType<typeof
   const { derived } = useData();
   if (!derived) return null;
   const { team, swissMatches, finalsMatches, standingsEntry, nextMatch, seeds } = journey;
-  const qualificationRank = derived.qualification.orderedTeamIds.indexOf(team.id);
+  // 正式名次只在定榜后成立；未定榜时最多显示"当前第 N 位（未确认）"。
+  const qualificationRank = derived.qualification.official
+    ? derived.qualification.orderedTeamIds.indexOf(team.id)
+    : -1;
+  const liveStanding = derived.qualification.live.entries.find((entry) => entry.teamId === team.id) ?? null;
+  const livePosition = liveStanding !== null && !liveStanding.incomplete ? liveStanding.position : null;
   const completedSwiss = swissMatches.filter((match) => match.resultStatus === 'confirmed').length;
   const confirmedRuns = journey.qualificationRuns.filter((run) => run.resultStatus === 'confirmed').length;
 
@@ -245,12 +250,12 @@ function CompetitiveDetail({ journey }: { journey: NonNullable<ReturnType<typeof
     </div>
     <aside className="stack" style={{ gap: 24 }}>
       <Section title="成绩与状态"><div className="card"><div className="row" style={{ justifyContent: 'space-between' }}><span className="small muted">当前状态</span><strong className="small">{journey.statusLabel}</strong></div>
-        {qualificationRank >= 0 ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">排位赛正式名次</span><strong className="tabular">第 {qualificationRank + 1} 名</strong></div> : null}
+        {qualificationRank >= 0 ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">排位赛正式名次</span><strong className="tabular">第 {qualificationRank + 1} 名</strong></div> : livePosition !== null ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">当前排行（未确认）</span><strong className="tabular">当前第 {livePosition} 位</strong></div> : null}
         {standingsEntry ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">瑞士轮战绩</span><strong className="tabular">{standingsEntry.wins} 胜 {standingsEntry.losses} 负</strong></div> : null}
         {seeds.length > 0 ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">八强种子</span><strong>{seeds.map(finalsSeedLabel).join('、')}</strong></div> : null}
         {standingsEntry ? <details className="disclosure" style={{ marginTop: 17 }}><summary>评分指标</summary><dl className="metrics-grid">{[['R 综合分', standingsEntry.display.r], ['P 表现分', standingsEntry.display.p], ['O 对手强度', standingsEntry.display.o], ['A 得分表现', standingsEntry.display.a], ['B 分差表现', standingsEntry.display.b], ['T 平均用时', standingsEntry.display.t], ['局均得分', standingsEntry.display.meanScore ?? '—'], ['局均分差', standingsEntry.display.meanDiff ?? '—']].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="tabular">{value}</dd></div>)}</dl><p className="xsmall muted">计入表现 n={standingsEntry.metrics.n}；已结算对阵 m={standingsEntry.metrics.m}。<Link to="/rules?section=scoring">查看评分说明</Link></p></details> : null}
       </div></Section>
-      <Section title="参赛历程"><div className="card"><ol className="journey-steps"><PathItem done={confirmedRuns > 0} label="排位赛" detail={qualificationRank >= 0 ? `正式名次第 ${qualificationRank + 1} 名` : `${confirmedRuns} / ${journey.qualificationRuns.length || 2} 次跑图已确认`} /><PathItem done={completedSwiss > 0} label="瑞士轮" detail={completedSwiss > 0 ? `已完成 ${completedSwiss} 场 · ${standingsEntry?.record ?? ''}` : '等待瑞士轮结果'} /><PathItem done={seeds.length > 0 || finalsMatches.length > 0} label="八强决赛" detail={seeds.length > 0 ? `种子 ${seeds.map(finalsSeedLabel).join('、')}` : finalsMatches.length > 0 ? '已进入八强赛' : '等待晋级结果'} /></ol></div></Section>
+      <Section title="参赛历程"><div className="card"><ol className="journey-steps"><PathItem done={confirmedRuns > 0} label="排位赛" detail={qualificationRank >= 0 ? `正式名次第 ${qualificationRank + 1} 名` : livePosition !== null ? `当前第 ${livePosition} 位（未确认）` : `${confirmedRuns} / ${journey.qualificationRuns.length || 2} 次跑图已确认`} /><PathItem done={completedSwiss > 0} label="瑞士轮" detail={completedSwiss > 0 ? `已完成 ${completedSwiss} 场 · ${standingsEntry?.record ?? ''}` : '等待瑞士轮结果'} /><PathItem done={seeds.length > 0 || finalsMatches.length > 0} label="八强决赛" detail={seeds.length > 0 ? `种子 ${seeds.map(finalsSeedLabel).join('、')}` : finalsMatches.length > 0 ? '已进入八强赛' : '等待晋级结果'} /></ol></div></Section>
       <details className="disclosure"><summary>队伍资料</summary><p className="small muted">编号 #{team.number}{team.thirdReviewRank !== null ? ` · 三审第 ${team.thirdReviewRank} 名` : ''}</p><p className="xsmall muted">三审排名仅用于出场安排，与正式名次无关。队名与编号依据官方名单。</p></details>
     </aside>
   </div>;
