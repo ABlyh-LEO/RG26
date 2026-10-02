@@ -1,4 +1,4 @@
-> 历史初版计划。最新实现与验收以 [体验升级计划](EXPERIENCE_UPGRADE.md)、[规则说明](RULES.md) 和 [维护指南](operator-guide.md) 为准；本文旧赛程、跨日第三轮与10场决赛描述已被 docs 新赛程替代。
+> **历史初版计划，不是当前操作手册。** 当前日常维护请阅读[维护操作手册](OPERATOR_GUIDE.md)，通过本地工作台完成录入、草稿、预览、发布与上线确认。本文“导出 JSON 后执行发布命令”等旧流程，以及旧页签、跨日第三轮和 10 场决赛描述，仅为历史记录。最新实现见[体验升级说明](EXPERIENCE_UPGRADE.md)，赛程与规则以 [docs 中的新资料](RULES.md)为准；完整文档入口见[文档目录](README.md)。
 
 # RoboGame2026 赛程可视化工具实施计划
 
@@ -499,6 +499,8 @@ buildPublicSnapshot(event) -> validated, sanitized, versioned public document
 保持函数确定性；当前时间、随机数和浏览器存储由调用层传入，不隐藏在评分算法中。比赛 ID、队伍 ID 必须稳定，不根据当前数组索引、队名或结果重新生成。
 
 ## 10 维护者录入与发布流程
+
+> 本节保留初版设计，以下导出、导入和手工发布步骤不再是当前日常流程。请直接按[当前维护手册](OPERATOR_GUIDE.md#quick-start)操作；工作台现已提供自动保存、观众预览与统一发布。
 
 ### 10.1 本地维护模式
 

@@ -1,7 +1,6 @@
 # 部署指南
 
-说明如何把本站部署到 GitHub Pages，以及路径配置、Actions、
-首次上线步骤和常见排错。
+本文供技术维护者配置 GitHub Pages、路径、Actions 与故障恢复。现场录入和日常发布请从 [维护者操作手册](OPERATOR_GUIDE.md#quick-start) 开始；无需按本文每次重新部署或手工提交赛果。
 
 - **仓库**：<https://github.com/ABlyh-LEO/RG26>
 - **目标地址**：<https://ablyh-leo.github.io/RG26/>
@@ -180,7 +179,7 @@ npm ci → typecheck → lint → test → validate:data → build → 观众端
 
 ## 5 数据发布流程
 
-日常发布见 [维护者操作手册](operator-guide.md) §5。要点：
+日常发布见 [维护者操作手册：核对、预览与发布](OPERATOR_GUIDE.md#publish)。右上角“预览与发布”和左侧“发布记录”进入同一页面。要点：
 
 ```
 本地录入与自动保存草稿 → 核对累计变更 → 冻结观众预览 → 确认发布 → commit → push → Pages 部署 → 核对公开版本
@@ -226,7 +225,7 @@ npm ci → typecheck → lint → test → validate:data → build → 观众端
 | 报错 | 原因 | 处理 |
 | --- | --- | --- |
 | `validate:data` 失败 | 数据有错误 | 本地运行 `npm run validate:data` 查看具体条目并修复 |
-| 「存在未处置的更正」 | `corrections` 有 `pending` | 完成处置流程（见操作手册 §3） |
+| 「存在未处置的更正」 | `corrections` 有 `pending` | 完成[更正处置流程](OPERATOR_GUIDE.md#results) |
 | 「公开产物中不应包含维护模式入口」 | 构建配置被改坏 | 检查 `vite.config.ts` 的 `input` 逻辑 |
 | `test` 失败 | 领域算法回归 | 本地 `npm run test` 定位 |
 | Pages 权限错误 | 权限或 environment 配置不对 | 确认 `permissions` 与 `environment: github-pages` |
@@ -249,7 +248,7 @@ npm ci → typecheck → lint → test → validate:data → build → 观众端
 
 ### 回滚
 
-见 [操作手册 §7](operator-guide.md)。**用新 commit 发布，不要 reset 历史。**
+见 [操作手册：技术命令与紧急回退](OPERATOR_GUIDE.md#cli)。**用新 commit 发布，不要 reset 历史。**
 
 ---
 

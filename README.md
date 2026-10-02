@@ -19,7 +19,9 @@ Windows 也可双击 `start-operator.cmd`。工作台在 `http://127.0.0.1:5199/
 
 草稿、未完成输入和发布任务保存在被 Git 忽略的 `.local/operator/`，重启可以恢复。发布只提交赛事数据文件；提交前失败会恢复原文件，提交后推送失败则保留提交并重推同一 SHA。Pages 需要几分钟部署，工作台根据公开快照的 revision 与 sourceCommit 核验本次版本是否可见。
 
-完整操作步骤、交接、更正与故障恢复见 [维护者手册](docs/operator-guide.md)。首次部署配置见 [部署说明](docs/DEPLOYMENT.md)。
+**现场维护从 [维护者操作手册](docs/OPERATOR_GUIDE.md#quick-start) 开始**：包括当前按钮路径、录入与更正、手机／桌面预览、失败重试、换机交接及配套截图。左侧“发布记录”和右上角“预览与发布”打开同一页面。
+
+已有旧版工具时，启动器不会自动更新代码：先备份草稿、停止旧服务，再由技术维护者更新 `main`、执行 `npm ci` 并重启。首次部署配置见 [部署说明](docs/DEPLOYMENT.md)，其他资料见 [文档目录](docs/README.md)。
 
 ## 常用命令
 
@@ -70,7 +72,8 @@ Windows 也可双击 `start-operator.cmd`。工作台在 `http://127.0.0.1:5199/
 ## 文档与站点
 
 - [规则与来源](docs/RULES.md)
-- [维护者操作手册](docs/operator-guide.md)
+- [维护者操作手册](docs/OPERATOR_GUIDE.md)
+- [文档目录（区分当前手册与历史记录）](docs/README.md)
 - [GitHub Pages 部署说明](docs/DEPLOYMENT.md)
 - [历史实施计划](docs/IMPLEMENTATION_PLAN.md)
 - [验收记录](docs/acceptance/)

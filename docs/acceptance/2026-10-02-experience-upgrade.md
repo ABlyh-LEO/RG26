@@ -62,4 +62,4 @@ sourceCommit = b4eb00bfbcf38debec261ef39459b588dcf0d2a3
 
 只有公开快照的 revision 与 sourceCommit 同时匹配本次目标，才报告“观众已可见”。部署验证脚本不会以“首页能访问”替代版本核对。本验收记录后续单独提交，仅补充证据，不改变这次已核验的运行代码或赛事数据。
 
-使用方式和故障恢复见 [维护指南](../operator-guide.md)，架构与交接说明见 [升级说明](../EXPERIENCE_UPGRADE.md)。
+使用方式和故障恢复见 [维护操作手册](../OPERATOR_GUIDE.md)，架构与交接说明见 [升级说明](../EXPERIENCE_UPGRADE.md)。
