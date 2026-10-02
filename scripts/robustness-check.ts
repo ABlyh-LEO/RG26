@@ -18,6 +18,7 @@
  */
 import { eventFileSchema, type EventFile } from '../src/domain/schema';
 import { validateEvent } from '../src/domain/validation';
+import { assessQualificationCompleteness, officialQualificationRanking } from '../src/domain/qualification-completeness';
 import { calculateSwissStandings } from '../src/domain/standings';
 import { resolveFinals } from '../src/domain/finals';
 import { computeQualificationRanking } from '../src/domain/qualification-ranking';
@@ -350,6 +351,14 @@ check(
   event.qualification.runs.every((r) => r.resultStatus === 'confirmed'),
   `${event.qualification.runs.filter((r) => r.resultStatus === 'confirmed').length}/44`,
 );
+/*
+ * 「前 16 名 = 晋级名单」这句话只有在正式名次成立时才成立。
+ * 先断言前提，再用 slice(0, 16) 当参赛名单——否则这条检查自己就会
+ * 把"部分数据算出来的前 16"固化成晋级结论。
+ */
+const qualificationCompleteness = assessQualificationCompleteness(event);
+must('排位赛成绩完整（定榜前提）', qualificationCompleteness.ok, qualificationCompleteness.reason ?? '成绩完整');
+must('排位赛正式名次已成立', officialQualificationRanking(event).official);
 check('前 16 名晋级名单长度正确', event.qualification.ranking.orderedTeamIds.slice(0, 16).length === 16);
 assertHealthy(event, '排位赛后');
 

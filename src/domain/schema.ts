@@ -195,7 +195,12 @@ export const qualificationRunSchema = z
     executionStatus: executionStatusSchema,
     /** 原始结果文字（规则未规定结构，因此允许自由文本）。 */
     rawResult: z.string().nullable().default(null),
-    /** 可选积分；不参与自动确定排位名次。 */
+    /**
+     * 积分。**参与排位名次比较**（积分高者优；同分时到达最终分时间早者优）。
+     *
+     * 只有 `resultStatus === 'confirmed'` 的成绩才参与；未确认的成绩
+     * 既不参与名次也不参与配对。
+     */
     score: decimalStringSchema.nullable().default(null),
     /** 可选用时（秒）。 */
     elapsedSeconds: decimalStringSchema.nullable().default(null),

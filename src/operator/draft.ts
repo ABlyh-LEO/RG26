@@ -464,7 +464,9 @@ export function applyQualificationRun(event: EventFile, entry: QualificationRunE
       event: { ...event.event, contentUpdatedAt: now },
     },
     ok: true,
-    messages: entry.confirm ? [] : ['已保存为「待确认」，确认后才会出现在跑图记录中。'],
+    messages: entry.confirm
+      ? []
+      : ['已保存为「待确认」：观众端显示为待确认，且不参与名次、配对与晋级。'],
   };
 }
 
