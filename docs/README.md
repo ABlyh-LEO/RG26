@@ -9,6 +9,7 @@
 | [维护操作手册](OPERATOR_GUIDE.md) | 启动、录入、裁判确认、更正、草稿恢复、预览、发布与交接 |
 | [部署说明](DEPLOYMENT.md) | GitHub Pages 配置、构建检查与部署排障 |
 | [规则说明](RULES.md) | 当前赛程、赛制、红蓝方、排名口径与资料来源 |
+| [全系统符合性检查报告（2026-10-03）](compliance-audit-2026-10-03.md) | 对照赛程手册与规则手册逐条核对赛制/算法（重点瑞士轮）、时间表与数据流程的结论 |
 | [排位赛定榜门禁排查与修复计划](qualification-ranking-gate-plan.md) | 「确认成绩就自动定榜并断言晋级」缺陷的完整问题清单、逐条证据与修复设计（实施已完成） |
 | [体验升级说明](EXPERIENCE_UPGRADE.md) | 观众端与维护端的实现结构、回归范围和开发交接 |
 
@@ -22,6 +23,7 @@
 - [排位赛定榜门禁与「当前排行」](acceptance/2026-10-03-qualification-ranking-gate.md)：修复“确认一组成绩就断言晋级”的缺陷，含门禁口径、回归范围与未验证项。
 - [展示组「单独演出」误报自我对阵的修复](acceptance/2026-10-03-showcase-performance.md)：展示组不再被当成两队比赛，抽签后可直接发布。
 - [收尾时段时间重合修复](acceptance/2026-10-03-final-block-times.md)：对照赛程手册把两组 BO3 与表演赛定死为 16:35–17:05 / 17:05–17:35 / 17:35–17:50，并加校验与手册对照测试。
+- [瑞士轮配对修正](acceptance/2026-10-03-swiss-pairing-manual.md)：R1 改前后两半对位、R2 起改组内首尾，与赛程手册一致。
 - [维护工作台验收](acceptance/operator-upgrade.md)：草稿、预览隔离、发布故障恢复与交接。
 - [BO3 固定红蓝方](acceptance/2026-10-02-bo3-fixed-sides.md)：当前规则、实现范围及最新回归与截图。
 - [晋级图汇入连线与红蓝方](acceptance/2026-10-02-bracket-junctions.md)：此前连线修复；其中旧 BO3 颜色说明和截图已被最新约定取代。
