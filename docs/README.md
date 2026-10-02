@@ -24,6 +24,7 @@
 - [展示组「单独演出」误报自我对阵的修复](acceptance/2026-10-03-showcase-performance.md)：展示组不再被当成两队比赛，抽签后可直接发布。
 - [收尾时段时间重合修复](acceptance/2026-10-03-final-block-times.md)：对照赛程手册把两组 BO3 与表演赛定死为 16:35–17:05 / 17:05–17:35 / 17:35–17:50，并加校验与手册对照测试。
 - [瑞士轮配对修正](acceptance/2026-10-03-swiss-pairing-manual.md)：R1 改前后两半对位、R2 起改组内首尾，与赛程手册一致。
+- [特殊赛果验证：0:0、弃权、判负](acceptance/2026-10-03-special-results.md)：三类特殊情形的处理结论、录入口径提示与已知限制。
 - [维护工作台验收](acceptance/operator-upgrade.md)：草稿、预览隔离、发布故障恢复与交接。
 - [BO3 固定红蓝方](acceptance/2026-10-02-bo3-fixed-sides.md)：当前规则、实现范围及最新回归与截图。
 - [晋级图汇入连线与红蓝方](acceptance/2026-10-02-bracket-junctions.md)：此前连线修复；其中旧 BO3 颜色说明和截图已被最新约定取代。

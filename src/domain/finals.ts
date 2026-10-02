@@ -516,7 +516,11 @@ export function resolveSeriesGames(series: Series): {
     }
   }
 
-  // BO2 允许平局（表演赛），因此不强制必须有胜者。
+  /*
+   * 表演赛（BO2）在本系统里按**活动**处理，不进录入队列，也不结算胜负；
+   * 所有真正录入的已确认小局都要求有明确胜者（校验与 schema 都会拦住无胜者的
+   * 已确认小局），因此这里不再假定"BO2 允许平局"。
+   */
   const total = maxGames(series.format);
   const notNeeded: number[] = [];
   if (winnerId !== null && playedGames < total) {

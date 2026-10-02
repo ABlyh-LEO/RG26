@@ -11,6 +11,26 @@ const RESULT_KINDS: { value: ResultKind; label: string }[] = [
   { value: 'walkover-before-start', label: '未开赛弃权' }, { value: 'administrative-stop', label: '行政判负中止' },
 ];
 
+/**
+ * 各结果类型的录入口径（规则手册 §3.2.2 / §5.4 / §8.5 与赛程手册附一六）。
+ *
+ * 重点说清三类最容易录错的情形：0:0 仍分胜负、弃权不填积分、判负的胜者是谁。
+ */
+const RESULT_KIND_HINTS: Record<ResultKind, string> = {
+  normal:
+    '完整打完 6 分钟。双方积分都要填；积分为 0 的一方到达时间自动记 360 秒。' +
+    '0:0 也可能有胜者——双方都没搭起来时，先成功抓取方块的一方胜，请照裁判记录选择胜者。',
+  'early-end':
+    '按规则提前结束（例如达到大胜条件，或可搭建方块耗尽）。' +
+    '仍需填写双方积分；积分为 0 的一方到达时间自动记 360 秒。',
+  'walkover-before-start':
+    '未开赛弃权：不用填积分。胜者选「到场并按规则完成比赛」的一方。' +
+    '该场不计入 A/B/P/T，但胜负、已登记对阵与对手强度 O 照常计入（可能因此达到 3 胜晋级或 3 败淘汰）。',
+  'administrative-stop':
+    '行政判负中止：不用填积分。胜者必须选「未被判罚」的一方——填反了会把胜负记反。' +
+    '该场不计入 A/B/P/T，但胜负、已登记对阵与对手强度 O 照常计入。',
+};
+
 interface QueueItem { target: ResultTarget; title: string; names: string; date: string; time: string; status: string; venue: string }
 type WorkbenchResult = ApplyResult & { clearFormKey?: string };
 
@@ -165,10 +185,12 @@ function ResultEditor({ target, draft, onApply, onNext }: { target: ResultTarget
       </div>)}</div>
       <fieldset className="operator-winner"><legend>裁判确认胜者</legend>
         {participants!.map((id) => <button className="btn" type="button" key={id} aria-pressed={winnerId === id} aria-invalid={!!proposal?.fields.winnerId} onClick={() => setWinnerId(id)}>{name(id)}</button>)}
-        {error('winnerId')}<p className="small muted">软件不代替裁判判定胜者。零分局到达时间按现有约定记为 360 秒。</p>
+        {error('winnerId')}<p className="small muted">软件不代替裁判判定胜者。0:0 也可能有胜者（先成功抓取方块的一方）；零分局到达时间按约定记 360 秒。</p>
       </fieldset>
       <div className="operator-field"><label htmlFor="result-kind">结果类型</label><select id="result-kind" className="select" value={resultKind} onChange={(e) => setResultKind(e.target.value as ResultKind)}>
-        {RESULT_KINDS.map((kind) => <option key={kind.value} value={kind.value}>{kind.label}</option>)}</select></div>
+        {RESULT_KINDS.map((kind) => <option key={kind.value} value={kind.value}>{kind.label}</option>)}</select>
+        <p className="xsmall muted" style={{ marginTop: 4 }}>{RESULT_KIND_HINTS[resultKind]}</p>
+      </div>
     </>}
     <div className="operator-field"><label htmlFor="result-note">裁判备注（可选）</label><textarea id="result-note" className="input" value={note} onChange={(e) => setNote(e.target.value)} rows={2} /></div>
     {confirmed && <section className="operator-correction"><h3>影响核对与处置</h3>
