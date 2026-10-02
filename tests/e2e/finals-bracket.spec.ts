@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { audienceSnapshot } from '../fixtures/audience-scenarios';
-import { waitForData } from './helpers';
+import { refreshSnapshot, waitForData } from './helpers';
 
 /** 按本届正式赛程核对，不套用常规双败模板，也不增加重置决赛。 */
 const expectedDependencies = [
@@ -96,8 +96,8 @@ test('BO3 图卡显示系列赛局数，未决出两胜时不标已完成，赛�
   await expect(qualifier.locator('.bracket-card--done')).toHaveCount(0);
   expect((await qualifier.locator('.bracket-card__team').allInnerTexts()).join(' ')).not.toMatch(/16\s*分|7\s*分/);
   snapshot = audienceSnapshot('after');
-  await page.getByRole('button', { name: '立即刷新', exact: true }).click();
-  await expect(qualifier).toContainText(/系列赛\s*2\s*:\s*0/);
+  await refreshSnapshot(page, snapshot.revision);
+  await expect(qualifier).toContainText(/系列赛\s*2\s*:\s*0/, { timeout: 15_000 });
   await expect(qualifier.locator('.bracket-card--done')).toHaveCount(1);
   const final = page.locator('[data-node-id="F-GF"]');
   await expect(final).toContainText(/系列赛\s*2\s*:\s*0/);

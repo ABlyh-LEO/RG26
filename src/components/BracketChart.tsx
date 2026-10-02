@@ -29,7 +29,7 @@ import {
   type LayoutConnection,
 } from '../domain/bracket-layout';
 import { SideBadge } from './ui';
-import type { Side } from '../domain/sides';
+import type { Side, Sides } from '../domain/sides';
 
 export interface BracketNodeContent {
   /** 卡片主体。 */
@@ -40,9 +40,13 @@ export interface BracketNodeContent {
     team: string | null;
     isWinner?: boolean;
     dim?: boolean;
-    /** 该行的红蓝方；未确定对阵时为 null，**不猜测**。 */
+    /** 该席位由赛制确定的红蓝方；不依赖队伍是否已产生。 */
     side?: Side | null;
   }[];
+  /** 未公布配对时标明席位规则，不把颜色分配给尚未确定的队伍。 */
+  slotSides?: Sides;
+  /** BO3 每局换边；不需要进行的小局不显示出场颜色。 */
+  gameSides?: { gameIndex: number; sides: Sides; notNeeded: boolean }[];
   /** 次要行（比分、状态）。 */
   meta?: string | null;
   status?: 'upcoming' | 'live' | 'done';
@@ -67,6 +71,8 @@ export interface BracketChartProps {
   legend?: ReactNode;
   highlightedNodeIds?: string[];
   showStageNavigation?: boolean;
+  /** 淘汰树中同一目标的分支在一个汇点合并；瑞士轮保留独立路径。 */
+  connectorRouting?: 'independent' | 'tree';
 }
 
 /**
@@ -125,6 +131,7 @@ export function BracketChart({
   legend,
   highlightedNodeIds = [],
   showStageNavigation = false,
+  connectorRouting = 'independent',
 }: BracketChartProps) {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -540,7 +547,12 @@ export function BracketChart({
         return l + Math.max(0, r - l) / 2;
       };
 
-      if (spansColumns) {
+      if (connectorRouting === 'tree' && conn.via === 'winner' && ci !== undefined && cj === ci + 1 && x2 > x1) {
+        // 同一场的两个来源使用同一条通道中线、同一个目标中心。
+        // 独立分车道和挪动终点会颠倒上下入线，在卡片前制造十字交叉。
+        // 原始依赖仍各保留一条 SVG path，共同末端表示同一场比赛的汇聚。
+        d = buildConnectorPath(x1, y1, x2, y2);
+      } else if (spansColumns) {
         /**
          * 跨列连线：借中间列的**上方或下方空档**越过去。
          *
@@ -651,7 +663,7 @@ export function BracketChart({
         ? previous
         : out,
     );
-  }, [columns, connections, layout, columnWidth, density, renderNode, sectionLabel, measuredHeight]);
+  }, [columns, connections, layout, columnWidth, density, renderNode, sectionLabel, measuredHeight, connectorRouting]);
 
   /**
    * 画布高度。
@@ -821,6 +833,18 @@ function NodeCard({
       {showSecondary && content.meta ? (
         <div className="bracket-card__meta">{content.meta}</div>
       ) : null}
+      {content.slotSides ? <div className="bracket-card__slot-sides" aria-label="待定席位红蓝规则">
+        <span>第一席位 <SideBadge side={content.slotSides.first} /></span>
+        <span>第二席位 <SideBadge side={content.slotSides.second} /></span>
+      </div> : null}
+      {content.gameSides ? <table className="bracket-card__game-sides" aria-label="BO3 每局红蓝方">
+        <caption>每局交换红蓝方</caption>
+        <thead><tr><th scope="col">队伍</th>{content.gameSides.map(game => <th scope="col" key={game.gameIndex}>第 {game.gameIndex} 局{game.notNeeded ? <span className="bracket-card__not-needed">免赛</span> : null}</th>)}</tr></thead>
+        <tbody>{(['first', 'second'] as const).map((slot, index) => <tr key={slot}>
+          <th scope="row">{index === 0 ? '上方队伍' : '下方队伍'}</th>
+          {content.gameSides!.map(game => <td key={game.gameIndex}>{game.notNeeded ? <span aria-label="不需要进行">—</span> : <SideBadge side={game.sides[slot]} />}</td>)}
+        </tr>)}</tbody>
+      </table> : null}
     </>
   );
 

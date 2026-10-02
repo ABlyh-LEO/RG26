@@ -217,7 +217,7 @@ test.describe('13.2 用户流程', () => {
   });
 
   // 已确认比赛刷新后的展示由 bracket-mobile.spec.ts 的明确赛果 fixture 覆盖。
-  test('13.4 赛前晋级图不编造成绩、胜者与红蓝方', async ({ page }) => {
+  test('13.4 赛前晋级图标明席位颜色，但不编造成绩、胜者和参赛队伍', async ({ page }) => {
     await usePreEventSnapshot(page);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await goto(page, '/progress?view=journey');
@@ -235,7 +235,10 @@ test.describe('13.2 用户流程', () => {
         // 有比分的行：形如 "16 分 · 81 秒"
         rowsWithScore: rows.filter((r) => /\d+\s*分/.test(r.innerText)).length,
         rowsWithSeconds: rows.filter((r) => /\d+\s*秒/.test(r.innerText)).length,
-        sideBadges: document.querySelectorAll('.side-badge').length,
+        finalsBo1Sides: [...document.querySelectorAll<HTMLElement>('[data-bracket-zone] [data-node-id]')]
+          .filter(node => !['F-QUAL', 'F-GF'].includes(node.dataset.nodeId!))
+          .map(node => [...node.querySelectorAll('.bracket-card__row .side-badge')].map(badge => badge.getAttribute('aria-label'))),
+        swissPendingSlots: document.querySelectorAll('[data-journey-stage="swiss"] .bracket-card__slot-sides').length,
       };
     });
 
@@ -244,7 +247,13 @@ test.describe('13.2 用户流程', () => {
     expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
     expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
     expect(stats.rowsWithSeconds, '无成绩时不得凭空显示到达最终分时间').toBe(0);
-    expect(stats.sideBadges, '对阵未确定时不得编造红蓝方').toBe(0);
+    expect(stats.finalsBo1Sides, 'BO1 席位颜色由赛程确定，不依赖队名和赛果').toEqual(Array.from({ length: 12 }, () => ['蓝方', '红方']));
+    expect(stats.swissPendingSlots, '尚未公布的瑞士轮只说明第一、第二席位颜色').toBe(33);
+    const swiss = page.locator('[data-journey-stage="swiss"]');
+    await expect(swiss.locator('.bracket-card__row')).toHaveCount(33);
+    await expect(swiss.locator('.bracket-card__row .side-badge')).toHaveCount(0);
+    const swissText = await swiss.innerText();
+    for (const team of buildSeedEvent('2026-10-02T12:00:00+08:00').teams) expect(swissText, '席位颜色不能被误解为已经公布某支队伍').not.toContain(team.name);
   });
 
   test('13.4 总览保留独立完整晋级图入口', async ({ page }) => {

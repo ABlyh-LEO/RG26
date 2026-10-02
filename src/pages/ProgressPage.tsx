@@ -23,7 +23,7 @@ import { BracketChart, type BracketNodeContent } from '../components/BracketChar
 import { FinalsBracket } from '../components/FinalsBracket';
 import { FINAL_ROUNDS, finalsIncoming, finalsOutgoing } from '../data/finals-presentation';
 import { buildSwissModel, nodeParticipants } from '../data/bracket-model';
-import { sidesForFinals, sidesForSwiss } from '../domain/sides';
+import { sidesForFinals, sidesForSeriesGame, sidesForSwiss } from '../domain/sides';
 import { FINALS_MATCH_ORDER, FINALS_SEED_ORDER, finalsSeedLabel, type FinalsResolution } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
@@ -746,9 +746,8 @@ function SeedTable() {
 }
 
 /**
- * 图例：说明连线与卡片状态的含义。
+ * 决赛节点渲染：一律走 view-model，不在这里重算规则。
  */
-/** 决赛节点渲染：一律走 view-model，不在这里重算规则。 */
 function useSeriesNode() {
   const { derived } = useData();
 
@@ -775,8 +774,8 @@ function useSeriesNode() {
       // 未确定的对阵显示"在等什么"，绝不显示一个看起来像真的名次
       /*
        * 决赛红蓝方：八强双败不换边（第一席位蓝、第二红）。
-       * BO3 的每一局各自换边，系列赛层面不给单一归属，
-       * 因此 BO3 卡片不标颜色 —— 逐局红蓝方在比赛详情页看。
+       * BO3 逐局标色，系列赛层面不给单一归属。
+       * 队伍待定仍可标出正式赛制已确定的席位颜色。
        */
       const finalsSides = series.format === 'BO3' ? null : sidesForFinals();
       const sideRow = (side: typeof home, index: number): BracketNodeContent['rows'][number] => ({
@@ -785,7 +784,7 @@ function useSeriesNode() {
         isWinner: side?.isWinner ?? false,
         dim: !side?.team,
         side:
-          !side?.team || finalsSides === null
+          finalsSides === null
             ? null
             : index === 0
               ? finalsSides.first
@@ -813,6 +812,11 @@ function useSeriesNode() {
       return {
         title: view.title,
         rows: [sideRow(home, 0), sideRow(away, 1)],
+        gameSides: series.format === 'BO3' ? [1, 2, 3].map(gameIndex => ({
+          gameIndex,
+          sides: sidesForSeriesGame(gameIndex),
+          notNeeded: res?.notNeededGameIndexes.includes(gameIndex) ?? false,
+        })) : undefined,
         meta: parts.length > 0 ? parts.join(' · ') : null,
         status,
         to: `/matches/${nodeId}`,
@@ -921,6 +925,7 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
           return {
             title: `R${match.roundIndex}`,
             rows: [{ label: '', team: refReason() ?? '对阵待公布', dim: true }],
+            slotSides: sidesForSwiss(match.roundIndex),
             meta: `${match.groupRecord} 战绩组`,
             status: 'upcoming',
             to: `/matches/${nodeId}`,
@@ -961,8 +966,7 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
             team: `${label(teamId, index)}${suffix}`,
             isWinner: winnerId !== null && teamId === winnerId,
             dim: teamId === null,
-            // 对阵未确定时不给颜色 —— 不猜
-            side: teamId === null ? null : index === 0 ? sideColor.first : sideColor.second,
+            side: index === 0 ? sideColor.first : sideColor.second,
           };
         };
 

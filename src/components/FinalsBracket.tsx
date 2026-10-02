@@ -111,6 +111,7 @@ export function FinalsBracket({ event, renderNode, highlightedNodeIds = [] }: Fi
           <BracketChart
             columns={zone.columns}
             connections={zone.connections}
+            connectorRouting="tree"
             renderNode={renderNode}
             renderNodeFooter={footer}
             minColumnWidth={260}

@@ -21,7 +21,8 @@
 .finals-zone .bracket-card { border: 0; border-radius: 11px 11px 0 0; box-shadow: none; }
 .finals-zone .bracket-card__title { color: var(--zone-color); }
 .finals-zone .bracket-card__team { overflow-wrap: anywhere; }
-.finals-zone .bracket__link { stroke: var(--zone-color); stroke-width: 1.75; opacity: .75; }
+.finals-zone .bracket__connectors { opacity: .75; }
+.finals-zone .bracket__link { stroke: var(--zone-color); stroke-width: 1.75; opacity: 1; }
 .finals-zone .bracket__link-casing { stroke: var(--zone-surface); }
 .finals-zone .bracket__node.is-focused { outline: 3px solid var(--zone-color); outline-offset: 3px; opacity: 1; }
 .finals-zone .bracket__node.is-focused .bracket-card { background: var(--zone-surface); }
