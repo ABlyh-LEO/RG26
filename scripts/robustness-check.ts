@@ -338,7 +338,7 @@ let event = loadEvent();
 must('竞技组 22 队', competitiveOf(event).length === 22, `${competitiveOf(event).length} 队`);
 must('排位赛共 44 条跑图记录', event.qualification.runs.length === 44, `${event.qualification.runs.length} 条`);
 
-// --- 排位赛：两轮 44 次跑图，按积分/用时自动重排 ---
+// --- 排位赛：两轮 44 次跑图，按积分/用时计算名次并显式定榜 ---
 event = playQualification(event);
 const rank = computeQualificationRanking(event);
 check('排位赛 22 队全部有名次', rank.standings.length === 22, `${rank.standings.length} 队`);

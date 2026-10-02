@@ -206,7 +206,7 @@ describe('computeQualificationRanking：名次排序', () => {
     expect(r.standings[1]!.tiedWithPrevious).toBe(true);
   });
 
-  it('单场成绩更新后名次随之改变（自动重排的核心行为）', () => {
+  it('成绩更正后实时排行随之改变（排名是纯函数，正式名次另行显式定榜）', () => {
     const before = withRuns([
       run(TEAMS[0]!, 1, '80', '30'),
       run(TEAMS[1]!, 1, '70', '30'),
