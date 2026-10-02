@@ -4,6 +4,7 @@ import { deriveEvent, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, eff
 import { describeEventUpdate } from '../../src/data/updates';
 import { buildSwissConnections, nodeParticipants } from '../../src/data/bracket-model';
 import { validateEvent } from '../../src/domain/validation';
+import { applyShowcaseDraw } from '../../src/operator/draft';
 
 describe('观众派生数据', () => {
   it('所有阶段回归场景遵守正式 schema 和领域规则', () => {
@@ -70,6 +71,22 @@ describe('观众派生数据', () => {
     expect(next?.id).toBe(showcase.id);
     expect(next?.sides?.[0].team?.name).toBe(team.name);
     expect(next?.sidesInfo).toBeNull();
+  });
+  it('展示组抽签后仍是单队演出：只登记演出队伍，没有对手席位', () => {
+    const event = audienceEvent('before');
+    const teams = event.teams.filter(t => t.division === 'showcase');
+    const drawn = applyShowcaseDraw(event, teams.map(t => t.id));
+    expect(drawn.ok).toBe(true);
+    expect(validateEvent(drawn.event).errors).toEqual([]);
+
+    const derived = deriveEvent(drawn.event);
+    const now = new Date('2026-10-04T14:00:00+08:00');
+    const next = deriveTeamJourney(derived, teams[0]!.id, now)?.nextMatch;
+    expect(next?.id).toBe('showcase-final-1');
+    expect(next?.sides?.[0].team?.name).toBe(teams[0]!.name);
+    // 第二个席位是"单队展示"占位，不是对手。
+    expect(next?.sides?.[1].team).toBeNull();
+    expect(next?.sides?.[1].sourceLabel).toBe('单队展示');
   });
   it('未公布的瑞士轮候选不产生确定参赛队伍或晋级线', () => {
     const event = audienceEvent('swiss');

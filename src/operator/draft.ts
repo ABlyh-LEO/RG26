@@ -928,8 +928,11 @@ export function publishFinalsSeeding(event: EventFile): ApplyResult {
 }
 
 /* ------------------------------------------------------------------ *
- * 展示组抽签
+ * 展示组抽签（单独演出，不是对阵）
  * ------------------------------------------------------------------ */
+
+/** 三场正式演出与抽签顺序一一对应。 */
+const SHOWCASE_SERIES_ORDER = ['showcase-final-1', 'showcase-final-2', 'showcase-final-3'];
 
 export function applyShowcaseDraw(event: EventFile, drawOrder: string[]): ApplyResult {
   const showcaseTeams = event.teams.filter((t) => t.division === 'showcase');
@@ -945,20 +948,24 @@ export function applyShowcaseDraw(event: EventFile, drawOrder: string[]): ApplyR
   }
 
   const now = new Date().toISOString();
-  // 把抽签结果绑定到三个正式演出系列赛
+  /*
+   * 展示组是**单独演出**，不是两队对阵：这里只登记演出队伍
+   * （`showcaseTeamId`），**不**伪造两个席位，也**不**写"参赛双方"快照。
+   *
+   * 旧实现把同一支队同时写进两个槽位与快照，于是校验报出
+   * "两个槽位来源完全相同，构成自我对阵"并阻断发布——那是把演出当成了比赛。
+   * 这里显式清空，重新登记一次即可顺手修正历史草稿里的这两个字段。
+   */
   const series = event.finals.series.map((s) => {
-    const index = ['showcase-final-1', 'showcase-final-2', 'showcase-final-3'].indexOf(s.id);
+    const index = SHOWCASE_SERIES_ORDER.indexOf(s.id);
     if (index === -1) return s;
     const teamId = drawOrder[index];
     if (!teamId) return s;
     return {
       ...s,
       showcaseTeamId: teamId,
-      participantSnapshot: [teamId, teamId] as [string, string],
-      slots: [
-        { kind: 'team' as const, teamId },
-        { kind: 'team' as const, teamId },
-      ] as [{ kind: 'team'; teamId: string }, { kind: 'team'; teamId: string }],
+      participantSnapshot: null,
+      slots: null,
     };
   });
 

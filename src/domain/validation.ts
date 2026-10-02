@@ -260,12 +260,27 @@ export function validateEvent(event: EventFile): ValidationResult {
         err('series', series.id, 'scheduleItemId', 'unknown-schedule-item', `引用了不存在的日程项：${series.scheduleItemId}`),
       );
     }
+    /*
+     * 展示组是**单独演出**：没有双方，也没有"胜者"。
+     * 因此不套用对阵类校验（自我对阵、必须指定胜者、胜者须为参赛方），
+     * 但仍然校验它引用的队伍与日程项是否真实存在。
+     */
+    const performance = series.stage === 'showcase';
     for (const game of series.games) {
       if (game.homeTeamId !== null && !teamIds.has(game.homeTeamId)) {
         errors.push(err('series', series.id, `games[${game.index}].homeTeamId`, 'unknown-team', `引用了不存在的队伍：${game.homeTeamId}`));
       }
       if (game.awayTeamId !== null && !teamIds.has(game.awayTeamId)) {
         errors.push(err('series', series.id, `games[${game.index}].awayTeamId`, 'unknown-team', `引用了不存在的队伍：${game.awayTeamId}`));
+      }
+      if (performance) {
+        // 演出没有胜负；记了胜者就是把演出当成了比赛。
+        if (game.winnerId !== null) {
+          errors.push(
+            err('series', series.id, `games[${game.index}].winnerId`, 'showcase-winner', '展示组是单独演出，不存在胜者，不应记录胜者'),
+          );
+        }
+        continue;
       }
       if (game.homeTeamId !== null && game.homeTeamId === game.awayTeamId) {
         errors.push(err('series', series.id, `games[${game.index}]`, 'self-match', '一局比赛不能自己对自己'));

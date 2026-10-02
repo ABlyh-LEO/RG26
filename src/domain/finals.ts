@@ -656,10 +656,15 @@ export function computeAwards(
 /**
  * 图的静态校验：拒绝循环、未知来源、自我对阵、不存在的系列赛。
  * 在初始化与导入时都要跑。
+ *
+ * **展示组（`stage === 'showcase'`）是单独演出，不是两队对阵**：
+ * 它没有"双方"，因此不适用自我对阵检查（见下方第 3、4 条）。
  */
 export function validateFinalsGraph(seriesList: readonly Series[]): string[] {
   const errors: string[] = [];
   const ids = new Set(seriesList.map((s) => s.id));
+  /** 单独演出：登记的是演出队伍，不存在对阵双方。 */
+  const isPerformance = (series: Series): boolean => series.stage === 'showcase';
 
   // 1. 未知来源
   for (const series of seriesList) {
@@ -699,8 +704,9 @@ export function validateFinalsGraph(seriesList: readonly Series[]): string[] {
   };
   for (const id of ids) if (color.get(id) === WHITE) visit(id, []);
 
-  // 3. 自我对阵（同一槽位来源重复）
+  // 3. 自我对阵（同一槽位来源重复）—— 单独演出没有双方，跳过
   for (const series of seriesList) {
+    if (isPerformance(series)) continue;
     if (!series.slots) continue;
     const [a, b] = series.slots;
     if (JSON.stringify(a) === JSON.stringify(b)) {
@@ -708,8 +714,9 @@ export function validateFinalsGraph(seriesList: readonly Series[]): string[] {
     }
   }
 
-  // 4. 实际参赛快照上的自我对阵
+  // 4. 实际参赛快照上的自我对阵 —— 单独演出没有"参赛双方"，跳过
   for (const series of seriesList) {
+    if (isPerformance(series)) continue;
     const snap = series.participantSnapshot;
     if (snap && snap[0] === snap[1]) {
       errors.push(`${series.id} 的参赛快照中出现自我对阵：${snap[0]}`);
