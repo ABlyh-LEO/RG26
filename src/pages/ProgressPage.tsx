@@ -6,13 +6,15 @@
  * - 瑞士轮按轮次显示战绩分组，默认只显示名次/队伍/战绩/R，展开看 A/B/P/O/T。
  * - 决赛桌面用固定流向图，手机按实际比赛顺序纵向卡片。
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueryParams } from '../app/useQueryParams';
 import { useData } from '../data/DataProvider';
+import { useEventClock } from '../data/clock';
 import {
   deriveRounds,
   formatDate,
   formatTime,
+  effectiveStart,
   type RoundGroupView,
 } from '../data/view-model';
 import { toSeriesView } from '../data/view-model';
@@ -20,7 +22,7 @@ import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components
 import { BracketChart, type BracketNodeContent } from '../components/BracketChart';
 import { buildFinalsModel, buildFullModel, nodeParticipants } from '../data/bracket-model';
 import { sidesForFinals, sidesForSwiss } from '../domain/sides';
-import { FINALS_MATCH_ORDER } from '../domain/finals';
+import { FINALS_MATCH_ORDER, FINALS_SEED_ORDER, finalsSeedLabel, type FinalsResolution } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
 
@@ -29,8 +31,20 @@ type View = 'qualification' | 'swiss' | 'finals' | 'journey';
 export function ProgressPage() {
   const { derived, loading } = useData();
   const { params, setParams } = useQueryParams();
-
-  const view = (params.get('view') ?? 'swiss') as View;
+  const now = useEventClock();
+  const event = derived?.event;
+  const currentStage: View = event && (
+    event.finals.seeding?.publicationStatus === 'published' ||
+    event.finals.series.some((s) => s.countsForStandings && s.executionStatus !== 'scheduled') ||
+    event.scheduleItems.some((s) => s.referenceId === 'F-M1' && Date.parse(effectiveStart(s)) <= now.getTime())
+  ) ? 'finals' : event && (
+    event.qualification.ranking.status === 'confirmed' ||
+    event.swiss.matches.some((m) => m.executionStatus !== 'scheduled') ||
+    event.scheduleItems.some((s) => s.stage === 'swiss' && Date.parse(effectiveStart(s)) <= now.getTime())
+  ) ? 'swiss' : 'qualification';
+  const requestedView = params.get('view');
+  const view: View = ['qualification', 'swiss', 'finals', 'journey'].includes(requestedView ?? '')
+    ? requestedView as View : currentStage;
 
   if (loading && !derived) return <div className="empty">正在加载晋级信息…</div>;
   if (!derived) return null;
@@ -45,7 +59,6 @@ export function ProgressPage() {
       <div className="segmented" role="group" aria-label="选择赛段视图">
         {(
           [
-            ['journey', '瑞士轮→决赛'],
             ['qualification', '排位赛'],
             ['swiss', '瑞士轮'],
             ['finals', '决赛'],
@@ -56,11 +69,23 @@ export function ProgressPage() {
             type="button"
             className="segmented__item"
             aria-pressed={view === key}
-            onClick={() => setParams({ view: key })}
+            onClick={() => setParams({ view: key, mode: null })}
           >
             {label}
           </button>
         ))}
+      </div>
+
+      <div className="progress-tools">
+        <label className="progress-team-picker">定位队伍
+          <select aria-label="定位队伍" value={params.get('team') ?? ''} onChange={(e) => setParams({ team: e.target.value || null })}>
+            <option value="">全部队伍</option>
+            {derived.event.teams.filter((t) => t.division === 'competitive').map((t) => <option key={t.id} value={t.id}>{t.number} 号 · {t.name}</option>)}
+          </select>
+        </label>
+        <button className="btn" type="button" onClick={() => setParams({ view: view === 'journey' ? currentStage : 'journey', mode: null })}>
+          {view === 'journey' ? '返回轮次视图' : '打开完整晋级图'}
+        </button>
       </div>
 
       {view === 'qualification' ? <QualificationView /> : null}
@@ -77,6 +102,8 @@ export function ProgressPage() {
 
 function QualificationView() {
   const { derived } = useData();
+  const { params } = useQueryParams();
+  const selectedTeam = params.get('team');
 
   /**
    * 按批次组织出场安排，直接读跑图与日程数据。
@@ -96,6 +123,7 @@ function QualificationView() {
     const slots = new Map<number, { round1: Run[]; round2: Run[] }>();
 
     for (const run of event.qualification.runs) {
+      if (selectedTeam && run.teamId !== selectedTeam) continue;
       const rank = teamMap.get(run.teamId)?.team?.thirdReviewRank;
       if (rank === undefined || rank === null) continue;
       const batch = Math.ceil(rank / 2);
@@ -119,7 +147,7 @@ function QualificationView() {
         round1: [...slot.round1].sort(byRank),
         round2: [...slot.round2].sort(byRank),
       }));
-  }, [derived]);
+  }, [derived, selectedTeam]);
 
   if (!derived) return null;
   const { event, qualification, teamMap } = derived;
@@ -167,6 +195,7 @@ function QualificationView() {
                 </thead>
                 <tbody>
                   {qualification.orderedTeamIds.map((teamId, index) => {
+                    if (selectedTeam && teamId !== selectedTeam) return null;
                     const team = teamMap.get(teamId)?.team ?? null;
                     const label = qualification.bestResultLabels?.[index] ?? '—';
                     const advanced = index < 16;
@@ -262,6 +291,7 @@ function QualificationView() {
               </thead>
               <tbody>
                 {event.qualification.runs.map((run) => {
+                  if (selectedTeam && run.teamId !== selectedTeam) return null;
                   // 该队的最优一轮加标记，让观众能对上名次表里的数字
                   const best = qualification.bestByTeam.get(run.teamId);
                   const isBest = best !== undefined && best !== null && best === run.round;
@@ -352,13 +382,15 @@ function RunCell({ runs }: { runs: EventFile['qualification']['runs'] }) {
 function SwissView() {
   const { derived } = useData();
   const { params, setParams } = useQueryParams();
+  const now = useEventClock();
   if (!derived) return null;
   const { event } = derived;
 
   const rounds = deriveRounds(derived);
   const requested = Number(params.get('round') ?? '');
-  const latestWithMatches = rounds.filter((r) => r.groups.length > 0).map((r) => r.index);
-  const fallbackRound = latestWithMatches.length > 0 ? Math.max(...latestWithMatches) : 1;
+  const published = rounds.filter((r) => r.publicationStatus === 'published');
+  const scheduled = rounds.filter((r) => r.groups.some((g) => g.matches.some((m) => m.schedule && Date.parse(effectiveStart(m.schedule)) <= now.getTime())));
+  const fallbackRound = published.find((r) => !r.complete)?.index ?? published.at(-1)?.index ?? scheduled.at(-1)?.index ?? 1;
   const roundIndex = Number.isFinite(requested) && requested >= 1 && requested <= 5 ? requested : fallbackRound;
   const round = rounds.find((r) => r.index === roundIndex) ?? rounds[0];
 
@@ -375,7 +407,7 @@ function SwissView() {
             type="button"
             className="segmented__item"
             aria-pressed={n === roundIndex}
-            onClick={() => setParams({ round: String(n) })}
+            onClick={() => setParams({ round: String(n), group: null })}
           >
             R{n}
           </button>
@@ -385,7 +417,7 @@ function SwissView() {
       <div className="card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <span className="small">
-            第 {round.index} 轮 · 依据第 {round.basedOnRound} 轮结算数据
+            第 {round.index} 轮 · {round.index === 1 ? '依据排位赛名次' : `依据第 ${round.basedOnRound} 轮成绩`}
           </span>
           <PublicationBadge status={round.publicationStatus} />
         </div>
@@ -406,19 +438,17 @@ function SwissView() {
         ) : null}
         {round.index === 3 ? (
           <div className="xsmall" style={{ marginTop: 'var(--sp-1)', color: 'var(--pending)' }}>
-            第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定；次日不重新排序。
+            第三轮全部 8 场在第二轮结束后一次性公布，于 10 月 3 日晚进行。
           </div>
         ) : null}
       </div>
 
-      {!anyResult ? (
-        <EmptyState
-          title="尚未比赛"
-          hint="瑞士轮结果录入后，这里会显示各战绩组、评分与下一轮对阵。"
-        />
-      ) : null}
+      {!anyResult ? <p className="xsmall muted">尚无已确认成绩，以下先展示本轮安排。</p> : null}
 
-      {round.groups.map((group) => (
+      <div className="round-tabs" role="group" aria-label="选择战绩组">
+        {[null, ...round.groups.map((g) => g.record)].map((record) => <button key={record ?? 'all'} type="button" className="btn" aria-pressed={(params.get('group') ?? null) === record} onClick={() => setParams({ group: record })}>{record ? `${record} 组` : '全部战绩组'}</button>)}
+      </div>
+      {round.groups.filter((g) => !params.get('group') || g.record === params.get('group')).map((group) => (
         <GroupBlock key={group.record} group={group} roundIndex={round.index} />
       ))}
 
@@ -431,7 +461,11 @@ function SwissView() {
 
 function GroupBlock({ group, roundIndex }: { group: RoundGroupView; roundIndex: number }) {
   const { derived } = useData();
+  const { params } = useQueryParams();
   if (!derived) return null;
+  const teamId = params.get('team');
+  const matches = group.matches.filter((m) => !teamId || m.sides?.some((s) => s.team?.id === teamId));
+  if (teamId && !matches.length && !group.entries.some((e) => e.teamId === teamId)) return null;
 
   return (
     <section>
@@ -449,15 +483,14 @@ function GroupBlock({ group, roundIndex }: { group: RoundGroupView; roundIndex: 
       {group.entries.length > 0 ? (
         <div className="card" style={{ marginBottom: 'var(--sp-2)' }}>
           <div className="xsmall muted" style={{ marginBottom: 'var(--sp-2)' }}>
-            排名依据：截至 R{roundIndex === 1 ? 0 : roundIndex - 1} 已确认成绩
-            {roundIndex === 1 ? '（排位赛名次）' : ''}
+            排名依据：{roundIndex === 1 ? '排位赛名次' : `截至 R${roundIndex - 1} 已确认成绩`}
           </div>
           <StandingsMiniTable entries={group.entries} />
         </div>
       ) : null}
 
       <div className="stack">
-        {group.matches.map((m) => (
+        {matches.map((m) => (
           <MatchCard key={m.id} match={m} />
         ))}
       </div>
@@ -473,8 +506,12 @@ export function StandingsMiniTable({
   entries: StandingsEntry[];
   showQualificationRank?: boolean;
 }) {
+  const { derived } = useData();
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="table-wrap">
+    <div>
+      <button className="btn btn--small" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? '收起评分明细' : '展开评分明细'}</button>
+      <div className="table-wrap">
       <table className="table">
         <thead>
           <tr>
@@ -482,9 +519,8 @@ export function StandingsMiniTable({
             <th className="table__team">队伍</th>
             <th className="num">战绩</th>
             <th className="num">R</th>
-            <th className="num">P</th>
-            <th className="num">T</th>
-            {showQualificationRank ? <th className="num">排位</th> : null}
+            {expanded ? (['A', 'B', 'P', 'O', 'T'] as const).map(key => <th className="num" key={key}>{key}</th>) : null}
+            {expanded && showQualificationRank ? <th className="num">排位</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -492,19 +528,19 @@ export function StandingsMiniTable({
             <tr key={e.teamId}>
               <td className="num tabular">{e.rankWithinGroup || i + 1}</td>
               <td className="table__team">
-                <TeamName team={null} fallback={e.teamId} linkTo={false} />
+                <TeamName team={derived?.teamMap.get(e.teamId)?.team ?? null} fallback="队伍待核对" />
               </td>
               <td className="num tabular">{e.record}</td>
               <td className="num tabular">{e.display.r}</td>
-              <td className="num tabular">{e.display.p}</td>
-              <td className="num tabular">{e.display.t}</td>
-              {showQualificationRank ? (
+              {expanded ? (['a', 'b', 'p', 'o', 't'] as const).map(key => <td className="num tabular" key={key}>{e.display[key]}</td>) : null}
+              {expanded && showQualificationRank ? (
                 <td className="num tabular">{e.qualificationRank ?? '—'}</td>
               ) : null}
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -527,12 +563,15 @@ function FinalsView() {
   }).filter((v): v is NonNullable<typeof v> => v !== null);
 
   const anyDecided = seriesViews.some((v) => v.resultStatus === 'confirmed');
+  const teamId = params.get('team');
+  const rounds = buildFinalsModel(event).columns;
+  const defaultRound = rounds.find((r) => r.nodes.some((n) => !finals.series.get(n.id)?.decided))?.key ?? rounds.at(-1)?.key;
+  const selectedRound = rounds.some((r) => r.key === params.get('finalsRound')) ? params.get('finalsRound') : defaultRound;
+  const roundIds = new Set(rounds.find((r) => r.key === selectedRound)?.nodes.map((n) => n.id));
+  const visible = seriesViews.filter((v) => teamId ? v.sides?.some((s) => s.team?.id === teamId) : roundIds.has(v.id));
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-3)' }}>
-      {/* 种子 */}
-      <SeedTable />
-
       {/* 视图切换 */}
       <div className="segmented" role="group" aria-label="选择决赛视图">
         <button
@@ -541,7 +580,7 @@ function FinalsView() {
           aria-pressed={mode === 'list'}
           onClick={() => setParams({ mode: 'list' })}
         >
-          按比赛顺序
+          按轮次查看
         </button>
         <button
           type="button"
@@ -553,22 +592,20 @@ function FinalsView() {
         </button>
       </div>
 
-      {!anyDecided ? (
-        <EmptyState
-          title="决赛尚未开始"
-          hint="八强种子与对阵来自瑞士轮最终成绩。下方按实际比赛顺序列出全部场次。"
-        />
-      ) : null}
-
       {mode === 'list' ? (
         <div className="stack">
-          {seriesViews.map((v) => (
+          {!teamId ? <div className="round-tabs" role="group" aria-label="选择决赛轮次">
+            {rounds.map((r) => <button className="btn" type="button" key={r.key} aria-pressed={selectedRound === r.key} onClick={() => setParams({ finalsRound: r.key })}>{r.title}</button>)}
+          </div> : <p className="small muted">展示该队已确定的决赛对阵；后续名额由赛果产生。</p>}
+          {visible.map((v) => (
             <MatchCard key={v.id} match={v} />
           ))}
+          {!visible.length ? <EmptyState title="暂无已确定的对阵" hint="队伍晋级或对阵公布后，这里会显示相关比赛。" /> : null}
         </div>
       ) : (
         <BracketView />
       )}
+      <details className="card"><summary>八强排名与首轮对阵依据</summary><SeedTable /></details>
 
       {/* 奖项 */}
       {anyDecided ? (
@@ -621,7 +658,7 @@ function SeedTable() {
         </div>
         <EmptyState
           title="八强种子尚未公布"
-          hint="种子在第五轮瑞士轮全部结束后统一计算：3-0 前两名为 W1/W2；3-1 前两名为 W3/W4、第三名为 L1；3-2 三名为 L2–L4。"
+          hint="第五轮瑞士轮结束后，按 3-0、3-1、3-2 战绩组内评分确定八强第 1–8 名。上午首轮为第 1 对第 5、第 2 对第 6、第 3 对第 7、第 4 对第 8 名；结果决定下午胜者组和败者组。"
         />
       </div>
     );
@@ -629,8 +666,7 @@ function SeedTable() {
 
   const seeds = seeding.seeds;
   const groups: { label: string; seeds: ('W1' | 'W2' | 'W3' | 'W4' | 'L1' | 'L2' | 'L3' | 'L4')[] }[] = [
-    { label: '八强胜者组', seeds: ['W1', 'W2', 'W3', 'W4'] },
-    { label: '八强败者组', seeds: ['L1', 'L2', 'L3', 'L4'] },
+    { label: '瑞士轮最终八强排名', seeds: [...FINALS_SEED_ORDER] },
   ];
 
   return (
@@ -648,7 +684,7 @@ function SeedTable() {
                 const teamId = seeds[seed];
                 return (
                   <div key={seed} className="row" style={{ justifyContent: 'space-between' }}>
-                    <span className="badge badge--info">{seed}</span>
+                    <span className="badge badge--info">{finalsSeedLabel(seed)}</span>
                     {teamId ? (
                       <TeamName team={teamMap.get(teamId)?.team ?? null} fallback={teamId} />
                     ) : (
@@ -723,7 +759,7 @@ function useSeriesNode() {
       const finalsSides = series.format === 'BO3' ? null : sidesForFinals();
       const sideRow = (side: typeof home, index: number): BracketNodeContent['rows'][number] => ({
         label: '',
-        team: side?.team ? side.team.name : (side?.sourceLabel ?? '待定'),
+        team: side?.team ? `${side.team.name}${side.score !== null ? ` · ${side.score} 分${side.seconds !== null ? ` · ${side.seconds} 秒` : ''}` : ''}` : (side?.sourceLabel ?? '待定'),
         isWinner: side?.isWinner ?? false,
         dim: !side?.team,
         side:
@@ -736,14 +772,14 @@ function useSeriesNode() {
 
       const parts: string[] = [];
       if (view.format) parts.push(view.format);
-      if (view.homeWins !== null && view.awayWins !== null && (view.homeWins > 0 || view.awayWins > 0)) {
+      if (series.format !== 'BO1' && view.homeWins !== null && view.awayWins !== null && (view.homeWins > 0 || view.awayWins > 0)) {
         parts.push(`${view.homeWins} : ${view.awayWins}`);
       }
       if (res && res.notNeededGameIndexes.length > 0) {
         parts.push(`第 ${res.notNeededGameIndexes.join('、')} 局不需要进行`);
       }
       if (view.schedule) {
-        parts.push(`${formatDate(view.schedule.date)} ${formatTime(view.schedule.revisedStart ?? view.schedule.plannedStart)}`);
+        parts.push(`${formatDate(effectiveStart(view.schedule))} ${formatTime(effectiveStart(view.schedule))}`);
       }
 
       return {
@@ -765,6 +801,7 @@ function useSeriesNode() {
  */
 function BracketView() {
   const { derived } = useData();
+  const { params } = useQueryParams();
   const renderSeriesNode = useSeriesNode();
 
   const model = useMemo(() => (derived ? buildFinalsModel(derived.event) : null), [derived]);
@@ -784,6 +821,8 @@ function BracketView() {
         connections={model.connections}
         renderNode={renderNode}
         ariaLabel="完整决赛对阵图，可横向滚动"
+        showStageNavigation
+        highlightedNodeIds={highlightedNodes(derived.event, derived.finals, params.get('team'))}
       />
       <p className="xsmall muted">
         八强败者组首轮与第二轮败者结算八强；半决赛败者组败者结算四强。
@@ -802,6 +841,7 @@ function BracketView() {
  */
 export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
   const { derived } = useData();
+  const { params } = useQueryParams();
   const renderSeriesNode = useSeriesNode();
 
   const model = useMemo(() => (derived ? buildFullModel(derived.event) : null), [derived]);
@@ -939,9 +979,19 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
         sectionLabel={sectionLabel}
         minColumnWidth={176}
         ariaLabel="完整晋级图：瑞士轮与决赛，可横向滚动"
+        showStageNavigation
+        highlightedNodeIds={highlightedNodes(derived.event, derived.finals, params.get('team'))}
       />
     </div>
   );
+}
+
+function highlightedNodes(event: EventFile, finals: FinalsResolution, teamId: string | null): string[] {
+  if (!teamId) return [];
+  return [...event.swiss.matches, ...event.finals.series].filter((m) => {
+    const { home, away } = nodeParticipants(m.id, event, finals);
+    return home === teamId || away === teamId;
+  }).map((m) => m.id);
 }
 
 /**

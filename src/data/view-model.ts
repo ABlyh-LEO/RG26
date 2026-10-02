@@ -68,6 +68,7 @@ export type EventPhase = 'before' | 'during' | 'after' | 'unknown';
  * 时间已过去但没有成绩时显示“结果待发布”，不能生成虚假冠军。
  */
 export function deriveEventPhase(event: EventFile, now: Date): EventPhase {
+  if (resolveFinals(event.finals.series, event.finals.seeding).series.get('F-GF')?.decided) return 'after';
   const confirmedResults =
     event.qualification.ranking.status === 'confirmed' ||
     event.swiss.matches.some((m) => m.attempts.some((a) => a.resultStatus === 'confirmed')) ||
@@ -81,10 +82,10 @@ export function deriveEventPhase(event: EventFile, now: Date): EventPhase {
   const endOfLast = Date.parse(`${lastDate}T23:59:59+08:00`);
   const t = now.getTime();
 
-  if (t < startOfFirst) return 'before';
+  if (t < startOfFirst && !confirmedResults) return 'before';
   if (t > endOfLast) {
     // 赛事日期已过：只有存在已确认结果才算结束，否则是“结果待发布”
-    return confirmedResults ? 'after' : 'during';
+    return 'during';
   }
   return 'during';
 }
@@ -106,6 +107,11 @@ export function defaultDate(event: EventFile, now: Date): string {
  * ------------------------------------------------------------------ */
 
 export const EVENT_TIME_ZONE = 'Asia/Shanghai';
+
+/** 修订时间是当前安排，原计划仍保留供对照。 */
+export function effectiveStart(schedule: Pick<ScheduleItem, 'plannedStart' | 'revisedStart'>): string {
+  return schedule.revisedStart ?? schedule.plannedStart;
+}
 
 /** 把带偏移的 ISO 时刻格式化为赛事时区的 HH:MM。 */
 export function formatTime(iso: string): string {
@@ -333,7 +339,7 @@ export function toSwissMatchView(
 
 function makeSide(
   teamId: string,
-  effective: { homeTeamId: string; awayTeamId: string; homeScore: string | null; awayScore: string | null; winnerId: string | null } | null,
+  effective: { homeTeamId: string; awayTeamId: string; homeScore: string | null; awayScore: string | null; homeReachedSeconds: string | null; awayReachedSeconds: string | null; winnerId: string | null } | null,
   isHome: boolean,
   teamMap: Map<string, TeamView>,
 ): MatchSideView {
@@ -343,7 +349,7 @@ function makeSide(
     team: view?.team ?? null,
     sourceLabel: view?.displayName ?? teamId,
     score: hasResult ? (isHome ? effective.homeScore : effective.awayScore) : null,
-    seconds: null,
+    seconds: effective ? (isHome ? effective.homeReachedSeconds : effective.awayReachedSeconds) : null,
     isWinner: hasResult && effective.winnerId === teamId,
   };
 }
@@ -360,6 +366,13 @@ export function toSeriesView(
   const res = resolution.series.get(series.id);
   const games = [...series.games].sort((a, b) => a.index - b.index);
   const firstConfirmed = games.find((g) => g.resultStatus === 'confirmed') ?? null;
+  const singleGame = series.format === 'BO1' ? games.find((g) => g.resultStatus !== 'none') : null;
+  const scoreFor = (teamId: string | null, metric: 'score' | 'seconds'): string | null => {
+    if (!singleGame || !teamId || !['normal', 'early-end'].includes(singleGame.resultKind)) return null;
+    if (singleGame.homeTeamId === teamId) return metric === 'score' ? singleGame.homeScore : singleGame.homeReachedSeconds;
+    if (singleGame.awayTeamId === teamId) return metric === 'score' ? singleGame.awayScore : singleGame.awayReachedSeconds;
+    return null;
+  };
   const resultStatus: 'none' | 'provisional' | 'confirmed' = series.games.some(
     (g) => g.resultStatus === 'confirmed',
   )
@@ -368,7 +381,13 @@ export function toSeriesView(
       ? 'provisional'
       : 'none';
 
-  const sides: [MatchSideView, MatchSideView] | null = res
+  const showcaseTeam = series.showcaseTeamId ? teamMap.get(series.showcaseTeamId)?.team ?? null : null;
+  const sides: [MatchSideView, MatchSideView] | null = series.stage === 'showcase'
+    ? [
+        { team: showcaseTeam, sourceLabel: showcaseTeam?.name ?? '演出队伍待抽签', score: null, seconds: null, isWinner: false },
+        { team: null, sourceLabel: '单队展示', score: null, seconds: null, isWinner: false },
+      ]
+    : res
     ? [
         {
           team: res.slots[0].state === 'resolved' ? (teamMap.get(res.slots[0].teamId)?.team ?? null) : null,
@@ -376,8 +395,8 @@ export function toSeriesView(
             res.slots[0].state === 'resolved'
               ? (teamMap.get(res.slots[0].teamId)?.displayName ?? res.slots[0].teamId)
               : res.slots[0].label,
-          score: null,
-          seconds: null,
+          score: scoreFor(res.slots[0].state === 'resolved' ? res.slots[0].teamId : null, 'score'),
+          seconds: scoreFor(res.slots[0].state === 'resolved' ? res.slots[0].teamId : null, 'seconds'),
           isWinner: res.decided && res.winnerId === (res.slots[0].state === 'resolved' ? res.slots[0].teamId : null),
         },
         {
@@ -386,8 +405,8 @@ export function toSeriesView(
             res.slots[1].state === 'resolved'
               ? (teamMap.get(res.slots[1].teamId)?.displayName ?? res.slots[1].teamId)
               : res.slots[1].label,
-          score: null,
-          seconds: null,
+          score: scoreFor(res.slots[1].state === 'resolved' ? res.slots[1].teamId : null, 'score'),
+          seconds: scoreFor(res.slots[1].state === 'resolved' ? res.slots[1].teamId : null, 'seconds'),
           isWinner: res.decided && res.winnerId === (res.slots[1].state === 'resolved' ? res.slots[1].teamId : null),
         },
       ]
@@ -409,7 +428,8 @@ export function toSeriesView(
     schedule,
     venueLabel: schedule?.venueId ? (venueLabels.get(schedule.venueId) ?? null) : null,
     format: series.format,
-    executionStatus: series.executionStatus,
+    // 已确认的小局已经决出系列赛时，以实际赛果结束展示，兼容旧数据残留的 running。
+    executionStatus: res?.decided ? 'finished' : series.executionStatus,
     resultStatus,
     sides,
     /*
@@ -417,7 +437,7 @@ export function toSeriesView(
      * BO3 的每一局各自换边，因此系列赛层面不给单一归属 ——
      * 那种情况在比赛详情页按局展示，避免把"第 1 局的归属"误当成整个系列赛的。
      */
-    sidesInfo: sides && series.format !== 'BO3' ? sidesForFinals() : null,
+    sidesInfo: sides && series.slots && series.format !== 'BO3' ? sidesForFinals() : null,
     homeWins: res?.homeWins ?? null,
     awayWins: res?.awayWins ?? null,
     notNeededGames: res?.notNeededGameIndexes ?? [],
@@ -512,7 +532,7 @@ export function deriveEvent(event: EventFile): DerivedEvent {
     finals,
     awards: finals.awards,
     scheduleByDate: [...event.scheduleItems].sort(
-      (a, b) => Date.parse(a.plannedStart) - Date.parse(b.plannedStart),
+      (a, b) => Date.parse(effectiveStart(a)) - Date.parse(effectiveStart(b)),
     ),
     dates: event.event.dates,
     swissConfirmedCount,
@@ -565,22 +585,22 @@ export function deriveNowPlaying(derived: DerivedEvent, now: Date): NowPlaying {
     ...event.qualification.runs.map((r) => toQualificationRunView(r, event, teamMap, venueLabels)),
     ...event.swiss.matches.map((m) => toSwissMatchView(m, event, teamMap, venueLabels)),
     ...event.finals.series.map((s) => toSeriesView(s, event, teamMap, venueLabels, derived.finals)),
-  ];
+  ].filter((view) => view.schedule?.kind !== 'activity' && !(view.kind === 'series' && !view.countsForStandings && view.stage !== 'showcase'));
 
   const running = allViews.filter((v) => v.executionStatus === 'running');
 
   const withTime = allViews
     .filter((v) => v.schedule !== null)
-    .sort((a, b) => Date.parse(a.schedule!.plannedStart) - Date.parse(b.schedule!.plannedStart));
+    .sort((a, b) => Date.parse(effectiveStart(a.schedule!)) - Date.parse(effectiveStart(b.schedule!)));
 
   const awaitingConfirmation = withTime.filter(
     (v) =>
-      Date.parse(v.schedule!.plannedStart) <= t &&
+      Date.parse(effectiveStart(v.schedule!)) <= t &&
       (v.executionStatus === 'scheduled' || v.executionStatus === 'ready') &&
       v.resultStatus === 'none',
   );
 
-  const upcoming = withTime.filter((v) => Date.parse(v.schedule!.plannedStart) > t);
+  const upcoming = withTime.filter((v) => Date.parse(effectiveStart(v.schedule!)) > t && ['scheduled', 'ready', 'delayed'].includes(v.executionStatus));
 
   const firstDay = event.event.dates[0];
   const firstDayPreview =
@@ -637,6 +657,7 @@ export function deriveTeamJourney(derived: DerivedEvent, teamId: string, now: Da
 
   const finalsMatches = event.finals.series
     .filter((s) => {
+      if (s.showcaseTeamId === teamId) return true;
       if (s.participantSnapshot?.includes(teamId)) return true;
       const res = derived.finals.series.get(s.id);
       if (!res) return false;
@@ -651,10 +672,13 @@ export function deriveTeamJourney(derived: DerivedEvent, teamId: string, now: Da
     .map(([seed]) => seed);
 
   const t = now.getTime();
-  const candidates = [...swissMatches, ...finalsMatches]
-    .filter((m) => m.schedule !== null && (m.resultStatus === 'none' || m.executionStatus === 'running'))
-    .sort((a, b) => Date.parse(a.schedule!.plannedStart) - Date.parse(b.schedule!.plannedStart));
-  const nextMatch = candidates.find((m) => Date.parse(m.schedule!.plannedStart) >= t - 60 * 60 * 1000) ?? candidates[0] ?? null;
+  const qualificationMatches = event.qualification.runs
+    .filter((run) => run.teamId === teamId)
+    .map((run) => toQualificationRunView(run, event, teamMap, venueLabels));
+  const candidates = [...qualificationMatches, ...swissMatches, ...finalsMatches]
+    .filter((m) => m.schedule !== null && !['cancelled', 'finished', 'not-needed'].includes(m.executionStatus) && (m.resultStatus !== 'confirmed' || m.executionStatus === 'running' || m.format === 'BO3'))
+    .sort((a, b) => Date.parse(effectiveStart(a.schedule!)) - Date.parse(effectiveStart(b.schedule!)));
+  const nextMatch = candidates.find((m) => m.executionStatus === 'running') ?? candidates.find((m) => Date.parse(effectiveStart(m.schedule!)) >= t - 60 * 60 * 1000) ?? candidates[0] ?? null;
 
   const { status, statusLabel } = teamStatus(derived, teamId, team, standingsEntry, isInFinals);
 

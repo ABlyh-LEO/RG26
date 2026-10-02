@@ -62,6 +62,7 @@ export function buildSwissConnections(event: EventFile): LayoutConnection[] {
   // 队伍 → 它参加过的比赛（按轮次）
   const byTeam = new Map<string, SwissMatch[]>();
   for (const match of event.swiss.matches) {
+    if (!event.swiss.rounds.some((r) => r.index === match.roundIndex && r.publicationStatus === 'published')) continue;
     const teams = match.participantSnapshot;
     if (!teams) continue;
     for (const teamId of teams) {
@@ -102,6 +103,10 @@ export function buildSwissConnections(event: EventFile): LayoutConnection[] {
  * 看起来像"连错了"。合成一列后全部是相邻列连接。
  */
 const FINALS_COLUMN_OF: Record<string, { key: string; title: string }> = {
+  'F-M1': { key: 'f-opening', title: '双败首轮' },
+  'F-M2': { key: 'f-opening', title: '双败首轮' },
+  'F-M3': { key: 'f-opening', title: '双败首轮' },
+  'F-M4': { key: 'f-opening', title: '双败首轮' },
   'F-L1A': { key: 'f-r1', title: '八强赛' },
   'F-L1B': { key: 'f-r1', title: '八强赛' },
   'F-W1A': { key: 'f-r1', title: '八强赛' },
@@ -115,7 +120,7 @@ const FINALS_COLUMN_OF: Record<string, { key: string; title: string }> = {
 };
 
 /** 决赛各列的展示顺序。 */
-const FINALS_COLUMN_ORDER = ['f-r1', 'f-r2', 'f-semi', 'f-qual', 'f-gf'];
+const FINALS_COLUMN_ORDER = ['f-opening', 'f-r1', 'f-r2', 'f-semi', 'f-qual', 'f-gf'];
 
 /** 决赛列（只含计入排名的系列赛）。 */
 export function buildFinalsColumns(event: EventFile): LayoutColumn[] {
@@ -246,6 +251,9 @@ export function nodeParticipants(
 ): { home: string | null; away: string | null; pending: boolean } {
   const swiss = event.swiss.matches.find((m) => m.id === nodeId);
   if (swiss) {
+    if (!event.swiss.rounds.some((r) => r.index === swiss.roundIndex && r.publicationStatus === 'published')) {
+      return { home: null, away: null, pending: true };
+    }
     return {
       home: swiss.participantSnapshot?.[0] ?? null,
       away: swiss.participantSnapshot?.[1] ?? null,

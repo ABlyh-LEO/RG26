@@ -687,6 +687,10 @@ export function publishRound(
   const round = event.swiss.rounds.find((r) => r.index === roundIndex);
   if (!round) return { event, ok: false, messages: [`找不到第 ${roundIndex} 轮`] };
 
+  const alreadyStarted = event.swiss.matches.some((m) => m.roundIndex === roundIndex &&
+    (m.executionStatus === 'running' || m.executionStatus === 'finished' || m.attempts.some((a) => a.resultStatus === 'confirmed')));
+  if (alreadyStarted) return { event, ok: false, messages: ['本轮已经开赛或已有确认结果，不能重新公布并覆盖参赛双方。请使用更正流程记录组委会处置。'] };
+
   const teamIds = qualifiedTeamIds(event);
   const standings = calculateSwissStandings(teamIds, event.swiss.matches, event.qualification.ranking);
 
@@ -723,6 +727,7 @@ export function publishRound(
 
   const newMatches: SwissMatch[] = skeletons.map((s) => ({
     ...s,
+    executionStatus: 'ready',
     attempts: [],
     effectiveAttemptId: null,
   }));
@@ -750,6 +755,9 @@ export function publishRound(
         ),
         matches: [...byId.values()],
       },
+      scheduleItems: event.scheduleItems.map((item) => newMatches.some((match) => match.scheduleItemId === item.id)
+        && (item.executionStatus === 'scheduled' || item.executionStatus === 'ready')
+        ? { ...item, executionStatus: 'ready' as const } : item),
       event: { ...event.event, contentUpdatedAt: now },
     },
     ok: true,

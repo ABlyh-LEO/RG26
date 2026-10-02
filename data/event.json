@@ -11,15 +11,15 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-01T17:12:02.756Z",
+    "contentUpdatedAt": "2026-10-02T08:17:58.499Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
-      "展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）"
+      "展示组决赛抽签顺序（10 月 3 日 12:20 抽签后录入）"
     ]
   },
   "rules": {
-    "version": "1.0.0",
+    "version": "4_6",
     "qualificationRankingMode": "official-manual",
     "swissPairingPolicy": "same-record-adjacent"
   },
@@ -277,7 +277,7 @@
       "stage": "showcase",
       "date": "2026-10-03",
       "plannedStart": "2026-10-03T10:50:00+08:00",
-      "plannedEnd": "2026-10-03T11:10:00+08:00",
+      "plannedEnd": "2026-10-03T11:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": null,
@@ -291,8 +291,8 @@
       "kind": "activity",
       "stage": "showcase",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T11:10:00+08:00",
-      "plannedEnd": "2026-10-03T11:25:00+08:00",
+      "plannedStart": "2026-10-03T11:30:00+08:00",
+      "plannedEnd": "2026-10-03T11:45:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-1",
@@ -306,8 +306,8 @@
       "kind": "activity",
       "stage": "showcase",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T11:25:00+08:00",
-      "plannedEnd": "2026-10-03T11:40:00+08:00",
+      "plannedStart": "2026-10-03T11:45:00+08:00",
+      "plannedEnd": "2026-10-03T12:00:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-2",
@@ -321,8 +321,8 @@
       "kind": "activity",
       "stage": "showcase",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T11:40:00+08:00",
-      "plannedEnd": "2026-10-03T11:55:00+08:00",
+      "plannedStart": "2026-10-03T12:00:00+08:00",
+      "plannedEnd": "2026-10-03T12:15:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-3",
@@ -336,7 +336,7 @@
       "kind": "activity",
       "stage": "showcase",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T12:00:00+08:00",
+      "plannedStart": "2026-10-03T12:20:00+08:00",
       "plannedEnd": null,
       "afterSeriesId": null,
       "venueId": "venue-main",
@@ -1146,8 +1146,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T18:30:00+08:00",
-      "plannedEnd": "2026-10-03T18:40:00+08:00",
+      "plannedStart": "2026-10-03T18:00:00+08:00",
+      "plannedEnd": "2026-10-03T18:10:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-10-1",
@@ -1161,8 +1161,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T18:40:00+08:00",
-      "plannedEnd": "2026-10-03T18:50:00+08:00",
+      "plannedStart": "2026-10-03T18:10:00+08:00",
+      "plannedEnd": "2026-10-03T18:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-10-2",
@@ -1176,8 +1176,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T18:50:00+08:00",
-      "plannedEnd": "2026-10-03T19:00:00+08:00",
+      "plannedStart": "2026-10-03T18:20:00+08:00",
+      "plannedEnd": "2026-10-03T18:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-10-3",
@@ -1191,8 +1191,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:00:00+08:00",
-      "plannedEnd": "2026-10-03T19:10:00+08:00",
+      "plannedStart": "2026-10-03T18:30:00+08:00",
+      "plannedEnd": "2026-10-03T18:40:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-10-4",
@@ -1206,8 +1206,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:10:00+08:00",
-      "plannedEnd": "2026-10-03T19:20:00+08:00",
+      "plannedStart": "2026-10-03T18:40:00+08:00",
+      "plannedEnd": "2026-10-03T18:50:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-01-1",
@@ -1221,8 +1221,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:20:00+08:00",
-      "plannedEnd": "2026-10-03T19:30:00+08:00",
+      "plannedStart": "2026-10-03T18:50:00+08:00",
+      "plannedEnd": "2026-10-03T19:00:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-01-2",
@@ -1236,8 +1236,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:30:00+08:00",
-      "plannedEnd": "2026-10-03T19:40:00+08:00",
+      "plannedStart": "2026-10-03T19:00:00+08:00",
+      "plannedEnd": "2026-10-03T19:10:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-01-3",
@@ -1251,8 +1251,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:40:00+08:00",
-      "plannedEnd": "2026-10-03T19:50:00+08:00",
+      "plannedStart": "2026-10-03T19:10:00+08:00",
+      "plannedEnd": "2026-10-03T19:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r2-01-4",
@@ -1266,8 +1266,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T20:10:00+08:00",
-      "plannedEnd": "2026-10-03T20:20:00+08:00",
+      "plannedStart": "2026-10-03T19:40:00+08:00",
+      "plannedEnd": "2026-10-03T19:50:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-20-1",
@@ -1281,8 +1281,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T20:20:00+08:00",
-      "plannedEnd": "2026-10-03T20:30:00+08:00",
+      "plannedStart": "2026-10-03T19:50:00+08:00",
+      "plannedEnd": "2026-10-03T20:00:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-20-2",
@@ -1296,8 +1296,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T20:30:00+08:00",
-      "plannedEnd": "2026-10-03T20:40:00+08:00",
+      "plannedStart": "2026-10-03T20:00:00+08:00",
+      "plannedEnd": "2026-10-03T20:10:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-1",
@@ -1311,8 +1311,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T20:40:00+08:00",
-      "plannedEnd": "2026-10-03T20:50:00+08:00",
+      "plannedStart": "2026-10-03T20:10:00+08:00",
+      "plannedEnd": "2026-10-03T20:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-2",
@@ -1325,9 +1325,9 @@
       "id": "sched-swiss-r3-11-3",
       "kind": "match",
       "stage": "swiss",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T09:00:00+08:00",
-      "plannedEnd": "2026-10-04T09:10:00+08:00",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T20:20:00+08:00",
+      "plannedEnd": "2026-10-03T20:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-3",
@@ -1340,9 +1340,9 @@
       "id": "sched-swiss-r3-11-4",
       "kind": "match",
       "stage": "swiss",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T09:10:00+08:00",
-      "plannedEnd": "2026-10-04T09:20:00+08:00",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T20:30:00+08:00",
+      "plannedEnd": "2026-10-03T20:40:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-4",
@@ -1355,9 +1355,9 @@
       "id": "sched-swiss-r3-02-1",
       "kind": "match",
       "stage": "swiss",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T09:20:00+08:00",
-      "plannedEnd": "2026-10-04T09:30:00+08:00",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T20:40:00+08:00",
+      "plannedEnd": "2026-10-03T20:50:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-02-1",
@@ -1370,9 +1370,9 @@
       "id": "sched-swiss-r3-02-2",
       "kind": "match",
       "stage": "swiss",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T09:30:00+08:00",
-      "plannedEnd": "2026-10-04T09:40:00+08:00",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T20:50:00+08:00",
+      "plannedEnd": "2026-10-03T21:00:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r3-02-2",
@@ -1386,8 +1386,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:00:00+08:00",
-      "plannedEnd": "2026-10-04T10:10:00+08:00",
+      "plannedStart": "2026-10-04T09:00:00+08:00",
+      "plannedEnd": "2026-10-04T09:10:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-21-1",
@@ -1401,8 +1401,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:10:00+08:00",
-      "plannedEnd": "2026-10-04T10:20:00+08:00",
+      "plannedStart": "2026-10-04T09:10:00+08:00",
+      "plannedEnd": "2026-10-04T09:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-21-2",
@@ -1416,8 +1416,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:20:00+08:00",
-      "plannedEnd": "2026-10-04T10:30:00+08:00",
+      "plannedStart": "2026-10-04T09:20:00+08:00",
+      "plannedEnd": "2026-10-04T09:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-21-3",
@@ -1431,8 +1431,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:30:00+08:00",
-      "plannedEnd": "2026-10-04T10:40:00+08:00",
+      "plannedStart": "2026-10-04T09:30:00+08:00",
+      "plannedEnd": "2026-10-04T09:40:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-12-1",
@@ -1446,8 +1446,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:40:00+08:00",
-      "plannedEnd": "2026-10-04T10:50:00+08:00",
+      "plannedStart": "2026-10-04T09:40:00+08:00",
+      "plannedEnd": "2026-10-04T09:50:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-12-2",
@@ -1461,8 +1461,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T10:50:00+08:00",
-      "plannedEnd": "2026-10-04T11:00:00+08:00",
+      "plannedStart": "2026-10-04T09:50:00+08:00",
+      "plannedEnd": "2026-10-04T10:00:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r4-12-3",
@@ -1476,8 +1476,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T11:20:00+08:00",
-      "plannedEnd": "2026-10-04T11:30:00+08:00",
+      "plannedStart": "2026-10-04T10:20:00+08:00",
+      "plannedEnd": "2026-10-04T10:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r5-22-1",
@@ -1491,8 +1491,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T11:30:00+08:00",
-      "plannedEnd": "2026-10-04T11:40:00+08:00",
+      "plannedStart": "2026-10-04T10:30:00+08:00",
+      "plannedEnd": "2026-10-04T10:40:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r5-22-2",
@@ -1506,8 +1506,8 @@
       "kind": "match",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T11:40:00+08:00",
-      "plannedEnd": "2026-10-04T11:50:00+08:00",
+      "plannedStart": "2026-10-04T10:40:00+08:00",
+      "plannedEnd": "2026-10-04T10:50:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "swiss-r5-22-3",
@@ -1517,16 +1517,31 @@
       "revisedStart": null
     },
     {
+      "id": "sched-swiss-review-2",
+      "kind": "activity",
+      "stage": "swiss",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T17:20:00+08:00",
+      "plannedEnd": "2026-10-03T17:40:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": null,
+      "title": "第一轮核分并公布第二轮对阵",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
       "id": "sched-swiss-review-3",
       "kind": "activity",
       "stage": "swiss",
       "date": "2026-10-03",
-      "plannedStart": "2026-10-03T19:50:00+08:00",
-      "plannedEnd": "2026-10-03T20:10:00+08:00",
+      "plannedStart": "2026-10-03T19:20:00+08:00",
+      "plannedEnd": "2026-10-03T19:40:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": null,
-      "title": "核分并一次性公布第三轮全部 8 场对阵及跨日场次",
+      "title": "核分并一次性公布第三轮全部 8 场对阵",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1535,9 +1550,9 @@
       "id": "sched-swiss-review-4",
       "kind": "activity",
       "stage": "swiss",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T09:40:00+08:00",
-      "plannedEnd": "2026-10-04T10:00:00+08:00",
+      "date": "2026-10-03",
+      "plannedStart": "2026-10-03T21:00:00+08:00",
+      "plannedEnd": "2026-10-03T21:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": null,
@@ -1551,8 +1566,8 @@
       "kind": "activity",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T11:00:00+08:00",
-      "plannedEnd": "2026-10-04T11:20:00+08:00",
+      "plannedStart": "2026-10-04T10:00:00+08:00",
+      "plannedEnd": "2026-10-04T10:20:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": null,
@@ -1566,12 +1581,12 @@
       "kind": "activity",
       "stage": "swiss",
       "date": "2026-10-04",
-      "plannedStart": "2026-10-04T11:50:00+08:00",
-      "plannedEnd": "2026-10-04T12:00:00+08:00",
+      "plannedStart": "2026-10-04T10:50:00+08:00",
+      "plannedEnd": "2026-10-04T11:10:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": null,
-      "title": "瑞士轮总核分（统一计算 A、B、P、O、R 与八强种子）",
+      "title": "瑞士轮总核分并公布八强第1至8名及双败首轮对阵",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1582,11 +1597,71 @@
       "stage": "finals",
       "date": "2026-10-04",
       "plannedStart": "2026-10-04T14:00:00+08:00",
-      "plannedEnd": null,
+      "plannedEnd": "2026-10-04T14:30:00+08:00",
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "opening",
       "title": "决赛开幕式",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
+      "id": "sched-F-M1",
+      "kind": "match",
+      "stage": "finals",
+      "date": "2026-10-04",
+      "plannedStart": "2026-10-04T11:10:00+08:00",
+      "plannedEnd": "2026-10-04T11:20:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": "F-M1",
+      "title": "八强双败首轮 · 第 1 名对第 5 名",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
+      "id": "sched-F-M2",
+      "kind": "match",
+      "stage": "finals",
+      "date": "2026-10-04",
+      "plannedStart": "2026-10-04T11:20:00+08:00",
+      "plannedEnd": "2026-10-04T11:30:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": "F-M2",
+      "title": "八强双败首轮 · 第 2 名对第 6 名",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
+      "id": "sched-F-M3",
+      "kind": "match",
+      "stage": "finals",
+      "date": "2026-10-04",
+      "plannedStart": "2026-10-04T11:30:00+08:00",
+      "plannedEnd": "2026-10-04T11:40:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": "F-M3",
+      "title": "八强双败首轮 · 第 3 名对第 7 名",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
+      "id": "sched-F-M4",
+      "kind": "match",
+      "stage": "finals",
+      "date": "2026-10-04",
+      "plannedStart": "2026-10-04T11:40:00+08:00",
+      "plannedEnd": "2026-10-04T11:50:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": "F-M4",
+      "title": "八强双败首轮 · 第 4 名对第 8 名",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1601,7 +1676,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-L1A",
-      "title": "八强败者组首轮 A · L1 对 L4",
+      "title": "八强败者组首轮 A",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1616,7 +1691,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-L1B",
-      "title": "八强败者组首轮 B · L2 对 L3",
+      "title": "八强败者组首轮 B",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1631,7 +1706,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-W1A",
-      "title": "八强胜者组 A · W1 对 W4",
+      "title": "八强胜者组 A",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1646,7 +1721,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-W1B",
-      "title": "八强胜者组 B · W2 对 W3",
+      "title": "八强胜者组 B",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1661,7 +1736,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-L2A",
-      "title": "败者组第二轮 A · 第 3 场败者 对 第 2 场胜者",
+      "title": "败者组第二轮 A",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1676,22 +1751,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-L2B",
-      "title": "败者组第二轮 B · 第 4 场败者 对 第 1 场胜者",
-      "executionStatus": "scheduled",
-      "adjustmentNote": null,
-      "revisedStart": null
-    },
-    {
-      "id": "sched-F-LSF",
-      "kind": "match",
-      "stage": "finals",
-      "date": "2026-10-04",
-      "plannedStart": "2026-10-04T16:25:00+08:00",
-      "plannedEnd": "2026-10-04T16:35:00+08:00",
-      "afterSeriesId": null,
-      "venueId": "venue-main",
-      "referenceId": "F-LSF",
-      "title": "半决赛败者组",
+      "title": "败者组第二轮 B",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1712,6 +1772,21 @@
       "revisedStart": null
     },
     {
+      "id": "sched-F-LSF",
+      "kind": "match",
+      "stage": "finals",
+      "date": "2026-10-04",
+      "plannedStart": "2026-10-04T16:25:00+08:00",
+      "plannedEnd": "2026-10-04T16:35:00+08:00",
+      "afterSeriesId": null,
+      "venueId": "venue-main",
+      "referenceId": "F-LSF",
+      "title": "半决赛败者组",
+      "executionStatus": "scheduled",
+      "adjustmentNote": null,
+      "revisedStart": null
+    },
+    {
       "id": "sched-F-QUAL",
       "kind": "match",
       "stage": "finals",
@@ -1721,7 +1796,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "F-QUAL",
-      "title": "总决赛名额争夺战（BO3）",
+      "title": "总决赛名额争夺战",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1736,7 +1811,7 @@
       "afterSeriesId": "F-QUAL",
       "venueId": "venue-main",
       "referenceId": "F-GF",
-      "title": "总决赛（BO3）",
+      "title": "总决赛",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1751,7 +1826,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-final-1",
-      "title": "展示组正式演出 · 抽签第 1 队",
+      "title": "展示组正式演出（抽签第 1 队）",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1766,7 +1841,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-final-2",
-      "title": "展示组正式演出 · 抽签第 2 队",
+      "title": "展示组正式演出（抽签第 2 队）",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1781,7 +1856,7 @@
       "afterSeriesId": null,
       "venueId": "venue-main",
       "referenceId": "showcase-final-3",
-      "title": "展示组正式演出 · 抽签第 3 队",
+      "title": "展示组正式演出（抽签第 3 队）",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -1796,7 +1871,7 @@
       "afterSeriesId": "F-GF",
       "venueId": "venue-main",
       "referenceId": "exhibition",
-      "title": "表演赛（15 分钟 BO2，不计正式排名）",
+      "title": "表演赛",
       "executionStatus": "scheduled",
       "adjustmentNote": null,
       "revisedStart": null
@@ -2927,7 +3002,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-20-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-20-2",
@@ -2950,7 +3025,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-20-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-11-1",
@@ -2973,7 +3048,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-11-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-11-2",
@@ -2996,7 +3071,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-11-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-11-3",
@@ -3019,7 +3094,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-11-3",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-11-4",
@@ -3042,7 +3117,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-11-4",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-02-1",
@@ -3065,7 +3140,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-02-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r3-02-2",
@@ -3088,7 +3163,7 @@
         "effectiveAttemptId": null,
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-swiss-r3-02-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定"
+        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
       },
       {
         "id": "swiss-r4-21-1",
@@ -3303,18 +3378,170 @@
     "seeding": null,
     "series": [
       {
-        "id": "F-L1A",
+        "id": "F-M1",
         "format": "BO1",
         "stage": "finals",
         "countsForStandings": true,
         "slots": [
           {
             "kind": "finals-seed",
+            "seed": "W1"
+          },
+          {
+            "kind": "finals-seed",
             "seed": "L1"
+          }
+        ],
+        "participantSnapshot": null,
+        "games": [
+          {
+            "id": "F-M1-g1",
+            "index": 1,
+            "homeTeamId": null,
+            "awayTeamId": null,
+            "homeScore": null,
+            "awayScore": null,
+            "homeReachedSeconds": null,
+            "awayReachedSeconds": null,
+            "winnerId": null,
+            "resultKind": "normal",
+            "resultStatus": "none",
+            "confirmedAt": null,
+            "note": null
+          }
+        ],
+        "executionStatus": "scheduled",
+        "scheduleItemId": "sched-F-M1",
+        "showcaseTeamId": null,
+        "note": null
+      },
+      {
+        "id": "F-M2",
+        "format": "BO1",
+        "stage": "finals",
+        "countsForStandings": true,
+        "slots": [
+          {
+            "kind": "finals-seed",
+            "seed": "W2"
+          },
+          {
+            "kind": "finals-seed",
+            "seed": "L2"
+          }
+        ],
+        "participantSnapshot": null,
+        "games": [
+          {
+            "id": "F-M2-g1",
+            "index": 1,
+            "homeTeamId": null,
+            "awayTeamId": null,
+            "homeScore": null,
+            "awayScore": null,
+            "homeReachedSeconds": null,
+            "awayReachedSeconds": null,
+            "winnerId": null,
+            "resultKind": "normal",
+            "resultStatus": "none",
+            "confirmedAt": null,
+            "note": null
+          }
+        ],
+        "executionStatus": "scheduled",
+        "scheduleItemId": "sched-F-M2",
+        "showcaseTeamId": null,
+        "note": null
+      },
+      {
+        "id": "F-M3",
+        "format": "BO1",
+        "stage": "finals",
+        "countsForStandings": true,
+        "slots": [
+          {
+            "kind": "finals-seed",
+            "seed": "W3"
+          },
+          {
+            "kind": "finals-seed",
+            "seed": "L3"
+          }
+        ],
+        "participantSnapshot": null,
+        "games": [
+          {
+            "id": "F-M3-g1",
+            "index": 1,
+            "homeTeamId": null,
+            "awayTeamId": null,
+            "homeScore": null,
+            "awayScore": null,
+            "homeReachedSeconds": null,
+            "awayReachedSeconds": null,
+            "winnerId": null,
+            "resultKind": "normal",
+            "resultStatus": "none",
+            "confirmedAt": null,
+            "note": null
+          }
+        ],
+        "executionStatus": "scheduled",
+        "scheduleItemId": "sched-F-M3",
+        "showcaseTeamId": null,
+        "note": null
+      },
+      {
+        "id": "F-M4",
+        "format": "BO1",
+        "stage": "finals",
+        "countsForStandings": true,
+        "slots": [
+          {
+            "kind": "finals-seed",
+            "seed": "W4"
           },
           {
             "kind": "finals-seed",
             "seed": "L4"
+          }
+        ],
+        "participantSnapshot": null,
+        "games": [
+          {
+            "id": "F-M4-g1",
+            "index": 1,
+            "homeTeamId": null,
+            "awayTeamId": null,
+            "homeScore": null,
+            "awayScore": null,
+            "homeReachedSeconds": null,
+            "awayReachedSeconds": null,
+            "winnerId": null,
+            "resultKind": "normal",
+            "resultStatus": "none",
+            "confirmedAt": null,
+            "note": null
+          }
+        ],
+        "executionStatus": "scheduled",
+        "scheduleItemId": "sched-F-M4",
+        "showcaseTeamId": null,
+        "note": null
+      },
+      {
+        "id": "F-L1A",
+        "format": "BO1",
+        "stage": "finals",
+        "countsForStandings": true,
+        "slots": [
+          {
+            "kind": "loser",
+            "seriesId": "F-M1"
+          },
+          {
+            "kind": "loser",
+            "seriesId": "F-M4"
           }
         ],
         "participantSnapshot": null,
@@ -3347,12 +3574,12 @@
         "countsForStandings": true,
         "slots": [
           {
-            "kind": "finals-seed",
-            "seed": "L2"
+            "kind": "loser",
+            "seriesId": "F-M2"
           },
           {
-            "kind": "finals-seed",
-            "seed": "L3"
+            "kind": "loser",
+            "seriesId": "F-M3"
           }
         ],
         "participantSnapshot": null,
@@ -3385,12 +3612,12 @@
         "countsForStandings": true,
         "slots": [
           {
-            "kind": "finals-seed",
-            "seed": "W1"
+            "kind": "winner",
+            "seriesId": "F-M1"
           },
           {
-            "kind": "finals-seed",
-            "seed": "W4"
+            "kind": "winner",
+            "seriesId": "F-M4"
           }
         ],
         "participantSnapshot": null,
@@ -3423,12 +3650,12 @@
         "countsForStandings": true,
         "slots": [
           {
-            "kind": "finals-seed",
-            "seed": "W2"
+            "kind": "winner",
+            "seriesId": "F-M2"
           },
           {
-            "kind": "finals-seed",
-            "seed": "W3"
+            "kind": "winner",
+            "seriesId": "F-M3"
           }
         ],
         "participantSnapshot": null,
@@ -3531,44 +3758,6 @@
         "note": null
       },
       {
-        "id": "F-LSF",
-        "format": "BO1",
-        "stage": "finals",
-        "countsForStandings": true,
-        "slots": [
-          {
-            "kind": "winner",
-            "seriesId": "F-L2A"
-          },
-          {
-            "kind": "winner",
-            "seriesId": "F-L2B"
-          }
-        ],
-        "participantSnapshot": null,
-        "games": [
-          {
-            "id": "F-LSF-g1",
-            "index": 1,
-            "homeTeamId": null,
-            "awayTeamId": null,
-            "homeScore": null,
-            "awayScore": null,
-            "homeReachedSeconds": null,
-            "awayReachedSeconds": null,
-            "winnerId": null,
-            "resultKind": "normal",
-            "resultStatus": "none",
-            "confirmedAt": null,
-            "note": null
-          }
-        ],
-        "executionStatus": "scheduled",
-        "scheduleItemId": "sched-F-LSF",
-        "showcaseTeamId": null,
-        "note": null
-      },
-      {
         "id": "F-WSF",
         "format": "BO1",
         "stage": "finals",
@@ -3603,6 +3792,44 @@
         ],
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-F-WSF",
+        "showcaseTeamId": null,
+        "note": null
+      },
+      {
+        "id": "F-LSF",
+        "format": "BO1",
+        "stage": "finals",
+        "countsForStandings": true,
+        "slots": [
+          {
+            "kind": "winner",
+            "seriesId": "F-L2A"
+          },
+          {
+            "kind": "winner",
+            "seriesId": "F-L2B"
+          }
+        ],
+        "participantSnapshot": null,
+        "games": [
+          {
+            "id": "F-LSF-g1",
+            "index": 1,
+            "homeTeamId": null,
+            "awayTeamId": null,
+            "homeScore": null,
+            "awayScore": null,
+            "homeReachedSeconds": null,
+            "awayReachedSeconds": null,
+            "winnerId": null,
+            "resultKind": "normal",
+            "resultStatus": "none",
+            "confirmedAt": null,
+            "note": null
+          }
+        ],
+        "executionStatus": "scheduled",
+        "scheduleItemId": "sched-F-LSF",
         "showcaseTeamId": null,
         "note": null
       },

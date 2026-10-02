@@ -3,11 +3,21 @@
  *
  * 内容与 docs/RULES.md 对应；公式与 DOCX 的 OMML 一致。
  */
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useData } from '../data/DataProvider';
 import { formatDate } from '../data/view-model';
+import { Icon } from '../components/Icon';
 
 export function RulesPage() {
   const { derived } = useData();
+  const location = useLocation();
+  useEffect(() => {
+    const section = new URLSearchParams(location.search).get('section');
+    if (!section) return;
+    const frame = requestAnimationFrame(() => document.getElementById(section)?.scrollIntoView({ block: 'start' }));
+    return () => cancelAnimationFrame(frame);
+  }, [location.search]);
 
   const rulesVersion = derived?.event.rules.version ?? '—';
   const sourceSha = derived?.event.event.sourceDocumentSha256 ?? '—';
@@ -15,15 +25,18 @@ export function RulesPage() {
   const openItems = derived?.event.event.openItems ?? [];
 
   return (
-    <div className="stack" style={{ gap: 'var(--sp-4)' }}>
+    <div className="stack reference-page" style={{ gap: 'var(--sp-4)' }}>
       <div className="page-head">
+        <div className="eyebrow">COMPETITION GUIDE</div>
         <h1 className="page-head__title">规则与说明</h1>
         <p className="page-head__sub">
-          通俗解释、公式、统计口径与资料来源。规则版本 {rulesVersion}。
+          从第一轮到冠军，了解比赛怎么打、成绩怎么算。
         </p>
       </div>
+      <div className="reference-intro"><h2>先看懂比赛，再看懂每一分。</h2><p>排位赛取两轮最优成绩，前十六名进入瑞士轮。瑞士轮三胜晋级、三败止步，八强通过双败赛与 BO3 决出冠军。</p></div>
+      <nav className="rules-contents" aria-label="规则目录">{[['format', '赛制'], ['scoring', '评分公式'], ['pairing', '排序配对'], ['confirmation', '判定与确认'], ['finals', '八强与名次'], ['sources', '资料来源']].map(([id, label]) => <Link key={id} to={`/rules?section=${id}`}>{label}</Link>)}</nav>
 
-      <div className="card">
+      <div className="card rules-section" id="time">
         <div className="card__head">
           <span className="card__title">时间是否准确</span>
         </div>
@@ -37,7 +50,7 @@ export function RulesPage() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="format">
         <div className="card__head">
           <span className="card__title">赛制总览</span>
         </div>
@@ -51,7 +64,8 @@ export function RulesPage() {
             累计三胜晋级八强，累计三败淘汰；达到三胜或三败后停止参赛。五轮依次 8、8、8、6、3 场，共 33 场。
           </li>
           <li>
-            <strong>决赛</strong>：八强分胜者组 4 队、败者组 4 队，按固定对阵图进行 8 场 BO1，
+            <strong>八强双败赛</strong>：八强种子先进行 1 对 5、2 对 6、3 对 7、4 对 8 四场首轮比赛，
+            胜者进入胜者组、败者进入败者组。竞技决赛共 12 场 BO1，
             再由“总决赛名额争夺战”与“总决赛”两组 BO3 决出冠军。
           </li>
           <li>
@@ -60,7 +74,7 @@ export function RulesPage() {
         </ol>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="scoring">
         <div className="card__head">
           <span className="card__title">瑞士轮评分公式</span>
         </div>
@@ -113,7 +127,7 @@ export function RulesPage() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="pairing">
         <div className="card__head">
           <span className="card__title">同战绩组排序与配对</span>
         </div>
@@ -130,11 +144,14 @@ export function RulesPage() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="confirmation">
         <div className="card__head">
           <span className="card__title">异常与成绩确认</span>
         </div>
         <ul className="stack stack--tight small" style={{ paddingLeft: '1.2em', margin: 0 }}>
+          <li>按照竞技组规则手册 4_6，先比较最终积分（保底分与最高建筑总分）；积分相同时，先达到该积分者优先。</li>
+          <li>双方均未完成搭建时比较先抓取情况；零分局由裁判与组委会确认结果。</li>
+          <li>大胜条件为达到 14 分、领先 10 分以上并持续 10 秒。页面只呈现已确认结果，不据录入积分自行判罚。</li>
           <li>
             有效正常比赛、按规则提前结束的有效比赛：双方计入表现统计、战绩与 O。
           </li>
@@ -148,7 +165,7 @@ export function RulesPage() {
         </ul>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="finals">
         <div className="card__head">
           <span className="card__title">八强种子与名次结算</span>
         </div>
@@ -157,17 +174,17 @@ export function RulesPage() {
           同组排名使用第五轮结算后的数据。
         </p>
         <ul className="stack stack--tight small" style={{ paddingLeft: '1.2em', margin: 0 }}>
-          <li>3-0 组前两队记为 W1、W2</li>
-          <li>3-1 组前两队记为 W3、W4；该组第三队记为 L1</li>
-          <li>3-2 组三队记为 L2、L3、L4</li>
+          <li>3-0 组两队为八强种子第 1、2 名</li>
+          <li>3-1 组三队为八强种子第 3、4、5 名</li>
+          <li>3-2 组三队为八强种子第 6、7、8 名</li>
         </ul>
         <p className="small" style={{ marginTop: 'var(--sp-2)' }}>
-          八强首轮：W1 对 W4、W2 对 W3、L1 对 L4、L2 对 L3。
-          败者组第二轮：W1/W4 负者对 L2/L3 胜者；W2/W3 负者对 L1/L4 胜者。
+          10 月 4 日上午的四场八强首轮按 1 对 5、2 对 6、3 对 7、4 对 8 配对。
+          下午胜者组与败者组的参赛队伍来自上午首轮的胜负结果，后续对阵按固定晋级图进行。
         </p>
         <p className="small">
           已晋级、已淘汰队伍的胜率和 P 按实际已赛成绩保留，其 O 随历史对手成绩更新。
-          因此两支 3-0 队伍不能在第三轮当晚就永久确定 W1/W2，最终种子要等第五轮全部结束后统一计算。
+          因此两支 3-0 队伍不能在第三轮当晚就永久确定第 1、2 种子，最终种子要等第五轮全部结束后统一计算。
         </p>
         <p className="xsmall muted">
           名次结算：八强败者组首轮与第二轮的败者结算“八强”；半决赛败者组败者结算“四强”；
@@ -176,17 +193,20 @@ export function RulesPage() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="card rules-section" id="sources">
         <div className="card__head">
           <span className="card__title">数据来源与已知未明确项</span>
         </div>
         <div className="stack stack--tight small">
-          <div>
+          <p><Icon name="book" size={16} /> <strong>赛程依据</strong>：RoboGame2026赛程安排（暂定） (1).docx</p>
+          <p><strong>竞技规则</strong>：RoboGame2026 竞技组规则手册4_6.pdf（2026 年 10 月 1 日发布），比赛胜负条件见第 23 页。</p>
+          <p className="muted">规则版本 {rulesVersion}。上述资料由组委会提供，现场最终解释与确认优先。</p>
+          <details className="disclosure"><summary>查看数据来源校验信息</summary><div>
             <span className="muted">原始文档 SHA256：</span>
             <code className="xsmall" style={{ overflowWrap: 'anywhere' }}>
               {sourceSha}
             </code>
-          </div>
+          </div></details>
           {updatedAt ? (
             <div>
               <span className="muted">数据更新时间：</span>

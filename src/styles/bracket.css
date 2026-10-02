@@ -12,6 +12,17 @@
   --bc-pad: 10px;
 }
 
+.progress-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.progress-team-picker { display: grid; gap: 5px; flex: 1; min-width: 0; font-size: var(--text-sm); }
+.progress-team-picker select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); font: inherit; }
+.round-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 12px; max-width: 100%; }
+.round-tabs .btn { flex: 0 0 auto; min-height: 44px; }
+.round-tabs .btn[aria-pressed='true'] { background: var(--accent); color: white; border-color: var(--accent); }
+.bracket--highlighting .bracket__node:not(.is-highlighted) { opacity: .45; }
+.bracket--highlighting .bracket__link:not(.is-highlighted) { opacity: .18; }
+.bracket__node.is-highlighted .bracket-card { outline: 3px solid var(--accent); outline-offset: 2px; }
+.bracket__link.is-highlighted { stroke-width: 3; }
+
 /* 紧凑档只缩字号与内边距，不隐藏对阵 */
 .bracket__board[data-density='compact'] {
   --bc-title-size: var(--text-xs);

@@ -55,6 +55,14 @@ function allEmptySeries(): Series[] {
   return FINALS_NODES.map((n) => emptySeries(n.id, n.format));
 }
 
+function afterMorning(seeds: Record<string, string>): Series[] {
+  return allEmptySeries().map((s) => {
+    if (!/^F-M[1-4]$/.test(s.id)) return s;
+    const i = s.id.slice(-1);
+    return playBo1(s, seeds[`W${i}`]!, seeds[`L${i}`]!, seeds[`W${i}`]!);
+  });
+}
+
 function seeding(seeds: Record<string, string>): FinalsSeeding {
   return {
     seeds,
@@ -89,6 +97,17 @@ function playBo1(series: Series, homeId: string, awayId: string, winnerId: strin
 }
 
 describe('D12 决赛按映射推进', () => {
+  it('上午首轮使用第1对5至第4对8，下午席位必须等待上午赛果', () => {
+    const seeds = { W1: 'w1', W2: 'w2', W3: 'w3', W4: 'w4', L1: 'l1', L2: 'l2', L3: 'l3', L4: 'l4' };
+    const initial = resolveFinals(allEmptySeries(), seeding(seeds));
+    for (let i = 1; i <= 4; i += 1) {
+      expect(initial.series.get(`F-M${i}`)!.slots).toEqual([{ state: 'resolved', teamId: `w${i}` }, { state: 'resolved', teamId: `l${i}` }]);
+    }
+    expect(initial.series.get('F-L1A')!.slots.every(s => s.state === 'pending')).toBe(true);
+    const morning = resolveFinals(afterMorning(seeds), seeding(seeds));
+    expect(morning.series.get('F-W1A')!.slots).toEqual([{ state: 'resolved', teamId: 'w1' }, { state: 'resolved', teamId: 'w4' }]);
+    expect(morning.series.get('F-L1A')!.slots).toEqual([{ state: 'resolved', teamId: 'l1' }, { state: 'resolved', teamId: 'l4' }]);
+  });
   it('两场败者组第二轮是交叉来源，对手对应准确', () => {
     const nodes = new Map(FINALS_NODES.map((n) => [n.id, n]));
 
@@ -108,20 +127,20 @@ describe('D12 决赛按映射推进', () => {
 
     // 与原文附一一致：W1/W4 负者对 L2/L3 胜者、W2/W3 负者对 L1/L4 胜者
     expect(nodes.get('F-L1A')!.slots).toEqual([
-      { kind: 'finals-seed', seed: 'L1' },
-      { kind: 'finals-seed', seed: 'L4' },
+      { kind: 'loser', seriesId: 'F-M1' },
+      { kind: 'loser', seriesId: 'F-M4' },
     ]);
     expect(nodes.get('F-L1B')!.slots).toEqual([
-      { kind: 'finals-seed', seed: 'L2' },
-      { kind: 'finals-seed', seed: 'L3' },
+      { kind: 'loser', seriesId: 'F-M2' },
+      { kind: 'loser', seriesId: 'F-M3' },
     ]);
     expect(nodes.get('F-W1A')!.slots).toEqual([
-      { kind: 'finals-seed', seed: 'W1' },
-      { kind: 'finals-seed', seed: 'W4' },
+      { kind: 'winner', seriesId: 'F-M1' },
+      { kind: 'winner', seriesId: 'F-M4' },
     ]);
     expect(nodes.get('F-W1B')!.slots).toEqual([
-      { kind: 'finals-seed', seed: 'W2' },
-      { kind: 'finals-seed', seed: 'W3' },
+      { kind: 'winner', seriesId: 'F-M2' },
+      { kind: 'winner', seriesId: 'F-M3' },
     ]);
   });
 
@@ -136,7 +155,7 @@ describe('D12 决赛按映射推进', () => {
       L3: 'l3',
       L4: 'l4',
     };
-    const list = allEmptySeries();
+    const list = afterMorning(seeds);
     const get = (id: string) => list.find((s) => s.id === id)!;
     const set = (s: Series) => {
       const i = list.findIndex((x) => x.id === s.id);
@@ -170,11 +189,11 @@ describe('D12 决赛按映射推进', () => {
     };
     // 下游尚未决定时保持 pending，并给出可读的来源说明。
     // **用场次序号，不用内部 ID** —— 观众在赛程表上找不到 "F-L2A"。
-    expect(pendingLabel('F-LSF', 0)).toBe('第 5 场胜者');
-    // F-QUAL 的第一个席位是「半决赛败者组胜者」= 第 8 场（新版顺序）
-    expect(pendingLabel('F-QUAL', 0)).toBe('第 8 场胜者');
-    // F-GF 的第一个席位是「半决赛胜者组胜者」= 第 7 场（新版顺序）
-    expect(pendingLabel('F-GF', 0)).toBe('第 7 场胜者');
+    expect(pendingLabel('F-LSF', 0)).toBe('第 9 场胜者');
+    // F-QUAL 的第一个席位是「半决赛败者组胜者」= 第 12 场（新版顺序）
+    expect(pendingLabel('F-QUAL', 0)).toBe('第 12 场胜者');
+    // F-GF 的第一个席位是「半决赛胜者组胜者」= 第 11 场（新版顺序）
+    expect(pendingLabel('F-GF', 0)).toBe('第 11 场胜者');
 
     // 任何未确定席位的文案都不应出现 F-XXXX 内部 ID
     for (const [id, res] of r1.series) {
@@ -187,7 +206,7 @@ describe('D12 决赛按映射推进', () => {
 
   it('完整结算出冠军、亚军与季军', () => {
     const seeds = { W1: 'w1', W2: 'w2', W3: 'w3', W4: 'w4', L1: 'l1', L2: 'l2', L3: 'l3', L4: 'l4' };
-    const list = allEmptySeries();
+    const list = afterMorning(seeds);
     const get = (id: string) => list.find((s) => s.id === id)!;
     const set = (s: Series) => {
       list[list.findIndex((x) => x.id === s.id)] = s;
@@ -307,7 +326,7 @@ describe('D13 BO3 2-0 与 2-1', () => {
 
   it('系列赛未决出胜者时不向下游推进', () => {
     const seeds = { W1: 'w1', W2: 'w2', W3: 'w3', W4: 'w4', L1: 'l1', L2: 'l2', L3: 'l3', L4: 'l4' };
-    const list = allEmptySeries();
+    const list = afterMorning(seeds);
     const get = (id: string) => list.find((s) => s.id === id)!;
     const set = (s: Series) => {
       list[list.findIndex((x) => x.id === s.id)] = s;
@@ -418,7 +437,7 @@ describe('D16 图校验', () => {
 
   it('已保存的参赛快照优先于依赖解析，不一致时报冲突而不是静默改写', () => {
     const seeds = { W1: 'w1', W2: 'w2', W3: 'w3', W4: 'w4', L1: 'l1', L2: 'l2', L3: 'l3', L4: 'l4' };
-    const list = allEmptySeries();
+    const list = afterMorning(seeds);
     const get = (id: string) => list.find((s) => s.id === id)!;
     const set = (s: Series) => {
       list[list.findIndex((x) => x.id === s.id)] = s;
@@ -449,7 +468,7 @@ describe('D16 图校验', () => {
 describe('D15 更正前置胜者且下游已开赛', () => {
   it('不把旧下游比分归给新队，并保留记录', () => {
     const seeds = { W1: 'w1', W2: 'w2', W3: 'w3', W4: 'w4', L1: 'l1', L2: 'l2', L3: 'l3', L4: 'l4' };
-    const list = allEmptySeries();
+    const list = afterMorning(seeds);
     const get = (id: string) => list.find((s) => s.id === id)!;
     const set = (s: Series) => {
       list[list.findIndex((x) => x.id === s.id)] = s;
@@ -475,7 +494,7 @@ describe('D15 更正前置胜者且下游已开赛', () => {
     // 依赖现在解析为 w1，但快照记录的是 w4 → 冲突，且保持快照
     expect(resolved.slots[0]).toEqual({
       state: 'conflict',
-      label: '第 3 场败者',
+      label: '第 7 场败者',
       reason: expect.stringContaining('保持已发生的比赛记录'),
     });
     // 已开赛比赛的记录没有被抹掉
@@ -524,9 +543,9 @@ void makeAttempt;
 void makeMatch;
 
 describe('决赛场次序号（替代内部 ID 的对外文案）', () => {
-  it('10 场竞技组决赛按比赛顺序编号 1–10，无重复无缺号', () => {
+  it('14 场竞技组决赛按比赛顺序编号 1–14，无重复无缺号', () => {
     const nos = FINALS_NODES.filter((n) => n.countsForStandings).map((n) => n.matchNo);
-    expect(nos).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(nos).toEqual(Array.from({ length: 14 }, (_, i) => i + 1));
     expect(new Set(nos).size).toBe(nos.length);
   });
 
@@ -538,21 +557,21 @@ describe('决赛场次序号（替代内部 ID 的对外文案）', () => {
   });
 
   it('编号顺序与实际比赛顺序一致（半决赛胜者组先行，总决赛最后）', () => {
-    expect(finalsMatchNoLabel('F-L1A')).toBe('第 1 场');
-    expect(finalsMatchNoLabel('F-L1B')).toBe('第 2 场');
-    expect(finalsMatchNoLabel('F-W1A')).toBe('第 3 场');
-    expect(finalsMatchNoLabel('F-W1B')).toBe('第 4 场');
-    expect(finalsMatchNoLabel('F-L2A')).toBe('第 5 场');
-    expect(finalsMatchNoLabel('F-L2B')).toBe('第 6 场');
+    expect(finalsMatchNoLabel('F-L1A')).toBe('第 5 场');
+    expect(finalsMatchNoLabel('F-L1B')).toBe('第 6 场');
+    expect(finalsMatchNoLabel('F-W1A')).toBe('第 7 场');
+    expect(finalsMatchNoLabel('F-W1B')).toBe('第 8 场');
+    expect(finalsMatchNoLabel('F-L2A')).toBe('第 9 场');
+    expect(finalsMatchNoLabel('F-L2B')).toBe('第 10 场');
     /*
      * 新版赛程手册（16:15~16:35）：「半决赛胜者组**先行**进行 BO1，
      * 而后半决赛败者组」。因此次序号与旧版相反 ——
      * 但这只影响**发生顺序**，依赖关系没变。
      */
-    expect(finalsMatchNoLabel('F-WSF')).toBe('第 7 场');
-    expect(finalsMatchNoLabel('F-LSF')).toBe('第 8 场');
-    expect(finalsMatchNoLabel('F-QUAL')).toBe('第 9 场');
-    expect(finalsMatchNoLabel('F-GF')).toBe('第 10 场');
+    expect(finalsMatchNoLabel('F-WSF')).toBe('第 11 场');
+    expect(finalsMatchNoLabel('F-LSF')).toBe('第 12 场');
+    expect(finalsMatchNoLabel('F-QUAL')).toBe('第 13 场');
+    expect(finalsMatchNoLabel('F-GF')).toBe('第 14 场');
   });
 
   it('未知 ID 返回 null，而不是把 ID 当标签', () => {

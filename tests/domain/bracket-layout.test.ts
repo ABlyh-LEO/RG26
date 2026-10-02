@@ -370,6 +370,13 @@ describe('纵向分段（band）', () => {
 });
 
 describe('连线的车道分配', () => {
+  it('新增首轮八条分支及瑞士轮十六条路径不会撞到固定容量上限', () => {
+    for (const count of [8, 16]) {
+      const offsets = Array.from({ length: count }, (_, lane) => Math.round(laneOffset(64, lane, count)));
+      expect(new Set(offsets).size).toBe(count);
+      expect(Math.max(...offsets.map(Math.abs))).toBeLessThan(32);
+    }
+  });
   it('车道 0 走通道中线', () => {
     expect(laneOffset(44, 0)).toBe(0);
   });

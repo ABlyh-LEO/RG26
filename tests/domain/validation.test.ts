@@ -39,7 +39,7 @@ describe('空赛果的种子数据必须校验通过', () => {
     expect(event.qualification.runs).toHaveLength(44);
     expect(event.swiss.rounds).toHaveLength(5);
     expect(event.swiss.matches).toHaveLength(33);
-    expect(event.finals.series).toHaveLength(14);
+    expect(event.finals.series).toHaveLength(18);
     // 没有任何赛果
     expect(event.qualification.runs.every((r) => r.resultStatus === 'none')).toBe(true);
     expect(event.swiss.matches.every((m) => m.attempts.length === 0)).toBe(true);
@@ -53,7 +53,7 @@ describe('空赛果的种子数据必须校验通过', () => {
     expect(event.finals.series.every((s) => s.executionStatus !== 'finished')).toBe(true);
   });
 
-  it('第三轮跨日槽位数量正确（10/3 四场、10/4 四场）', () => {
+  it('第三轮八场均在10月3日晚，上午增加四场八强首轮', () => {
     const event = buildSeedEvent('2026-09-30T00:00:00+08:00');
     const r3 = event.swiss.rounds.find((r) => r.index === 3)!;
     expect(r3.matchIds).toHaveLength(8);
@@ -61,8 +61,8 @@ describe('空赛果的种子数据必须校验通过', () => {
       const m = event.swiss.matches.find((x) => x.id === id)!;
       return event.scheduleItems.find((s) => s.id === m.scheduleItemId)!;
     });
-    expect(items.filter((s) => s.date === '2026-10-03')).toHaveLength(4);
-    expect(items.filter((s) => s.date === '2026-10-04')).toHaveLength(4);
+    expect(items.filter((s) => s.date === '2026-10-03')).toHaveLength(8);
+    expect(items.filter((s) => s.date === '2026-10-04')).toHaveLength(0);
   });
 
   it('瑞士轮逐场进行（同轮时间不重叠）', () => {

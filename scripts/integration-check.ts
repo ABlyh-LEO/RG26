@@ -3,7 +3,7 @@
  *
  * 验证：
  * 1. 录入一场结果 → 计算 → 生成下一轮候选的完整链路
- * 2. R3 跨日锁定演练
+ * 2. R3 整轮对阵锁定演练
  * 3. 基础版本冲突被拒绝
  *
  * 这是脚本而非单元测试，因为它跨越多个模块并要真实读写临时文件。
@@ -167,24 +167,24 @@ if (!r3Published.ok) fail(`R3 公布失败：${r3Published.messages.join('；')}
 event = r3Published.event;
 ok('R3 全部 8 场一次性公布');
 
-section('7. R3 跨日锁定演练');
+section('7. R3 整轮对阵锁定演练');
 const r3Round = event.swiss.rounds.find((r) => r.index === 3)!;
 const r3Matches = r3Round.matchIds.map((id) => event.swiss.matches.find((m) => m.id === id)!);
 
-// 记录次日四场的参赛双方与时间槽
+// 记录本轮后四场的参赛双方与时间槽
 const nextDay = r3Matches.filter((m) => {
   const item = event.scheduleItems.find((s) => s.id === m.scheduleItemId)!;
-  return item.date === '2026-10-04';
+  return Date.parse(item.plannedStart) >= Date.parse('2026-10-03T20:20:00+08:00');
 });
-if (nextDay.length !== 4) fail(`次日应有 4 场，实际 ${nextDay.length}`);
+if (nextDay.length !== 4) fail(`本轮后段应有 4 场，实际 ${nextDay.length}`);
 const nextDayBefore = nextDay.map((m) => ({
   id: m.id,
   participants: [...(m.participantSnapshot ?? [])].join('|'),
   slot: m.scheduleItemId,
 }));
-ok(`次日锁定 ${nextDay.length} 场：${nextDayBefore.map((n) => n.participants).join(' / ')}`);
+ok(`后段锁定 ${nextDay.length} 场：${nextDayBefore.map((n) => n.participants).join(' / ')}`);
 
-// 完成当晚四场（2-0 两场 + 1-1 前两场）
+// 完成本轮前四场（2-0 两场 + 1-1 前两场）
 const tonight = r3Matches.filter((m) => !nextDayBefore.some((n) => n.id === m.id));
 if (tonight.length !== 4) fail(`当晚应有 4 场，实际 ${tonight.length}`);
 for (const match of tonight) {
@@ -204,7 +204,7 @@ for (const match of tonight) {
 }
 ok('当晚 4 场已完成');
 
-// 关键断言：次日四场的参赛双方与时间槽未变化
+// 关键断言：本轮后四场的参赛双方与时间槽未变化
 const nextDayAfter = r3Round.matchIds
   .map((id) => event.swiss.matches.find((m) => m.id === id)!)
   .filter((m) => nextDayBefore.some((n) => n.id === m.id))
@@ -216,13 +216,13 @@ const nextDayAfter = r3Round.matchIds
 
 for (const before of nextDayBefore) {
   const after = nextDayAfter.find((a) => a.id === before.id);
-  if (!after) fail(`次日的 ${before.id} 消失了`);
+  if (!after) fail(`后段的 ${before.id} 消失了`);
   if (after.participants !== before.participants) {
-    fail(`次日的 ${before.id} 参赛双方被改变了：${before.participants} → ${after.participants}`);
+    fail(`后段的 ${before.id} 参赛双方被改变了：${before.participants} → ${after.participants}`);
   }
-  if (after.slot !== before.slot) fail(`次日的 ${before.id} 时间槽被改变了`);
+  if (after.slot !== before.slot) fail(`后段的 ${before.id} 时间槽被改变了`);
 }
-ok('次日四场的参赛双方与时间槽保持不变（跨日锁定生效）');
+ok('本轮后四场的参赛双方与时间槽保持不变（整轮锁定生效）');
 
 // R4 不可生成
 const r4 = generateNextRound(event, 4);
@@ -376,14 +376,14 @@ section('12. 完成 R4/R5 并公布八强种子');
   ok(`八强种子已公布：${Object.entries(seeds).map(([k, v]) => `${k}=${v}`).join(' ')}`);
 }
 
-section('13. 决赛 BO1（第 1–8 场）可完整录入');
+section('13. 决赛 BO1（第 1–12 场）可完整录入');
 {
   /*
-   * 这 8 场曾经**没有任何录入入口**：applyBo1Entry 只查瑞士轮，
+   * 这 12 场曾经**没有任何录入入口**：applyBo1Entry 只查瑞士轮，
    * applyBo3Game 明确拒绝非 BO3/BO2 系列赛，于是决赛推不下去。
    * 现在由 applyFinalsBo1 覆盖，这里做端到端确认。
    */
-  const bo1Order = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
+  const bo1Order = ['F-M1', 'F-M2', 'F-M3', 'F-M4', 'F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
   for (const seriesId of bo1Order) {
     const slots = resolveFinals(event.finals.series, event.finals.seeding).series.get(seriesId)?.slots;
     const a = slots?.[0];
@@ -406,10 +406,10 @@ section('13. 决赛 BO1（第 1–8 场）可完整录入');
     if (!result.ok) fail(`${seriesId} 录入失败：${result.messages.join('；')}`);
     event = result.event;
   }
-  ok(`第 1–8 场 BO1 已全部录入`);
+  ok(`第 1–12 场 BO1 已全部录入`);
 }
 
-section('14. 决赛 BO3（第 9–10 场）与冠军');
+section('14. 决赛 BO3（第 13–14 场）与冠军');
 {
   const playBo3 = (seriesId: string): void => {
     const slots = resolveFinals(event.finals.series, event.finals.seeding).series.get(seriesId)?.slots;
@@ -431,9 +431,9 @@ section('14. 决赛 BO3（第 9–10 场）与冠军');
     }
   };
   playBo3('F-QUAL');
-  ok('第 9 场（名额争夺战）已决出');
+  ok('第 13 场（名额争夺战）已决出');
   playBo3('F-GF');
-  ok('第 10 场（总决赛）已决出');
+  ok('第 14 场（总决赛）已决出');
 
   const resolution = resolveFinals(event.finals.series, event.finals.seeding);
   const { awards } = resolution;
@@ -458,8 +458,8 @@ section('集成检查全部通过');
 console.log(`
 已验证的完整链路：
   种子数据 → 排位赛排名 → 生成/公布 R1 → 录入 8 场 → 确认 → 生成/公布 R2
-  → 录入 8 场 → 确认 → 一次性公布 R3 → 跨日锁定（次日 4 场不变）
+  → 录入 8 场 → 确认 → 一次性公布 R3 → 整轮锁定（后半轮 4 场不变）
   → 完成 R3 → 确认 → 生成 R4（6 场）→ 完成 R4/R5 → 公布八强种子
-  → 决赛 BO1 第 1–8 场 → BO3 第 9–10 场 → 冠军
+  → 决赛 BO1 第 1–12 场 → BO3 第 13–14 场 → 冠军
   → 数据校验 → 排名计算 → 冲突拒绝
 `);

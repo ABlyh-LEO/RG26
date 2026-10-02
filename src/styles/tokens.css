@@ -1,166 +1,46 @@
-/* ==========================================================================
-   RoboGame2026 设计 token 与全局样式
-   视觉方向：清晰的赛事信息风格，浅灰背景、深蓝正文、蓝色交互强调。
-   颜色只是初始 token；已按 4.5:1 对比度目标挑选。
-   ========================================================================== */
-
 :root {
-  /* 颜色 */
-  --bg: #f4f6fa;
+  --bg: #f5f6f8;
   --panel: #ffffff;
-  --text: #142033;
-  --text-muted: #5c687c;
-  --accent: #2457e7;
-  --accent-weak: #e8eeff;
-  --border: #dde3ee;
-  --border-strong: #c3ccdd;
-
-  /* 状态色（配明确文字，绝不只靠颜色传达） */
-  --advanced: #1b7f4d;
-  --advanced-bg: #e6f5ec;
-  --pending: #8a5a00;
-  --pending-bg: #fdf3e0;
-  --eliminated: #5c687c;
-  --eliminated-bg: #eef1f6;
-  --danger: #b3261e;
-  --danger-bg: #fdecea;
-
-  /* 间距尺度 */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
-
-  /* 圆角与阴影 */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --shadow: 0 1px 2px rgba(20, 32, 51, 0.06), 0 2px 8px rgba(20, 32, 51, 0.04);
-
-  /* 排版 */
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    'Source Han Sans SC', 'Noto Sans CJK SC', sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-  --text-xs: 13px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-3xl: 28px;
-
-  /* 布局 */
-  --content-max: 1200px;
-  --gutter: 16px;
-  --tabbar-height: 60px;
-
+  --text: #17243b;
+  --text-muted: #647187;
+  --accent: #2454ce;
+  --accent-weak: #edf2ff;
+  --border: #e3e7ed;
+  --border-strong: #c4cedb;
+  --advanced: #177c55;
+  --advanced-bg: #eaf6ef;
+  --pending: #906015;
+  --pending-bg: #fff5e2;
+  --eliminated: #647187;
+  --eliminated-bg: #eff2f5;
+  --danger: #b63535;
+  --danger-bg: #fff0ef;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  --radius-sm: 8px; --radius: 12px; --radius-lg: 16px;
+  --shadow: 0 2px 8px rgb(24 36 57 / 3%);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --text-xs: 12px; --text-sm: 14px; --text-base: 16px; --text-lg: 18px; --text-xl: 20px; --text-2xl: 26px; --text-3xl: 32px;
+  --content-max: 1240px; --gutter: 18px; --tabbar-height: 64px;
   color-scheme: light;
 }
-
-/* 重置 */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: 1.6;
-  /* 整个页面不应横向溢出 */
-  overflow-x: hidden;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  margin: 0;
-  line-height: 1.35;
-  font-weight: 700;
-}
-
-h1 {
-  font-size: var(--text-2xl);
-}
-h2 {
-  font-size: var(--text-xl);
-}
-h3 {
-  font-size: var(--text-lg);
-}
-
-p {
-  margin: 0 0 var(--sp-3);
-}
-
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* 键盘焦点必须清晰可见 */
-:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-button {
-  font: inherit;
-  color: inherit;
-}
-
-/* 比分、时间、编号使用等宽数字，保证纵向对齐 */
-.tabular {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
-}
-
-/* 仅供屏幕阅读器 */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* 减少动画 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* 200% 文本缩放下仍可操作：容器允许换行 */
-@media (min-width: 768px) {
-  :root {
-    --gutter: 24px;
-  }
-}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 84px; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); font-size: var(--text-base); line-height: 1.6; }
+h1,h2,h3,h4 { margin: 0; line-height: 1.3; font-weight: 750; }
+h1 { font-size: var(--text-3xl); letter-spacing: -.035em; }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+p { margin: 0 0 var(--sp-3); }
+p:last-child { margin-bottom: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 5px; }
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+.icon { flex: none; vertical-align: middle; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (min-width: 768px) { :root { --gutter: 28px; } }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }

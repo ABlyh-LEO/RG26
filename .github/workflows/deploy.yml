@@ -12,6 +12,7 @@ on:
       - 'index.html'
       - 'vite.config.ts'
       - 'playwright.config.ts'
+      - 'playwright.operator.config.ts'
       - 'vitest.config.ts'
       - 'eslint.config.js'
       - 'tsconfig*.json'
@@ -39,6 +40,8 @@ jobs:
   build:
     name: 必需检查与构建
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.snapshot.outputs.revision }}
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -76,14 +79,16 @@ jobs:
         run: npm run build
 
       - name: 校验公开快照可读且版本一致
+        id: snapshot
         run: |
           node -e "
           const fs = require('node:fs');
           const snap = JSON.parse(fs.readFileSync('dist/data/event.json', 'utf8'));
-          if (!snap.revision || !snap.schemaVersion || !snap.data) {
-            console.error('公开快照缺少必要字段');
+          if (!/^[a-f0-9]{32}$/.test(snap.revision || '') || snap.schemaVersion !== 1 || !snap.data || snap.sourceCommit !== process.env.GITHUB_SHA) {
+            console.error('公开快照缺少必要字段，或 sourceCommit 与本次提交不符');
             process.exit(1);
           }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'revision=' + snap.revision + '\n');
           console.log('revision =', snap.revision);
           console.log('schemaVersion =', snap.schemaVersion);
           console.log('builtAt =', snap.builtAt);
@@ -118,12 +123,18 @@ jobs:
           E2E_BASE_URL: http://127.0.0.1:4173/${{ github.event.repository.name }}/
         run: npm run test:e2e
 
+      - name: 本地维护工作台端到端测试（Chromium 与 WebKit）
+        # 临时仓库隔离发布测试；通过后继续上传此前已验证的公开 dist。
+        run: npx playwright test --config playwright.operator.config.ts
+
       - name: 上传 Playwright 报告（失败时）
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/operator/
           retention-days: 7
 
       - name: 上传 Pages 产物
@@ -139,23 +150,23 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: 检出本次部署的验证脚本
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
       - name: 部署到 GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: 部署后检查
+      - name: 核验本次公开版本（最多等待 3 分钟）
+        timeout-minutes: 4
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: |
-          echo "部署地址：$PAGE_URL"
-          # 检查首页可读
-          curl -fsS --max-time 30 "$PAGE_URL" -o /tmp/index.html
-          grep -q 'RoboGame2026' /tmp/index.html && echo "首页可读"
-          # 检查公开 JSON 可读且可解析
-          curl -fsS --max-time 30 "${PAGE_URL%/}/data/event.json" -o /tmp/event.json
-          node -e "
-          const snap = JSON.parse(require('node:fs').readFileSync('/tmp/event.json','utf8'));
-          console.log('公开数据 revision =', snap.revision);
-          if (snap.schemaVersion !== 1) { console.error('schemaVersion 不一致'); process.exit(1); }
-          "
-          echo "部署后检查通过。注意：CDN 传播可能有延迟。"
+          EXPECTED_REVISION: ${{ needs.build.outputs.revision }}
+        # 不调用 Actions API，也不依赖“部署 action 已成功”来推断观众可见。
+        # 脚本使用 cache-bust；网络/HTTP/结构/双字段不符均重试，180s 到期失败。
+        run: node scripts/verify-pages.mjs

@@ -6,20 +6,21 @@
  * - 未能 100% 确认的字形保留 nameVerified:false 与 nameNote，绝不臆造队名。
  * - 所有结果为 null / 空数组；绝不预演真实赛果。
  */
+import { FINALS_NODES } from '../src/domain/finals';
 import type { EventFile, Series, SlotRef, SwissMatch, SwissRound, Team, Venue } from '../src/domain/schema';
 
 /**
  * 原始文档哈希。
  *
  * 2026-10 手册更新（docs/RoboGame2026赛程安排（暂定） (1).docx）：
- * 决赛倒数第三、四场（半决赛）次序调整为**胜者组先行、败者组随后**。
+ * 瑞士轮时间调整、第三轮改为首日晚间、增加次日上午双败首轮四场。
  * 哈希随之更新，以便校验器发现"源文档又变了"。
  */
 export const SOURCE_DOC_SHA256 = '89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2';
 
 export const EVENT_ID = 'robogame-2026';
 
-export const RULES_VERSION = '1.0.0';
+export const RULES_VERSION = '4_6';
 
 /* ------------------------------------------------------------------ *
  * 队伍名单（逐项对照官方图片核读）
@@ -186,26 +187,26 @@ export const QUAL_ROUND2_START = '13:30';
 /** 瑞士轮各轮首场时间（第 4.1、4.2 节）。 */
 export const SWISS_SLOT_PLAN: Record<number, { date: string; start: string; groupOrder: string[]; counts: Record<string, number> }> = {
   1: { date: DAY1, start: '16:00', groupOrder: ['0-0'], counts: { '0-0': 8 } },
-  2: { date: DAY1, start: '18:30', groupOrder: ['1-0', '0-1'], counts: { '1-0': 4, '0-1': 4 } },
-  // R3 跨日：2-0 与 1-1 前两场在 10/3 晚，1-1 后两场与 0-2 在 10/4 上午。
-  3: { date: DAY1, start: '20:10', groupOrder: ['2-0', '1-1', '0-2'], counts: { '2-0': 2, '1-1': 4, '0-2': 2 } },
-  4: { date: DAY2, start: '10:00', groupOrder: ['2-1', '1-2'], counts: { '2-1': 3, '1-2': 3 } },
-  5: { date: DAY2, start: '11:20', groupOrder: ['2-2'], counts: { '2-2': 3 } },
+  2: { date: DAY1, start: '18:00', groupOrder: ['1-0', '0-1'], counts: { '1-0': 4, '0-1': 4 } },
+  // 新版赛程：第三轮八场全部在首日晚间完成。
+  3: { date: DAY1, start: '19:40', groupOrder: ['2-0', '1-1', '0-2'], counts: { '2-0': 2, '1-1': 4, '0-2': 2 } },
+  4: { date: DAY2, start: '09:00', groupOrder: ['2-1', '1-2'], counts: { '2-1': 3, '1-2': 3 } },
+  5: { date: DAY2, start: '10:20', groupOrder: ['2-2'], counts: { '2-2': 3 } },
 };
 
 /**
  * R3 的槽位到具体时间的映射（第 4.1、4.2、5.4 节）。
- * 一次性发布全部 8 场并跨日固定；次日不得根据前晚结果重排。
+ * 一次性发布全部 8 场，19:40 至 21:00 完成。
  */
 export const R3_SLOT_TIMES: readonly { groupRecord: string; orderInGroup: number; date: string; start: string }[] = [
-  { groupRecord: '2-0', orderInGroup: 1, date: DAY1, start: '20:10' },
-  { groupRecord: '2-0', orderInGroup: 2, date: DAY1, start: '20:20' },
-  { groupRecord: '1-1', orderInGroup: 1, date: DAY1, start: '20:30' },
-  { groupRecord: '1-1', orderInGroup: 2, date: DAY1, start: '20:40' },
-  { groupRecord: '1-1', orderInGroup: 3, date: DAY2, start: '09:00' },
-  { groupRecord: '1-1', orderInGroup: 4, date: DAY2, start: '09:10' },
-  { groupRecord: '0-2', orderInGroup: 1, date: DAY2, start: '09:20' },
-  { groupRecord: '0-2', orderInGroup: 2, date: DAY2, start: '09:30' },
+  { groupRecord: '2-0', orderInGroup: 1, date: DAY1, start: '19:40' },
+  { groupRecord: '2-0', orderInGroup: 2, date: DAY1, start: '19:50' },
+  { groupRecord: '1-1', orderInGroup: 1, date: DAY1, start: '20:00' },
+  { groupRecord: '1-1', orderInGroup: 2, date: DAY1, start: '20:10' },
+  { groupRecord: '1-1', orderInGroup: 3, date: DAY1, start: '20:20' },
+  { groupRecord: '1-1', orderInGroup: 4, date: DAY1, start: '20:30' },
+  { groupRecord: '0-2', orderInGroup: 1, date: DAY1, start: '20:40' },
+  { groupRecord: '0-2', orderInGroup: 2, date: DAY1, start: '20:50' },
 ];
 
 /** 决赛各节点的时间（第 4.3 节）。BO3 没有给出固定结束时刻，故 plannedEnd 为 null。 */
@@ -216,7 +217,11 @@ export const FINALS_SCHEDULE: readonly {
   end: string | null;
   afterSeriesId: string | null;
 }[] = [
-  { id: 'opening', date: DAY2, start: '14:00', end: null, afterSeriesId: null },
+  { id: 'F-M1', date: DAY2, start: '11:10', end: '11:20', afterSeriesId: null },
+  { id: 'F-M2', date: DAY2, start: '11:20', end: '11:30', afterSeriesId: null },
+  { id: 'F-M3', date: DAY2, start: '11:30', end: '11:40', afterSeriesId: null },
+  { id: 'F-M4', date: DAY2, start: '11:40', end: '11:50', afterSeriesId: null },
+  { id: 'opening', date: DAY2, start: '14:00', end: '14:30', afterSeriesId: null },
   { id: 'F-L1A', date: DAY2, start: '14:30', end: '14:40', afterSeriesId: null },
   { id: 'F-L1B', date: DAY2, start: '14:40', end: '14:50', afterSeriesId: null },
   { id: 'showcase-final-1', date: DAY2, start: '14:50', end: '15:05', afterSeriesId: null },
@@ -355,7 +360,7 @@ export function buildEmptyMatch(
  * - 44 次排位跑图直接绑定真实队伍与场地（三审顺序已知）。
  * - 33 个瑞士轮时间槽先只记录轮次、战绩组、组内序号与时间；对阵引用留空，
  *   待每轮正式公布后再绑定实际比赛与队伍。不预演任何赛果。
- * - 决赛预建第 4.3 节的 14 个节点（10 个竞技系列赛 + 3 个展示演出 + 表演赛），
+ * - 决赛预建第 4.3 节的 18 个节点（14 个竞技系列赛 + 3 个展示演出 + 表演赛），
  *   队伍来源全部使用引用。
  */
 export function buildSeedEvent(now: string): EventFile {
@@ -371,7 +376,7 @@ export function buildSeedEvent(now: string): EventFile {
     stage: 'showcase',
     date: DAY1,
     plannedStart: at(DAY1, '10:50'),
-    plannedEnd: at(DAY1, '11:10'),
+    plannedEnd: at(DAY1, '11:30'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
@@ -387,8 +392,8 @@ export function buildSeedEvent(now: string): EventFile {
       kind: 'activity',
       stage: 'showcase',
       date: DAY1,
-      plannedStart: at(DAY1, '11:10', index * 15),
-      plannedEnd: at(DAY1, '11:10', (index + 1) * 15),
+      plannedStart: at(DAY1, '11:30', index * 15),
+      plannedEnd: at(DAY1, '11:30', (index + 1) * 15),
       afterSeriesId: null,
       venueId: VENUE_MAIN,
       referenceId: showcaseTeamId(entry.number),
@@ -404,7 +409,7 @@ export function buildSeedEvent(now: string): EventFile {
     kind: 'activity',
     stage: 'showcase',
     date: DAY1,
-    plannedStart: at(DAY1, '12:00'),
+    plannedStart: at(DAY1, '12:20'),
     // 原文未给出结束时间。
     plannedEnd: null,
     afterSeriesId: null,
@@ -518,7 +523,7 @@ export function buildSeedEvent(now: string): EventFile {
         const waitingReason = waitingReasonOf(index, groupRecord);
         matchIds.push(matchId);
 
-        // 时间：R3 使用显式的跨日槽位表；其余轮次在组顺序内连续排布。
+        // 时间：R3 使用显式时间槽表；其余轮次在组顺序内连续排布。
         let date = plan.date;
         let start = plan.start;
         if (index === 3) {
@@ -572,7 +577,7 @@ export function buildSeedEvent(now: string): EventFile {
           effectiveAttemptId: null,
           executionStatus: 'scheduled',
           scheduleItemId: scheduleId,
-          note: index === 3 ? '第三轮全部 8 场在第二轮结束后一次性公布，跨日期间保持固定' : null,
+          note: index === 3 ? '第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成' : null,
         });
       }
     }
@@ -593,17 +598,20 @@ export function buildSeedEvent(now: string): EventFile {
   }
 
   // 瑞士轮核分节点
+  scheduleItems.push({ id: 'sched-swiss-review-2', kind: 'activity', stage: 'swiss', date: DAY1,
+    plannedStart: at(DAY1, '17:20'), plannedEnd: at(DAY1, '17:40'), afterSeriesId: null, venueId: VENUE_MAIN,
+    referenceId: null, title: '第一轮核分并公布第二轮对阵', executionStatus: 'scheduled', adjustmentNote: null, revisedStart: null });
   scheduleItems.push({
     id: 'sched-swiss-review-3',
     kind: 'activity',
     stage: 'swiss',
     date: DAY1,
-    plannedStart: at(DAY1, '19:50'),
-    plannedEnd: at(DAY1, '20:10'),
+    plannedStart: at(DAY1, '19:20'),
+    plannedEnd: at(DAY1, '19:40'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
-    title: '核分并一次性公布第三轮全部 8 场对阵及跨日场次',
+    title: '核分并一次性公布第三轮全部 8 场对阵',
     executionStatus: 'scheduled',
     adjustmentNote: null,
     revisedStart: null,
@@ -612,9 +620,9 @@ export function buildSeedEvent(now: string): EventFile {
     id: 'sched-swiss-review-4',
     kind: 'activity',
     stage: 'swiss',
-    date: DAY2,
-    plannedStart: at(DAY2, '09:40'),
-    plannedEnd: at(DAY2, '10:00'),
+    date: DAY1,
+    plannedStart: at(DAY1, '21:00'),
+    plannedEnd: at(DAY1, '21:20'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
@@ -628,8 +636,8 @@ export function buildSeedEvent(now: string): EventFile {
     kind: 'activity',
     stage: 'swiss',
     date: DAY2,
-    plannedStart: at(DAY2, '11:00'),
-    plannedEnd: at(DAY2, '11:20'),
+    plannedStart: at(DAY2, '10:00'),
+    plannedEnd: at(DAY2, '10:20'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
@@ -643,18 +651,18 @@ export function buildSeedEvent(now: string): EventFile {
     kind: 'activity',
     stage: 'swiss',
     date: DAY2,
-    plannedStart: at(DAY2, '11:50'),
-    plannedEnd: at(DAY2, '12:00'),
+    plannedStart: at(DAY2, '10:50'),
+    plannedEnd: at(DAY2, '11:10'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
-    title: '瑞士轮总核分（统一计算 A、B、P、O、R 与八强种子）',
+    title: '瑞士轮总核分并公布八强第1至8名及双败首轮对阵',
     executionStatus: 'scheduled',
     adjustmentNote: null,
     revisedStart: null,
   });
 
-  /* ---------- 决赛：10 个竞技系列赛 + 3 个展示演出 + 表演赛 ---------- */
+  /* ---------- 决赛：14 个竞技系列赛 + 3 个展示演出 + 表演赛 ---------- */
   const series: Series[] = [];
   const seriesSchedule = new Map(FINALS_SCHEDULE.map((s) => [s.id, s]));
 
@@ -707,7 +715,7 @@ export function buildSeedEvent(now: string): EventFile {
       openItems: [
         '赛程组共享文档地址（原文声明以其当天安排为准）',
         '是否公开原始 DOCX',
-        '展示组决赛抽签顺序（10 月 3 日 12:00 抽签后录入）',
+        '展示组决赛抽签顺序（10 月 3 日 12:20 抽签后录入）',
       ],
     },
     rules: {
@@ -747,7 +755,7 @@ export function buildSeedEvent(now: string): EventFile {
 }
 
 /* ------------------------------------------------------------------ *
- * 决赛节点本地定义（避免与 domain/finals.ts 形成循环依赖）
+ * 决赛节点：复用领域依赖图，仅补充开幕式日程
  * ------------------------------------------------------------------ */
 
 type LocalNode = {
@@ -763,184 +771,9 @@ type LocalNode = {
 };
 
 const FINALS_NODES_LOCAL: readonly LocalNode[] = [
-  {
-    id: 'opening',
-    kind: 'activity',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: false,
-    slots: null,
-    title: '决赛开幕式',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-L1A',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'finals-seed', seed: 'L1' },
-      { kind: 'finals-seed', seed: 'L4' },
-    ],
-    title: '八强败者组首轮 A · L1 对 L4',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-L1B',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'finals-seed', seed: 'L2' },
-      { kind: 'finals-seed', seed: 'L3' },
-    ],
-    title: '八强败者组首轮 B · L2 对 L3',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-W1A',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'finals-seed', seed: 'W1' },
-      { kind: 'finals-seed', seed: 'W4' },
-    ],
-    title: '八强胜者组 A · W1 对 W4',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-W1B',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'finals-seed', seed: 'W2' },
-      { kind: 'finals-seed', seed: 'W3' },
-    ],
-    title: '八强胜者组 B · W2 对 W3',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-L2A',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'loser', seriesId: 'F-W1A' },
-      { kind: 'winner', seriesId: 'F-L1B' },
-    ],
-    title: '败者组第二轮 A · 第 3 场败者 对 第 2 场胜者',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-L2B',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'loser', seriesId: 'F-W1B' },
-      { kind: 'winner', seriesId: 'F-L1A' },
-    ],
-    title: '败者组第二轮 B · 第 4 场败者 对 第 1 场胜者',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-LSF',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'winner', seriesId: 'F-L2A' },
-      { kind: 'winner', seriesId: 'F-L2B' },
-    ],
-    title: '半决赛败者组',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-WSF',
-    kind: 'match',
-    format: 'BO1',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'winner', seriesId: 'F-W1A' },
-      { kind: 'winner', seriesId: 'F-W1B' },
-    ],
-    title: '半决赛胜者组',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-QUAL',
-    kind: 'match',
-    format: 'BO3',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'winner', seriesId: 'F-LSF' },
-      { kind: 'loser', seriesId: 'F-WSF' },
-    ],
-    title: '总决赛名额争夺战（BO3）',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'F-GF',
-    kind: 'match',
-    format: 'BO3',
-    stage: 'finals',
-    countsForStandings: true,
-    slots: [
-      { kind: 'winner', seriesId: 'F-WSF' },
-      { kind: 'winner', seriesId: 'F-QUAL' },
-    ],
-    title: '总决赛（BO3）',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'showcase-final-1',
-    kind: 'match',
-    format: 'BO2',
-    stage: 'showcase',
-    countsForStandings: false,
-    slots: null,
-    title: '展示组正式演出 · 抽签第 1 队',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'showcase-final-2',
-    kind: 'match',
-    format: 'BO2',
-    stage: 'showcase',
-    countsForStandings: false,
-    slots: null,
-    title: '展示组正式演出 · 抽签第 2 队',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'showcase-final-3',
-    kind: 'match',
-    format: 'BO2',
-    stage: 'showcase',
-    countsForStandings: false,
-    slots: null,
-    title: '展示组正式演出 · 抽签第 3 队',
-    showcaseTeamId: null,
-  },
-  {
-    id: 'exhibition',
-    kind: 'match',
-    format: 'BO2',
-    stage: 'finals',
-    countsForStandings: false,
-    slots: null,
-    title: '表演赛（15 分钟 BO2，不计正式排名）',
-    showcaseTeamId: null,
-  },
+  { id: 'opening', kind: 'activity', format: 'BO1', stage: 'finals', countsForStandings: false, slots: null, title: '决赛开幕式', showcaseTeamId: null },
+  ...FINALS_NODES.map((node): LocalNode => ({
+    id: node.id, kind: 'match', format: node.format, stage: node.stage,
+    countsForStandings: node.countsForStandings, slots: node.slots, title: node.label, showcaseTeamId: null,
+  })),
 ];

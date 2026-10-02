@@ -61,12 +61,18 @@ jobs:
           E2E_SKIP_BUILD: '1'
         run: npm run test:e2e
 
+      - name: 本地维护工作台端到端测试（Chromium 与 WebKit）
+        # 使用临时 Git 仓库和独立本机 API，不改动正式源或公开构建。
+        run: npx playwright test --config playwright.operator.config.ts
+
       - name: 上传 Playwright 报告（失败时）
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/operator/
           retention-days: 7
 
       - name: 上传构建产物

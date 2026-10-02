@@ -5,41 +5,19 @@
 
 - **仓库**：<https://github.com/ABlyh-LEO/RG26>
 - **目标地址**：<https://ablyh-leo.github.io/RG26/>
-- **当前修复状态**：CI、Pages 路径及移动晋级图修复已完成本地检查；结果见[2026-10-02 验收记录](acceptance/2026-10-02-ci-mobile.md)。提交推送后的远端状态请查看 [GitHub Actions](https://github.com/ABlyh-LEO/RG26/actions)。
+- **验收证据**：[界面与更新流程升级验收](acceptance/2026-10-02-experience-upgrade.md)、[维护工作台验收](acceptance/operator-upgrade.md)。远端运行状态以对应提交的 [GitHub Actions](https://github.com/ABlyh-LEO/RG26/actions) 和公开快照为准。
 
 ---
 
-## 0 当前网络环境（本机实测）
+## 0 网络与代理
 
-推送这个仓库时遇到的实际情况，供换机器时参考：
+工作台和兼容的 `npm run publish` 命令复用已有 Git 登录，不保存仓库令牌。运行时依次读取目标 URL 对应的 Git 代理配置、进程代理环境变量；Windows 下还会检查当前系统代理，并在需要时按目标地址解析系统自动配置/PAC。
 
-| 方式 | 实测 | 说明 |
-| --- | --- | --- |
-| SSH `git@github.com:22` | ❌ 连接超时 | 端口被网络阻断 |
-| SSH over 443（`ssh.github.com:443`） | ⚠️ 可连通 | 但密钥未授权（`Permission denied (publickey)`） |
-| **HTTPS + 代理** | ✅ **可用** | 本仓库已配置，`push` 成功 |
-| GitHub REST API | ❌ 403 | 无法用 API 读 Actions 状态，需在网页查看 |
+检测到的系统代理只传给本次子进程，不写入仓库、全局 Git 或系统设置，也不内置任何个人代理端口。Git 中明确禁用代理的配置会被尊重。普通终端直接执行 `git push` / `git pull` 仍遵循该终端自己的配置，不保证继承工作台的代理选择。
 
-本仓库已设置代理，后续 `push` / `pull` **无需额外参数**：
+换电脑或网络后，先检查当前 Git 凭据与网络条件。连接失败时在任务日志查看具体阶段；已提交的发布可在网络恢复后重推同一提交。重试不保证能解决配置错误或网络限制。
 
-```bash
-git config --get http.proxy      # http://127.0.0.1:7890
-git config --get https.proxy     # http://127.0.0.1:7890
-```
-
-代理偶发 `SSL_ERROR_SYSCALL`，**重试即可成功**。
-
-> 换到无代理网络时清除：`git config --unset http.proxy && git config --unset https.proxy`
->
-> 若想改用 SSH，先把公钥（`~/.ssh/id_rsa.pub`）加到
-> <https://github.com/settings/keys>，并在 `~/.ssh/config` 里加：
-> ```
-> Host github.com
->   HostName ssh.github.com
->   Port 443
->   User git
-> ```
-> 然后 `git remote set-url origin git@github.com:ABlyh-LEO/RG26.git`
+GitHub API 返回限流或暂不可访问时，工作台会显示“部署状态暂不可查询”，并继续核对公开快照。只有本次 revision 与 sourceCommit 同时匹配，才确认观众可见。首次网络排错和真实远端结果记录在对应验收文档中，不应当作其他机器的固定配置。
 
 ---
 
@@ -47,12 +25,12 @@ git config --get https.proxy     # http://127.0.0.1:7890
 
 | 项目 | 说明 |
 | --- | --- |
-| Node | 见 `.nvmrc`（当前为 24）。CI 使用同一版本。 |
-| 仓库 | <https://github.com/ABlyh-LEO/RG26> —— **已创建，`main` 已推送** |
+| Node | 支持 `>=22.12 <25`，推荐 `.nvmrc` 中的 Node 24；CI 使用 `.nvmrc`。Windows 启动器会先检查版本。 |
+| Git | 已安装且在 PATH 中可执行，已设置提交身份和远端访问权限。Windows 启动器会先检查可用性。 |
+| 仓库 | 已检出目标仓库，并核对 origin、main 分支和工作区状态。 |
 | 权限 | 能修改仓库 Settings → Pages |
 
-> 仓库已就绪，**§3.1 的初始化步骤已经完成**，你只需做 §3.2 起的两件事：
-> 启用 Pages（Source 选 GitHub Actions）并确认部署成功。
+已有仓库无需重复初始化；检查 Pages 的 Source 设置，并核对本次提交的部署结果。
 
 ---
 
@@ -109,7 +87,7 @@ E2E_SKIP_BUILD=1 E2E_BASE_URL=http://127.0.0.1:4173/test-repo/ npm run test:e2e
 
 ## 3 首次上线步骤
 
-### 3.1 初始化仓库并推送 —— ✅ 已完成
+### 3.1 初始化仓库并推送（仅新建仓库）
 
 ```bash
 git init
@@ -120,15 +98,12 @@ git remote add origin https://github.com/ABlyh-LEO/RG26.git
 git push -u origin main
 ```
 
-**实际结果**：`main` → commit `0ddbdc3ca8b0a7a0fc6ac5f8d765d2d61a364811`，
-已用 `git ls-remote` 核对远端一致。共 87 个文件。
-
 > `.gitignore` 已排除 `node_modules/`、`dist/`、`.npm-cache/`、`test-results/`。
 > `.gitattributes` 统一为 LF，避免 Windows 提交 CRLF 导致 CI 整文件差异。
 > `data/event.json` **必须提交**（它是正式输入）；
 > `public/data/event.json` 是生成产物，但也提交了，方便直接查看。
 
-### 3.2 启用 Pages —— ⏳ 需要你操作
+### 3.2 检查 Pages 设置
 
 打开 <https://github.com/ABlyh-LEO/RG26/settings/pages>，
 **Source 选择 `GitHub Actions`**。
@@ -156,6 +131,10 @@ Actions 页面应看到两个 job：
 
 - 首页可读且包含 `RoboGame2026`
 - `data/event.json` 可读、可解析、`schemaVersion === 1`
+- 公开 revision 与 build job 输出的目标 revision 完全一致
+- 公开 sourceCommit 与本次 `GITHUB_SHA` 完全一致
+
+检查使用 cache-bust，允许 CDN 在最多 180 秒内传播；网络、HTTP、结构或版本检查在预算内未通过时，工作流失败。GitHub 部署 action 成功不代替这一步核验。
 
 ### 3.5 手动核对实际 Pages 子路径
 
@@ -173,10 +152,10 @@ https://<owner>.github.io/<repo>/
 
 ### `ci.yml`（PR 与 main push）
 
-按顺序执行，任一失败即阻止合并：
+按顺序执行，任一失败会使检查失败；要强制阻止合并，须将该检查设为分支保护的必需检查：
 
 ```
-npm ci → typecheck → lint → test → validate:data → build → e2e
+npm ci → typecheck → lint → test → validate:data → build → 观众端 e2e → 维护端 e2e
 ```
 
 ### `deploy.yml`（main push 或手动）
@@ -201,32 +180,28 @@ npm ci → typecheck → lint → test → validate:data → build → e2e
 
 ## 5 数据发布流程
 
-日常发布见 [`OPERATOR_GUIDE.md`](OPERATOR_GUIDE.md) §9。要点：
+日常发布见 [维护者操作手册](operator-guide.md) §5。要点：
 
 ```
-本地录入 → 导出变更包 → npm run data:import → validate:data → commit → push → Actions 部署
+本地录入与自动保存草稿 → 核对累计变更 → 冻结观众预览 → 确认发布 → commit → push → Pages 部署 → 核对公开版本
 ```
 
 **关键区分：**
 
 | 事件 | 含义 |
 | --- | --- |
-| 导入成功 | 本机 `data/event.json` 已更新 |
+| 草稿已保存 | 输入已保存在 `.local/operator/`，观众尚不可见 |
 | commit 成功 | 本地历史已记录 |
 | push 成功 | 远端已收到 |
-| **Actions 部署成功** | **公开快照已生成并上传** |
-| **公开页面 revision 变化** | **观众已可见** |
+| Pages 部署 action 成功 | 产物已交给托管服务，继续检查公开版本 |
+| **公开 revision 与 sourceCommit 同时匹配本次发布** | **本次版本已可见** |
 
 ---
 
 ## 6 限制与预期
 
-来自 GitHub 官方文档的约束：
-
-- 发布的站点大小上限 **1 GB**，月带宽软限制 **100 GB**
-  —— 本项目远低于此规模（公开数据约 120 KB，JS 约 93 KB gzip）。
-- 使用**自定义 Actions 工作流**可避免 Pages 默认每小时 10 次构建软限制的适用情形，
-  但仍存在**部署耗时、平台配额和缓存传播**。
+- GitHub Pages 提供静态托管；本项目的维护服务在本机运行。
+- 部署需要构建、检查、上传和缓存传播，平台配额以实际账户与 GitHub 规定为准。
 - **不能承诺固定延迟**。观众页面每 60 秒检查一次新数据，因此「确认成绩后几分钟内更新」是合理预期，
   而不是秒级。
 
@@ -251,10 +226,11 @@ npm ci → typecheck → lint → test → validate:data → build → e2e
 | 报错 | 原因 | 处理 |
 | --- | --- | --- |
 | `validate:data` 失败 | 数据有错误 | 本地运行 `npm run validate:data` 查看具体条目并修复 |
-| 「存在未处置的更正」 | `corrections` 有 `pending` | 完成处置流程（见操作手册 §10） |
+| 「存在未处置的更正」 | `corrections` 有 `pending` | 完成处置流程（见操作手册 §3） |
 | 「公开产物中不应包含维护模式入口」 | 构建配置被改坏 | 检查 `vite.config.ts` 的 `input` 逻辑 |
 | `test` 失败 | 领域算法回归 | 本地 `npm run test` 定位 |
 | Pages 权限错误 | 权限或 environment 配置不对 | 确认 `permissions` 与 `environment: github-pages` |
+| 「180 秒内未确认本次部署」 | 网络、CDN 或公开版本尚不匹配 | 核对日志中的 revision/sourceCommit、实际 Pages 地址和 HTTP 状态；处理后重跑，不绕过双字段检查 |
 
 ### 深链刷新出现 GitHub 404
 
@@ -273,7 +249,7 @@ npm ci → typecheck → lint → test → validate:data → build → e2e
 
 ### 回滚
 
-见操作手册 §12。**用新 commit 发布，不要 reset 历史。**
+见 [操作手册 §7](operator-guide.md)。**用新 commit 发布，不要 reset 历史。**
 
 ---
 
@@ -309,4 +285,4 @@ npm ci → typecheck → lint → test → validate:data → build → e2e
 3. 公开 bundle 中不含维护界面独有标识
    （由 e2e 测试「公开产物中不包含维护模式界面代码」验证）。
 4. 维护工具只监听 `127.0.0.1`，公开站点**没有任何写入能力**。
-5. **不靠前端密码假装鉴权** —— 靠的是构建期剔除，而不是运行时判断。
+5. 本地写入还会校验 Host、Origin、会话 token 和编辑会话；公开站点不提供这些 API。

@@ -289,6 +289,7 @@ export function buildConnectorPath(
   y2: number,
   /** 同一条通道内的车道号（0 起）。多条线共用一个 midX 时会重叠成一条。 */
   lane = 0,
+  totalLanes = MAX_LANES + 1,
 ): string {
   // 同一行：直接连通，不要折线
   if (Math.abs(y2 - y1) < 0.5 && x2 > x1) {
@@ -296,7 +297,7 @@ export function buildConnectorPath(
   }
 
   if (x2 > x1 + 8) {
-    const midX = (x1 + x2) / 2 + laneOffset(x2 - x1, lane);
+    const midX = (x1 + x2) / 2 + laneOffset(x2 - x1, lane, totalLanes);
     return `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
   }
 
@@ -321,12 +322,13 @@ export const MAX_LANES = 6;
  *
  * 因此用**严格单调**的铺开：车道 0 在中线，之后左右交替且距离递增。
  */
-export function laneOffset(span: number, lane: number): number {
+export function laneOffset(span: number, lane: number, totalLanes = MAX_LANES + 1): number {
   if (lane <= 0) return 0;
   const usable = Math.max(0, span - 12);
-  const step = usable / (MAX_LANES + 1);
+  const capacity = Math.max(MAX_LANES + 1, totalLanes);
+  const step = usable / capacity;
   if (step <= 0) return 0;
-  const slot = Math.min(lane, MAX_LANES);
+  const slot = Math.min(lane, capacity - 1);
   const rank = Math.ceil(slot / 2);
   const sign = slot % 2 === 1 ? 1 : -1;
   return sign * Math.min(rank * step, usable / 2);

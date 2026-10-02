@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
        * 入口里。不指定 open 的话，跑 `npm run operator` 的人看到的
        * 是一个没有任何录入表单的公开页面，会以为维护工具坏了。
        *
-       * 见 docs/OPERATOR_GUIDE.md §1。
+       * 见 docs/operator-guide.md §1。
        */
       open: isOperator ? '/operator.html' : undefined,
     },

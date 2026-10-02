@@ -13,8 +13,8 @@ function fixture(withResult: boolean) {
       seeds, version: 1, publicationStatus: 'published',
       publishedAt: '2026-10-04T12:00:00+08:00', basisNote: '仅浏览器布局回归测试使用的合成种子',
     };
-    const series = event.finals.series.find((entry) => entry.id === 'F-L1A')!;
-    const [home, away] = [seeds.L1!, seeds.L4!];
+    const series = event.finals.series.find((entry) => entry.id === 'F-M1')!;
+    const [home, away] = [seeds.W1!, seeds.L1!];
     series.participantSnapshot = [home, away];
     series.executionStatus = 'finished';
     Object.assign(series.games[0]!, {
@@ -77,7 +77,7 @@ test('移动晋级图首次加载、横竖屏切换及横向滚动后保持对�
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  await expect(page.locator('.bracket__node')).toHaveCount(43);
+  await expect(page.locator('.bracket__node')).toHaveCount(47);
   await expectAligned(page);
 
   for (const [width, height] of [[844, 390], [360, 780], [1440, 900], [390, 844]] as const) {
@@ -99,13 +99,13 @@ test('移动晋级图收到成绩及长队名后重新测量，字体增大后�
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  await expect(page.locator('.bracket__node')).toHaveCount(43);
+  await expect(page.locator('.bracket__node')).toHaveCount(47);
   await expectAligned(page);
 
   snapshot = fixture(true);
   await page.getByRole('button', { name: '立即刷新', exact: true }).click();
-  await expect(page.locator('[data-node-id="F-L1A"] .bracket-card--done')).toHaveCount(1);
-  await expect(page.locator('[data-node-id="F-L1A"]')).toContainText('名字够长就一定会有人看队');
+  await expect(page.locator('[data-node-id="F-M1"] .bracket-card--done')).toHaveCount(1);
+  await expect(page.locator('[data-node-id="F-M1"]')).toContainText('名字够长就一定会有人看队');
   await expectAligned(page);
 
   // 模拟移动端字体设置/字体晚加载，只变内容尺寸，不触发 window.resize。

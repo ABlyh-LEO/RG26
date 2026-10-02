@@ -14,17 +14,24 @@
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdirSync, rmSync, cpSync, existsSync, statSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, relative, isAbsolute } from 'node:path';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const FAKE_REPO = 'rg26-test-repo';
+const FAKE_REPO = 'RG26';
 const PORT = 4181;
 const TMP = join(ROOT, '.tmp-subpath');
 const SERVE_ROOT = join(TMP, 'serve');
 const DIST = join(ROOT, 'dist-testrepo');
+
+function cleanTestDirectory(target: string): void {
+  const resolved = resolve(target);
+  const within = relative(ROOT, resolved);
+  if (![TMP, DIST].includes(resolved) || !within || within.startsWith('..') || isAbsolute(within)) throw new Error('测试清理目录超出工作区');
+  rmSync(resolved, { recursive: true, force: true });
+}
 
 let failures = 0;
 function check(label: string, ok: boolean, detail = ''): void {
@@ -63,8 +70,8 @@ function startServer(root: string, port: number): Promise<ReturnType<typeof crea
     try {
       const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
       const pathname = decodeURIComponent(url.pathname);
-      const relative = pathname.replace(/^\/+/, '');
-      let filePath = join(root, relative);
+      const requestedPath = pathname.replace(/^\/+/, '');
+      let filePath = join(root, requestedPath);
 
       // 目录请求映射到 index.html（模拟静态托管行为）。
       // 注意：必须先用 statSync 判断，不能对目录调用 readFile。
@@ -73,7 +80,8 @@ function startServer(root: string, port: number): Promise<ReturnType<typeof crea
       }
 
       // 越界保护
-      if (!resolve(filePath).startsWith(resolve(root))) {
+      const within = relative(resolve(root), resolve(filePath));
+      if (within.startsWith('..') || isAbsolute(within)) {
         res.writeHead(403).end('forbidden');
         return;
       }
@@ -95,7 +103,7 @@ async function main(): Promise<void> {
   check('构建完成', existsSync(join(DIST, 'index.html')));
 
   console.log('\n=== 2. 模拟 Pages 目录结构 ===');
-  rmSync(TMP, { recursive: true, force: true });
+  cleanTestDirectory(TMP);
   mkdirSync(join(SERVE_ROOT, FAKE_REPO), { recursive: true });
   cpSync(DIST, join(SERVE_ROOT, FAKE_REPO), { recursive: true });
   check(`${FAKE_REPO}/ 下已放置站点`, existsSync(join(SERVE_ROOT, FAKE_REPO, 'index.html')));
@@ -103,7 +111,7 @@ async function main(): Promise<void> {
   const server = await startServer(SERVE_ROOT, PORT);
   const base = `http://127.0.0.1:${PORT}/${FAKE_REPO}/`;
 
-  const browser = await chromium.launch({ channel: process.env.E2E_CHROMIUM_CHANNEL ?? 'msedge' });
+  const browser = await chromium.launch({ ...(process.env.E2E_CHROMIUM_CHANNEL ? { channel: process.env.E2E_CHROMIUM_CHANNEL } : {}) });
   const page = await browser.newPage();
 
   const badResponses: string[] = [];
@@ -121,10 +129,10 @@ async function main(): Promise<void> {
   try {
     console.log('\n=== 3. 子路径首页加载 ===');
     await page.goto(base, { waitUntil: 'networkidle' });
-    await page.waitForSelector('.meta-bar', { timeout: 20_000 }).catch(() => {});
+    await page.waitForSelector('main[data-ready="true"]', { timeout: 20_000 });
     check('元信息条可见（数据加载成功）', (await page.locator('.meta-bar').count()) === 1);
     const h1 = await page.locator('h1').first().innerText().catch(() => '');
-    check('首页标题渲染', h1.includes('总览'), `h1="${h1}"`);
+    check('首页标题渲染', h1.includes('赛场动态'), `h1="${h1}"`);
 
     console.log('\n=== 4. 所有资源与数据都走子路径 ===');
     const dataReqs = observed.filter((r) => r.url.includes('/data/'));
@@ -135,18 +143,18 @@ async function main(): Promise<void> {
 
     console.log('\n=== 5. 深链刷新（hash 路由不应 404） ===');
     await page.goto(`${base}#/teams/competitive-18`, { waitUntil: 'networkidle' });
-    await page.waitForSelector('.meta-bar', { timeout: 20_000 }).catch(() => {});
+    await page.waitForSelector('main[data-ready="true"]', { timeout: 20_000 });
     const teamH1 = await page.locator('h1').first().innerText().catch(() => '');
     check('队伍深链首次打开', teamH1.includes('Uniforest'), `h1="${teamH1}"`);
     await page.reload({ waitUntil: 'networkidle' });
-    await page.waitForSelector('.meta-bar', { timeout: 20_000 }).catch(() => {});
+    await page.waitForSelector('main[data-ready="true"]', { timeout: 20_000 });
     const afterReload = await page.locator('h1').first().innerText().catch(() => '');
     check('深链刷新后仍可用', afterReload.includes('Uniforest'), `h1="${afterReload}"`);
 
     console.log('\n=== 6. 全部路由在子路径下可用 ===');
     for (const route of ['/', '/schedule', '/progress?view=journey', '/progress?view=qualification', '/progress?view=swiss', '/progress?view=finals', '/teams', '/rules']) {
       await page.goto(`${base}#${route}`, { waitUntil: 'networkidle' });
-      await page.waitForSelector('.meta-bar', { timeout: 20_000 }).catch(() => {});
+      await page.waitForSelector('main[data-ready="true"]', { timeout: 20_000 });
       const title = await page.locator('h1').first().innerText().catch(() => '');
       check(`${route} 渲染`, title.length > 0, `h1="${title}"`);
     }
@@ -157,8 +165,8 @@ async function main(): Promise<void> {
   } finally {
     await browser.close();
     await new Promise((res) => server.close(res));
-    rmSync(TMP, { recursive: true, force: true });
-    rmSync(DIST, { recursive: true, force: true });
+    cleanTestDirectory(TMP);
+    cleanTestDirectory(DIST);
   }
 
   console.log(

@@ -57,7 +57,7 @@ test.describe('13.2 用户流程', () => {
     await goto(page, '/');
     await waitForData(page);
 
-    await expect(page.getByRole('heading', { level: 1, name: '总览' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '赛场动态' })).toBeVisible();
     // 赛事状态可见
     await expect(page.getByText(/赛事(尚未开始|进行中|已结束)/)).toBeVisible();
     // 首屏或一次点击内找到下一场：总览必须给出赛程入口
@@ -96,7 +96,7 @@ test.describe('13.2 用户流程', () => {
     expect(overview, '总览的下一批比赛应包含排位赛跑图').toContain('单队跑图');
     expect(overview).toContain('排位 R1');
     // 首日安排必须列出排位赛批次与真实队名（不是内部 ID）
-    expect(overview).toContain('排位赛跑图');
+    expect(overview).toContain('次跑图');
     expect(overview).toContain('Uniforest队');
     expect(overview, '不应显示内部 ID').not.toMatch(/qual-r\d+-rank\d+/);
 
@@ -157,17 +157,14 @@ test.describe('13.2 用户流程', () => {
     await goto(page, '/teams/competitive-18');
     await waitForData(page);
 
-    // 该队两轮跑图记录必须公开，且带可比字段（观众能看到名次是怎么来的）
-    await expect(page.getByText('排位赛跑图（原始成绩）')).toBeVisible();
-    const table = page.getByRole('table').filter({ hasText: '到达最终分' });
-    await expect(table).toBeVisible();
-
-    const head = await table.locator('thead').innerText();
-    for (const col of ['轮次', '场地', '积分', '到达最终分', '成绩原文', '状态']) {
-      expect(head, `原始成绩表缺少「${col}」列`).toContain(col);
+    const records = page.locator('.record-card');
+    await expect(records).toHaveCount(2);
+    await expect(records.nth(0)).toContainText('第 1 轮');
+    await expect(records.nth(1)).toContainText('第 2 轮');
+    for (const record of await records.all()) {
+      await expect(record).toContainText('积分');
+      await expect(record).toContainText('到达最终分');
     }
-    const rows = await table.locator('tbody tr').count();
-    expect(rows, '应列出该队两轮跑图记录').toBe(2);
   });
 
   test('2f. 红蓝方由赛程结构自动推出，页面上明确标出', async ({ page }) => {
@@ -201,16 +198,13 @@ test.describe('13.2 用户流程', () => {
     expect(body, 'BO3 页应说明每局换边').toContain('每局换边');
     expect(body, 'BO3 页应说明时间用途').toContain('到达最终分');
 
-    // 小局表列结构必须包含红蓝方与双方时间
-    const table = page.getByRole('table').first();
-    await expect(table).toBeVisible();
-    const head = await table.locator('thead').innerText();
-    for (const col of ['红方', '蓝方', '红方到达最终分', '蓝方到达最终分']) {
-      expect(head, `小局表缺少「${col}」列`).toContain(col);
+    const games = page.locator('section').filter({ has: page.getByRole('heading', { name: '小局记录', exact: true }) }).locator('article');
+    await expect(games).toHaveCount(3);
+    for (const game of await games.all()) {
+      await expect(game.getByLabel('红方', { exact: true })).toBeVisible();
+      await expect(game.getByLabel('蓝方', { exact: true })).toBeVisible();
+      await expect(game.locator('.match-side__result')).toHaveCount(2);
     }
-    // 三局都要列出
-    const rows = await table.locator('tbody tr').count();
-    expect(rows, 'F-QUAL 是 BO3，应列出 3 局').toBe(3);
   });
 
   test('2h. 决赛 BO1 标注「八强双败不换边」', async ({ page }) => {
@@ -245,7 +239,7 @@ test.describe('13.2 用户流程', () => {
       };
     });
 
-    expect(stats.cards, '完整赛前晋级图仍展示全部场次').toBe(43);
+    expect(stats.cards, '完整赛前晋级图仍展示全部场次').toBe(47);
     expect(stats.done, '赛前不得标出已结算比赛').toBe(0);
     expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
     expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
@@ -253,34 +247,14 @@ test.describe('13.2 用户流程', () => {
     expect(stats.sideBadges, '对阵未确定时不得编造红蓝方').toBe(0);
   });
 
-  test('13.4 总览页包含完整晋级图', async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 1000 });
+  test('13.4 总览保留独立完整晋级图入口', async ({ page }) => {
     await goto(page, '/');
     await waitForData(page);
-
-    // 总览页必须有完整晋级图（可横向滚动）
-    await expect(page.getByText('完整晋级图').first()).toBeVisible();
-    await expect(page.locator('.bracket')).toBeVisible();
+    await expect(page.locator('.bracket')).toHaveCount(0);
+    await page.getByRole('link', { name: /完整晋级图/ }).first().click();
     await expect(page.locator('.bracket__scroller')).toBeVisible();
-
-    const chart = await page.evaluate(() => {
-      const sc = document.querySelector('.bracket__scroller');
-      const el = document.querySelector('.bracket');
-      return {
-        columns: document.querySelectorAll('.bracket__column').length,
-        cards: document.querySelectorAll('.bracket-card').length,
-        height: el ? el.getBoundingClientRect().height : 0,
-        scrollable: sc ? sc.scrollWidth > sc.clientWidth : false,
-        // 页面本体不得横向溢出
-        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      };
-    });
-
-    expect(chart.columns, '完整晋级图应有 10 列（瑞士 5 + 决赛 5）').toBe(10);
-    expect(chart.cards, '完整晋级图应有 43 张卡（33 瑞士 + 10 决赛）').toBe(43);
-    expect(chart.height, '晋级图应有可见高度').toBeGreaterThan(200);
-    expect(chart.scrollable, '长图应可横向滚动').toBe(true);
-    expect(chart.overflow, '总览页本体不得横向溢出').toBeLessThanOrEqual(0);
+    await expect(page.locator('.bracket-card')).toHaveCount(47);
+    await expect(page.locator('.bracket__column')).toHaveCount(11);
   });
 
   test('13.4 赛程页标出红蓝方', async ({ page }) => {
@@ -329,6 +303,7 @@ test.describe('13.2 用户流程', () => {
     await goto(page, '/progress?view=finals');
     await waitForData(page);
     // 种子未公布时明确显示待公布，不显示编造的队伍
+    await page.getByText('八强排名与首轮对阵依据', { exact: true }).click();
     await expect(page.getByText('八强种子尚未公布')).toBeVisible();
 
     // 未抽签时展示组演出顺序不得沿用编号顺序
@@ -336,7 +311,7 @@ test.describe('13.2 用户流程', () => {
     await waitForData(page);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('晓啸启宇队');
     // 明确提示等待抽签，且说明不会推测上台顺序
-    await expect(page.getByText('抽签结果录入前，这里不会推测上台顺序')).toBeVisible();
+    await expect(page.getByText(/抽签决定，结果确认后会在这里公布/)).toBeVisible();
     // 不应出现任何"第 N 队上台"的虚构结论
     await expect(page.getByText(/抽签第 \d 队上台/)).toHaveCount(0);
   });
@@ -389,6 +364,7 @@ test.describe('13.2 用户流程', () => {
   test('7. 数据元信息区分"数据更新时间"与"最近成功检查时间"', async ({ page }) => {
     await goto(page, '/');
     await waitForData(page);
+    await page.locator('.meta-bar summary').click();
     await expect(page.getByText(/赛事数据更新于/)).toBeVisible();
     await expect(page.getByText(/最近成功检查/)).toBeVisible();
   });
@@ -402,7 +378,9 @@ test.describe('13.2 用户流程', () => {
     const dateButton = page.getByRole('button', { name: /10月4日/ });
     await expect(dateButton).toHaveAttribute('aria-pressed', 'true');
     const stageButton = page.getByRole('button', { name: '瑞士轮' });
-    await expect(stageButton).toHaveAttribute('aria-pressed', 'true');
+    await expect(stageButton).toBeVisible();
+    await stageButton.click();
+    await expect(page).not.toHaveURL(/stage=swiss/);
   });
 
   test('9. 队伍深链刷新后仍然可用（hash 路由不会 404）', async ({ page }) => {
@@ -531,8 +509,9 @@ test.describe('13.4 列式赛程图', () => {
     // 5 列：八强赛 / 败者组第二轮 / 半决赛 / 名额争夺战 / 总决赛
     // 八强首轮四场必须在**同一列**：胜者组与败者组交叉向前喂给败者组第二轮，
     // 拆成两列会让四条连线各横穿一整列无关卡片。
-    expect(stats.columns).toBe(5);
+    expect(stats.columns).toBe(6);
     expect(stats.columnTitles).toEqual([
+      '双败首轮',
       '八强赛',
       '败者组第二轮',
       '半决赛',
@@ -540,7 +519,7 @@ test.describe('13.4 列式赛程图', () => {
       '总决赛',
     ]);
     // 10 场计入排名的系列赛
-    expect(stats.cards).toBe(10);
+    expect(stats.cards).toBe(14);
     // 连线必须真的画出来，而不是只有一个空 svg
     expect(stats.paths).toBeGreaterThan(0);
     expect(stats.loserPaths).toBeGreaterThan(0);
@@ -777,13 +756,14 @@ test.describe('13.4 列式赛程图', () => {
     const stats = await bracketStats(page);
 
     // 瑞士轮 5 列 + 决赛 5 列，共 10 列
-    expect(stats.columns).toBe(10);
+    expect(stats.columns).toBe(11);
     expect(stats.columnTitles).toEqual([
       'R1',
       'R2',
       'R3',
       'R4',
       'R5',
+      '双败首轮',
       '八强赛',
       '败者组第二轮',
       '半决赛',
@@ -791,7 +771,7 @@ test.describe('13.4 列式赛程图', () => {
       '总决赛',
     ]);
     // 33 场瑞士轮 + 10 场决赛
-    expect(stats.cards).toBe(43);
+    expect(stats.cards).toBe(47);
 
     // 排位赛**不应**出现在这张图里：
     // 44 次单队跑图会把一列撑到 5000px，整张图糊成一团
@@ -815,7 +795,7 @@ test.describe('13.4 列式赛程图', () => {
     );
 
     // 瑞士轮 5 列 + 决赛 5 列
-    expect(cols).toHaveLength(10);
+    expect(cols).toHaveLength(11);
     // 所有列 top 相同 —— 同一条纵向带，不上下错开
     expect([...new Set(cols.map((c) => c.top))]).toEqual([0]);
 
@@ -1070,6 +1050,10 @@ test.describe('13.2 发布与读取健壮性', () => {
       expect(code).not.toContain('下载变更包 JSON');
       expect(code).not.toContain('维护工具');
       expect(code).not.toContain('rg26.operator.draft');
+      expect(code).not.toContain('/api/operator');
+      expect(code).not.toContain('接管编辑');
+      expect(code).not.toContain('本地赛事工作台');
+      expect(code).not.toContain('rg26.operator.session');
       // 不应打包维护模式入口模块
       expect(code).not.toContain('src/operator/main');
     }

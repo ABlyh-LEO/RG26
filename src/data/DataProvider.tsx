@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { publicSnapshotSchema, type PublicSnapshot } from '../domain/schema';
 import { deriveEvent, type DerivedEvent } from './view-model';
+import { describeEventUpdate } from './updates';
 import {
   DataFetchError,
   SnapshotPoller,
@@ -50,6 +51,8 @@ export interface DataState {
   /** 首次失败且无缓存。 */
   fatal: boolean;
   refresh: () => void;
+  updateSummary: string | null;
+  dismissUpdate: () => void;
 }
 
 const DataContext = createContext<DataState | null>(null);
@@ -73,9 +76,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [lastSuccessAt, setLastSuccessAt] = useState<string | null>(null);
   const [lastAttemptAt, setLastAttemptAt] = useState<string | null>(null);
   const [fatal, setFatal] = useState(false);
+  const [updateSummary, setUpdateSummary] = useState<string | null>(null);
+  const dismissUpdate = useCallback(() => setUpdateSummary(null), []);
 
   // 用 ref 保存最新 revision，避免 tick 闭包读到旧值。
   const revisionRef = useRef<string | null>(null);
+  const snapshotRef = useRef<PublicSnapshot | null>(null);
+  const checkingRef = useRef(false);
   const storageRef = useRef<Storage | null>(null);
 
   useEffect(() => {
@@ -83,6 +90,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const check = useCallback(async (): Promise<void> => {
+    if (checkingRef.current) return;
+    checkingRef.current = true;
     setRefreshing(true);
     setLastAttemptAt(new Date().toISOString());
     try {
@@ -95,8 +104,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
 
       // revision 变化才替换赛事内容；否则只更新发布元信息。
-      if (revisionRef.current !== next.revision || snapshot === null) {
+      const previous = snapshotRef.current;
+      if (revisionRef.current !== next.revision || previous === null) {
+        if (previous) setUpdateSummary(describeEventUpdate(previous.data, next.data));
         revisionRef.current = next.revision;
+        snapshotRef.current = next;
         setSnapshot(next);
       } else {
         setSnapshot((prev) => (prev === null ? next : { ...prev, builtAt: next.builtAt, sourceCommit: next.sourceCommit }));
@@ -118,6 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             const parsed = isValidSnapshot(JSON.parse(cached.text));
             if (parsed.ok) {
               revisionRef.current = parsed.value.revision;
+              snapshotRef.current = parsed.value;
               setSnapshot(parsed.value);
               setFromCache(true);
               setFatal(false);
@@ -134,10 +147,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setFromCache(true);
       }
     } finally {
+      checkingRef.current = false;
       setRefreshing(false);
       setLoading(false);
     }
-  }, [snapshot]);
+  }, []);
 
   // 首次加载：先尝试网络，失败回落到缓存。
   useEffect(() => {
@@ -150,6 +164,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           const parsed = isValidSnapshot(JSON.parse(cached.text));
           if (parsed.ok) {
             revisionRef.current = parsed.value.revision;
+            snapshotRef.current = parsed.value;
             setSnapshot(parsed.value);
             setFromCache(true);
             setLoading(false);
@@ -211,7 +226,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [check]);
 
-  const derived = useMemo(() => (snapshot ? deriveEvent(snapshot.data) : null), [snapshot]);
+  const event = snapshot?.data;
+  const derived = useMemo(() => (event ? deriveEvent(event) : null), [event]);
 
   const value = useMemo<DataState>(
     () => ({
@@ -226,10 +242,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
       lastAttemptAt,
       fatal,
       refresh,
+      updateSummary,
+      dismissUpdate,
     }),
-    [snapshot, derived, loading, refreshing, failure, fromCache, lastSuccessAt, lastAttemptAt, fatal, refresh],
+    [snapshot, derived, loading, refreshing, failure, fromCache, lastSuccessAt, lastAttemptAt, fatal, refresh, updateSummary, dismissUpdate],
   );
 
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+}
+
+/** 维护预览使用同一观众页面；不启动网络、缓存写入或自动刷新。 */
+export function SnapshotProvider({ snapshot, children }: { snapshot: PublicSnapshot; children: ReactNode }) {
+  const derived = useMemo(() => deriveEvent(snapshot.data), [snapshot]);
+  const value = useMemo<DataState>(() => ({
+    snapshot, derived, loading: false, refreshing: false, failure: null, fromCache: false,
+    contentUpdatedAt: snapshot.data.event.contentUpdatedAt, lastSuccessAt: snapshot.builtAt,
+    lastAttemptAt: snapshot.builtAt, fatal: false, refresh: () => {}, updateSummary: null, dismissUpdate: () => {},
+  }), [snapshot, derived]);
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
 

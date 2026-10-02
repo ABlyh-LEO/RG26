@@ -1,10 +1,10 @@
 /**
- * 决赛 BO1 录入测试（第 1–8 场）。
+ * 决赛 BO1 录入测试（第 1–12 场）。
  *
  * 这些测试锁定的是一个**曾经完全缺失的入口**：
- * 决赛 10 场里前 8 场是 BO1、后 2 场是 BO3。
+ * 决赛 14 场里前 12 场是 BO1、后 2 场是 BO3。
  * `applyBo1Entry` 只查瑞士轮，`applyBo3Game` 明确拒绝非 BO3/BO2，
- * 于是这 8 场没有任何录入途径 —— 决赛根本推不下去。
+ * 于是这 12 场没有任何录入途径 —— 决赛根本推不下去。
  */
 import { describe, expect, it } from 'vitest';
 import { applyFinalsBo1, applyBo3Game, seriesWins } from '../../src/operator/draft';
@@ -27,7 +27,7 @@ function withSeeds(ev: EventFile): EventFile {
     L3: competitive[6]!.id,
     L4: competitive[7]!.id,
   };
-  return {
+  let seeded: EventFile = {
     ...ev,
     finals: {
       ...ev.finals,
@@ -40,6 +40,15 @@ function withSeeds(ev: EventFile): EventFile {
       },
     },
   };
+  // 下午各组必须由上午双败首轮产生，不能直接把瑞士轮排名当作胜负组。
+  for (let i = 1; i <= 4; i += 1) {
+    const id = `F-M${i}`;
+    const [home, away] = players(seeded, id)!;
+    const result = applyFinalsBo1(seeded, entry(id, home, away, home));
+    if (!result.ok) throw new Error(result.messages.join('；'));
+    seeded = result.event;
+  }
+  return seeded;
 }
 
 const resolveP = (ev: EventFile) => resolveFinals(ev.finals.series, ev.finals.seeding);
@@ -53,7 +62,7 @@ function players(ev: EventFile, id: string): [string, string] | null {
   return [a.teamId, b.teamId];
 }
 
-const EIGHT_BO1 = ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
+const BO1_SERIES = ['F-M1', 'F-M2', 'F-M3', 'F-M4', 'F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'];
 
 /**
  * 构造一次决赛 BO1 录入。
@@ -84,8 +93,8 @@ function entry(
 }
 
 describe('决赛 BO1 录入', () => {
-  it('第 1–8 场都是 BO1，且计数入排名', () => {
-    for (const id of EIGHT_BO1) {
+  it('第 1–12 场都是 BO1，且计数入排名', () => {
+    for (const id of BO1_SERIES) {
       const s = BASE.finals.series.find((x) => x.id === id)!;
       expect(s.format, `${id} 应为 BO1`).toBe('BO1');
       expect(s.countsForStandings, `${id} 应计入排名`).toBe(true);

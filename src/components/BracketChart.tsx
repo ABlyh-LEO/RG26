@@ -63,6 +63,8 @@ export interface BracketChartProps {
   ariaLabel: string;
   /** 图例。 */
   legend?: ReactNode;
+  highlightedNodeIds?: string[];
+  showStageNavigation?: boolean;
 }
 
 /**
@@ -118,6 +120,8 @@ export function BracketChart({
   minColumnWidth = 190,
   ariaLabel,
   legend,
+  highlightedNodeIds = [],
+  showStageNavigation = false,
 }: BracketChartProps) {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -291,6 +295,20 @@ export function BracketChart({
      * 用起点 x 当 key 会让它们各自从 0 开始、撞在同一个 x 上。
      */
     const laneCount = new Map<number, number>();
+    // 新赛程首轮有八条出线；瑞士轮公布后更多。容量按实际通道需求计算。
+    const laneCapacity = new Map<number, number>();
+    for (const connection of connections) {
+      const from = columnOfNode.get(connection.fromId);
+      const to = columnOfNode.get(connection.toId);
+      if (from === undefined || to === undefined) continue;
+      for (let col = from; col < to; col += 1) {
+        const left = columnBounds[col]?.right;
+        const right = columnBounds[col + 1]?.left;
+        if (left === undefined || right === undefined) continue;
+        const key = Math.round((left + right) / 2);
+        laneCapacity.set(key, (laneCapacity.get(key) ?? 0) + 1);
+      }
+    }
 
     /**
      * 中间列 k 里离目标高度 targetY 最近的**卡片空隙**。
@@ -554,7 +572,7 @@ export function BracketChart({
           const laneKeyL = Math.round(prevR + gapL / 2);
           const usedL = laneCount.get(laneKeyL) ?? 0;
           laneCount.set(laneKeyL, usedL + 1);
-          const enterX = prevR + gapL / 2 + laneOffset(gapL, usedL);
+          const enterX = prevR + gapL / 2 + laneOffset(gapL, usedL, laneCapacity.get(laneKeyL));
           pts.push(`H ${round2(enterX)}`);
 
           // 穿越高度：沿 y1→y2 的直线按列序比例插值，取最近的可穿越空档。
@@ -577,7 +595,7 @@ export function BracketChart({
         laneKey = Math.round(center);
         const used = laneCount.get(laneKey) ?? 0;
         laneCount.set(laneKey, used + 1);
-        const laneX = center + laneOffset(gap, used);
+        const laneX = center + laneOffset(gap, used, laneCapacity.get(laneKey));
 
         /**
          * 在通道里竖直对齐到目标高度。
@@ -618,7 +636,7 @@ export function BracketChart({
         } else {
           const fromY = reserveHorizontal(center, y1, CLEAR_STEP);
           const toY = reserveHorizontal(center, y2, CLEAR_STEP);
-          d = buildConnectorPath(x1, fromY, x2, toY, used);
+          d = buildConnectorPath(x1, fromY, x2, toY, used, laneCapacity.get(laneKey));
         }
       }
 
@@ -651,7 +669,13 @@ export function BracketChart({
   const maxHeight = Math.max(layout.totalHeight, measuredHeight, FALLBACK_HEIGHT);
 
   return (
-    <div className="bracket">
+    <div className={`bracket${highlightedNodeIds.length ? ' bracket--highlighting' : ''}`}>
+      {showStageNavigation ? <div className="round-tabs" role="group" aria-label="定位晋级图阶段">
+        {columns.map((col, index) => <button type="button" className="btn" key={col.key} onClick={() => {
+          // 阶段跳转立即定位，避免长距离动画被横向触摸或 WebKit 滚动中断。
+          scrollerRef.current?.scrollTo({ left: index * (columnWidth + GAP), behavior: 'instant' });
+        }}>{col.title}</button>)}
+      </div> : null}
       {legend ? <div className="bracket__legend">{legend}</div> : null}
 
       <div
@@ -686,7 +710,7 @@ export function BracketChart({
             {paths.map((p) => (
               <path
                 key={p.key}
-                className={`bracket__link bracket__link--${p.via}`}
+                className={`bracket__link bracket__link--${p.via}${highlightedNodeIds.includes(p.fromId) && highlightedNodeIds.includes(p.toId) ? ' is-highlighted' : ''}`}
                 data-from-id={p.fromId}
                 data-to-id={p.toId}
                 d={p.d}
@@ -707,6 +731,7 @@ export function BracketChart({
             <div
               key={col.key}
               className="bracket__column"
+              data-column-key={col.key}
               style={{
                 left: ci * (columnWidth + GAP),
                 width: columnWidth,
@@ -743,7 +768,7 @@ export function BracketChart({
                     <div
                       key={node.id}
                       data-node-id={node.id}
-                      className="bracket__node"
+                      className={`bracket__node${highlightedNodeIds.includes(node.id) ? ' is-highlighted' : ''}`}
                       style={{ top }}
                     >
                       <NodeCard content={content} showSecondary={showSecondary} linkable={Boolean(content.to)} />

@@ -37,17 +37,29 @@ export interface FinalsNodeSpec {
 }
 
 export const FINALS_NODES: readonly FinalsNodeSpec[] = [
+  { id: 'F-M1', format: 'BO1', stage: 'finals', countsForStandings: true,
+    slots: [{ kind: 'finals-seed', seed: 'W1' }, { kind: 'finals-seed', seed: 'L1' }],
+    label: '八强双败首轮 · 第 1 名对第 5 名', matchNo: 1, showcaseOrder: null },
+  { id: 'F-M2', format: 'BO1', stage: 'finals', countsForStandings: true,
+    slots: [{ kind: 'finals-seed', seed: 'W2' }, { kind: 'finals-seed', seed: 'L2' }],
+    label: '八强双败首轮 · 第 2 名对第 6 名', matchNo: 2, showcaseOrder: null },
+  { id: 'F-M3', format: 'BO1', stage: 'finals', countsForStandings: true,
+    slots: [{ kind: 'finals-seed', seed: 'W3' }, { kind: 'finals-seed', seed: 'L3' }],
+    label: '八强双败首轮 · 第 3 名对第 7 名', matchNo: 3, showcaseOrder: null },
+  { id: 'F-M4', format: 'BO1', stage: 'finals', countsForStandings: true,
+    slots: [{ kind: 'finals-seed', seed: 'W4' }, { kind: 'finals-seed', seed: 'L4' }],
+    label: '八强双败首轮 · 第 4 名对第 8 名', matchNo: 4, showcaseOrder: null },
   {
     id: 'F-L1A',
     format: 'BO1',
     stage: 'finals',
     countsForStandings: true,
     slots: [
-      { kind: 'finals-seed', seed: 'L1' },
-      { kind: 'finals-seed', seed: 'L4' },
+      { kind: 'loser', seriesId: 'F-M1' },
+      { kind: 'loser', seriesId: 'F-M4' },
     ],
     label: '八强败者组首轮 A',
-    matchNo: 1,
+    matchNo: 5,
     showcaseOrder: null,
   },
   {
@@ -56,11 +68,11 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     stage: 'finals',
     countsForStandings: true,
     slots: [
-      { kind: 'finals-seed', seed: 'L2' },
-      { kind: 'finals-seed', seed: 'L3' },
+      { kind: 'loser', seriesId: 'F-M2' },
+      { kind: 'loser', seriesId: 'F-M3' },
     ],
     label: '八强败者组首轮 B',
-    matchNo: 2,
+    matchNo: 6,
     showcaseOrder: null,
   },
   {
@@ -69,11 +81,11 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     stage: 'finals',
     countsForStandings: true,
     slots: [
-      { kind: 'finals-seed', seed: 'W1' },
-      { kind: 'finals-seed', seed: 'W4' },
+      { kind: 'winner', seriesId: 'F-M1' },
+      { kind: 'winner', seriesId: 'F-M4' },
     ],
     label: '八强胜者组 A',
-    matchNo: 3,
+    matchNo: 7,
     showcaseOrder: null,
   },
   {
@@ -82,11 +94,11 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
     stage: 'finals',
     countsForStandings: true,
     slots: [
-      { kind: 'finals-seed', seed: 'W2' },
-      { kind: 'finals-seed', seed: 'W3' },
+      { kind: 'winner', seriesId: 'F-M2' },
+      { kind: 'winner', seriesId: 'F-M3' },
     ],
     label: '八强胜者组 B',
-    matchNo: 4,
+    matchNo: 8,
     showcaseOrder: null,
   },
   {
@@ -99,7 +111,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1B' },
     ],
     label: '败者组第二轮 A',
-    matchNo: 5,
+    matchNo: 9,
     showcaseOrder: null,
   },
   {
@@ -112,7 +124,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1A' },
     ],
     label: '败者组第二轮 B',
-    matchNo: 6,
+    matchNo: 10,
     showcaseOrder: null,
   },
   {
@@ -125,7 +137,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-W1B' },
     ],
     label: '半决赛胜者组',
-    matchNo: 7,
+    matchNo: 11,
     showcaseOrder: null,
   },
   {
@@ -138,7 +150,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L2B' },
     ],
     label: '半决赛败者组',
-    matchNo: 8,
+    matchNo: 12,
     showcaseOrder: null,
   },
   {
@@ -151,7 +163,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'loser', seriesId: 'F-WSF' },
     ],
     label: '总决赛名额争夺战',
-    matchNo: 9,
+    matchNo: 13,
     showcaseOrder: null,
   },
   {
@@ -164,7 +176,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-QUAL' },
     ],
     label: '总决赛',
-    matchNo: 10,
+    matchNo: 14,
     showcaseOrder: null,
   },
   {
@@ -219,6 +231,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
  * 名额争夺战仍是「半决赛败者组胜者 vs 半决赛胜者组败者」。
  */
 export const FINALS_MATCH_ORDER: readonly string[] = [
+  'F-M1', 'F-M2', 'F-M3', 'F-M4',
   'F-L1A',
   'F-L1B',
   'F-W1A',
@@ -233,6 +246,10 @@ export const FINALS_MATCH_ORDER: readonly string[] = [
 /* ------------------------------------------------------------------ *
  * 种子分配（第 5.5 节）
  * ------------------------------------------------------------------ */
+
+/** schema v1 兼容键，依次表示八强排名1–8；下午分组必须由上午胜负决定。 */
+export const FINALS_SEED_ORDER: readonly FinalsSeed[] = ['W1', 'W2', 'W3', 'W4', 'L1', 'L2', 'L3', 'L4'];
+export function finalsSeedLabel(seed: FinalsSeed): string { return `八强第 ${FINALS_SEED_ORDER.indexOf(seed) + 1} 名`; }
 
 export interface SeedingResult {
   seeds: Partial<Record<FinalsSeed, string>>;
@@ -371,7 +388,7 @@ function placeholderLabel(ref: SlotRef): string {
     case 'qualification-rank':
       return `排位赛第 ${ref.rank} 名`;
     case 'finals-seed':
-      return ref.seed;
+      return finalsSeedLabel(ref.seed);
     case 'winner': {
       const no = finalsMatchNoLabel(ref.seriesId);
       return no ? `${no}胜者` : '上一场胜者';
@@ -413,7 +430,7 @@ function resolveSlot(
         return { state: 'pending', label: placeholderLabel(ref) };
       case 'finals-seed': {
         const teamId = seeds[ref.seed];
-        return teamId ? { state: 'resolved', teamId } : { state: 'pending', label: ref.seed };
+        return teamId ? { state: 'resolved', teamId } : { state: 'pending', label: finalsSeedLabel(ref.seed) };
       }
       case 'winner':
       case 'loser': {

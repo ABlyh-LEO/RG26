@@ -1,389 +1,145 @@
-/**
- * 比赛详情页：对阵、结果和依赖是什么。
- *
- * 展示场地、时间、状态、双方分数/时间、异常说明与上下游链接。
- */
-import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useData } from '../data/DataProvider';
-import {
-  formatDate,
-  formatDateTime,
-  formatTime,
-  toSeriesView,
-  toSwissMatchView,
-  type MatchView,
-} from '../data/view-model';
+import { effectiveStart, formatDate, formatDateTime, formatTime, todayInEventTz, toSeriesView, toSwissMatchView, type MatchView } from '../data/view-model';
 import { finalsMatchNoLabel } from '../domain/finals';
-import { assignSides, sidesForFinals, sidesForSeriesGame, sidesForSwiss } from '../domain/sides';
-import {
-  CopyLinkButton,
-  EmptyState,
-  ResultBadge,
-  StatusBadge,
-  TeamName,
-} from '../components/ui';
+import { assignSides, sidesForSeriesGame } from '../domain/sides';
+import { BackButton, CopyLinkButton, EmptyState, OriginalStart, ResultBadge, Section, SideBadge, StatusBadge, TeamName } from '../components/ui';
+import { Icon } from '../components/Icon';
 
 export function MatchDetailPage() {
   const { matchId = '' } = useParams();
   const { derived, loading } = useData();
-  const now = useMemo(() => new Date(), []);
-  void now;
-
-  if (loading && !derived) return <div className="empty">正在加载…</div>;
+  if (loading && !derived) return <div className="empty">正在加载比赛…</div>;
   if (!derived) return null;
-
   const { event, teamMap, venueLabels, finals } = derived;
-
-  const swissMatch = event.swiss.matches.find((m) => m.id === matchId);
-  const series = event.finals.series.find((s) => s.id === matchId);
-
-  let view: MatchView | null = null;
-  if (swissMatch) view = toSwissMatchView(swissMatch, event, teamMap, venueLabels);
-  else if (series) view = toSeriesView(series, event, teamMap, venueLabels, finals);
-
-  if (!view) {
-    return (
-      <div className="card">
-        <h1 className="page-head__title">找不到该比赛</h1>
-        <p className="muted">比赛 ID「{matchId}」不存在。</p>
-        <Link to="/schedule" className="btn">
-          返回赛程
-        </Link>
-      </div>
-    );
-  }
-
+  const swiss = event.swiss.matches.find((match) => match.id === matchId);
+  const series = event.finals.series.find((match) => match.id === matchId);
+  const view: MatchView | null = swiss ? toSwissMatchView(swiss, event, teamMap, venueLabels) : series ? toSeriesView(series, event, teamMap, venueLabels, finals) : null;
+  if (!view) return <EmptyState title="找不到这场比赛" hint="该链接可能已经调整，请从赛程重新选择比赛。" action={<Link to="/schedule" className="btn">返回赛程</Link>} />;
+  if (view.stage === 'showcase') return <ShowcaseMatchDetail view={view} />;
   const schedule = view.schedule;
-  const isSeries = view.kind === 'series';
+  const sideNote = swiss ? `第 ${swiss.roundIndex} 轮${swiss.roundIndex % 2 === 0 ? ' · 偶数轮换边' : ''}` : series?.format === 'BO3' ? '每局交换红蓝方' : '八强双败不换边';
+  const relatedIds = new Set([matchId, ...(swiss ? [swiss.roundId] : []), ...(series?.games.map((game) => game.id) ?? [])]);
+  const corrections = event.corrections.filter((entry) => entry.affectedIds.some((id) => relatedIds.has(id)));
+  const records = swiss?.attempts ?? series?.games ?? [];
+  const resultLabels: Record<string, string> = { normal: '正常比赛', 'early-end': '提前结束', 'walkover-before-start': '未开赛弃权', 'administrative-loss': '行政判负', 'administrative-stop': '行政判负中止' };
 
-  /**
-   * 本场红蓝方。
-   *
-   * 瑞士轮：按轮次（偶数轮换边）；
-   * 决赛 BO1/BO2：八强双败不换边；
-   * 决赛 BO3 的每一局各自换边，因此**不在系列赛层面**给单一归属 ——
-   * 那种情况由下方「小局」表逐局展示。
-   */
-  const sidesInfo = (() => {
-    if (swissMatch) {
-      const s = sidesForSwiss(swissMatch.roundIndex);
-      const snap = swissMatch.participantSnapshot;
-      if (!snap?.[0] || !snap[1]) return null;
-      return {
-        ...assignSides(snap[0], snap[1], s),
-        note:
-          swissMatch.roundIndex % 2 === 0
-            ? `第 ${swissMatch.roundIndex} 轮（偶数轮换边）`
-            : `第 ${swissMatch.roundIndex} 轮`,
-      };
-    }
-    if (series && series.format !== 'BO3') {
-      const snap = series.participantSnapshot;
-      if (!snap?.[0] || !snap[1]) return null;
-      return {
-        ...assignSides(snap[0], snap[1], sidesForFinals()),
-        note: '八强双败不换边',
-      };
-    }
-    return null;
-  })();
+  return <div className="stack">
+    <BackButton fallback="/schedule" label="返回赛程" />
+    <div className="detail-heading"><div><div className="eyebrow">{view.stage === 'swiss' ? 'SWISS ROUND' : 'FINALS'}</div><h1>{view.title}</h1><div className="row" style={{ marginTop: 12 }}><StatusBadge status={view.executionStatus} /><ResultBadge status={view.resultStatus} />{view.format ? <span className="badge badge--neutral">{view.format}</span> : null}{!view.countsForStandings ? <span className="badge badge--neutral">不计正式排名</span> : null}</div></div><CopyLinkButton path={`/matches/${matchId}`} label="分享比赛" /></div>
+    <div className="detail-grid">
+      <div className="stack" style={{ gap: 26 }}>
+        <section className="detail-scoreboard" aria-label="对阵与比分">
+          <div className="section__head"><h2 className="section__title">对阵</h2><span className="xsmall muted">{sideNote}</span></div>
+          {view.sides ? view.sides.map((side, index) => <div className="scoreboard-row" key={index}><div className="scoreboard-name">{view.sidesInfo ? <SideBadge side={index === 0 ? view.sidesInfo.first : view.sidesInfo.second} /> : null}<TeamName team={side.team} fallback={side.sourceLabel} />{side.isWinner ? <span className="winner-mark" aria-label="胜者"><Icon name="check" size={18} /></span> : null}</div><div className="scoreboard-value"><strong className="tabular" style={{ color: side.isWinner ? 'var(--advanced)' : undefined }}>{series?.format === 'BO3' ? (view.homeWins ?? 0) + (view.awayWins ?? 0) > 0 ? index === 0 ? view.homeWins : view.awayWins : '—' : side.score ?? '—'}</strong>{side.seconds !== null ? <div className="xsmall muted tabular">{side.seconds} 秒</div> : null}</div></div>) : <EmptyState title="对阵尚待公布" hint="现场确认后将显示参赛队伍。" />}
+          {view.format !== 'BO1' && view.homeWins !== null && view.awayWins !== null && view.homeWins + view.awayWins > 0 ? <p className="small muted" style={{ marginTop: 14 }}>系列赛比分 <strong className="tabular">{view.homeWins} : {view.awayWins}</strong>{view.notNeededGames.length > 0 ? ` · 第 ${view.notNeededGames.join('、')} 局不需要进行` : ''}</p> : null}
+          <div className="detail-timing">{schedule ? <span><Icon name="clock" size={16} />{formatDate(effectiveStart(schedule))} {formatTime(effectiveStart(schedule))}</span> : null}{view.venueLabel ? <span><Icon name="pin" size={16} />{view.venueLabel}</span> : null}{schedule?.revisedStart ? <span className="rescheduled">已改期 · 原定 <OriginalStart schedule={schedule} /></span> : null}</div>
+        </section>
 
-  return (
-    <div className="stack" style={{ gap: 'var(--sp-3)' }}>
-      <div className="page-head">
-        <h1 className="page-head__title">{view.title}</h1>
-        <div className="row" style={{ gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
-          <StatusBadge status={view.executionStatus} />
-          <ResultBadge status={view.resultStatus} />
-          {view.format ? <span className="badge badge--neutral">{view.format}</span> : null}
-          {!view.countsForStandings ? <span className="badge badge--neutral">不计正式排名</span> : null}
-        </div>
+        {series?.format === 'BO3' ? <Section title="小局记录" action={<span className="xsmall muted">三局两胜 · 每局换边</span>}><div className="stack">{[...series.games].sort((a, b) => a.index - b.index).map((game) => {
+          const notNeeded = view.notNeededGames.includes(game.index);
+          const first = game.homeTeamId ?? series.participantSnapshot?.[0] ?? view.sides?.[0]?.team?.id ?? null;
+          const second = game.awayTeamId ?? series.participantSnapshot?.[1] ?? view.sides?.[1]?.team?.id ?? null;
+          const sides = first && second ? assignSides(first, second, sidesForSeriesGame(game.index)) : null;
+          return <article className="card" key={game.id}><div className="card__head"><strong className="small">第 {game.index} 局</strong>{notNeeded ? <span className="badge badge--neutral">不需要进行</span> : game.resultStatus === 'none' ? <span className="badge badge--neutral">未开始</span> : <ResultBadge status={game.resultStatus} />}</div>{notNeeded ? <p className="small muted">系列赛已决出胜者，无需进行本局。</p> : <div className="stack stack--tight">{(['red', 'blue'] as const).map((color) => {
+            const id = sides?.[color] ?? null;
+            const score = id === null ? null : id === game.homeTeamId ? game.homeScore : id === game.awayTeamId ? game.awayScore : null;
+            const seconds = id === null ? null : id === game.homeTeamId ? game.homeReachedSeconds : id === game.awayTeamId ? game.awayReachedSeconds : null;
+            const winner = game.resultStatus === 'confirmed' && id !== null && id === game.winnerId;
+            return <div className={`match-side${winner ? ' match-side--winner' : ''}`} key={color}><div className="match-side__name"><SideBadge side={color} /><TeamName team={id ? teamMap.get(id)?.team ?? null : null} fallback="对阵待定" />{winner ? <span className="winner-mark" aria-label="胜者"><Icon name="check" size={16} /></span> : null}</div><div className="match-side__result"><strong className="tabular">{score ?? '—'}</strong><span className="xsmall muted">{seconds ? `${seconds} 秒` : '到达最终分时间待确认'}</span></div></div>;
+          })}</div>}</article>;
+        })}</div><p className="xsmall muted" style={{ marginTop: 12 }}>先赢 2 局者胜；2–0 时第 3 局不需要进行，不计为未完赛。</p></Section> : null}
+
+        {view.note || view.conflicts.length > 0 ? <Section title="比赛说明"><div className="card">{view.note ? <p className="small">{view.note}</p> : null}{view.conflicts.length > 0 ? <div className="inline-notice">相关赛果正在复核，更新后会在这里公布。<details className="disclosure"><summary>查看复核说明</summary><p className="xsmall">{view.conflicts.join('；')}</p></details></div> : null}</div></Section> : null}
+        <details className="card result-history"><summary>原始成绩与更正记录<Icon name="chevron" size={17} /></summary><div className="stack" style={{ marginTop: 18 }}>
+          {records.length > 0 ? records.map((record, index) => {
+            const effective = swiss ? record.id === swiss.effectiveAttemptId : record.resultStatus === 'confirmed';
+            const supersedesId = 'supersedesId' in record ? record.supersedesId : null;
+            const previousIndex = supersedesId ? records.findIndex((entry) => entry.id === supersedesId) : -1;
+            return <article className="record-card" key={record.id}><div className="record-card__head"><strong>{swiss ? `第 ${index + 1} 次记录` : `第 ${'index' in record ? record.index : index + 1} 局`}</strong><span className={`badge ${effective ? 'badge--advanced' : 'badge--neutral'}`}>{effective ? '当前有效' : record.resultStatus === 'none' ? '尚未录入' : '历史记录'}</span></div><div className="record-card__meta"><span>{resultLabels[record.resultKind] ?? record.resultKind}</span>{record.confirmedAt ? <span>确认于 {formatDateTime(record.confirmedAt)}</span> : null}{previousIndex >= 0 ? <span>替代第 {previousIndex + 1} 次记录</span> : null}</div><div className="stack stack--tight" style={{ marginTop: 12 }}>{[{ id: record.homeTeamId, score: record.homeScore, seconds: record.homeReachedSeconds }, { id: record.awayTeamId, score: record.awayScore, seconds: record.awayReachedSeconds }].map((side, sideIndex) => <div className="record-card__head" key={sideIndex}><span className="small">{side.id ? teamMap.get(side.id)?.displayName ?? '队伍待核对' : '队伍待定'}{record.winnerId && record.winnerId === side.id ? <span className="badge badge--advanced" style={{ marginLeft: 8 }}>胜者</span> : null}</span><span className="small tabular">{side.score ?? '—'} 分 · {side.seconds ?? '—'} 秒</span></div>)}</div>{record.note ? <p className="small" style={{ marginTop: 10 }}>裁判说明：{record.note}</p> : null}</article>;
+          }) : <p className="small muted">本场尚未录入原始成绩。</p>}
+          {corrections.length > 0 ? <section><h3 className="small">更正记录</h3>{[...corrections].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).map((entry) => <article className="record-card" key={entry.id}><div className="record-card__meta">{formatDateTime(entry.at)}</div><p className="small" style={{ marginTop: 7 }}>{entry.reason}</p>{entry.previousValue ? <p className="xsmall muted">更正前：{entry.previousValue}</p> : null}{entry.newValue ? <p className="xsmall">更正后：{entry.newValue}</p> : null}{entry.note ? <p className="xsmall muted">组委会说明：{entry.note}</p> : null}<span className={`badge ${entry.allowsProgress ? 'badge--advanced' : 'badge--pending'}`}>{entry.allowsProgress ? '复核后继续比赛' : '等待复核，暂停推进'}</span></article>)}</section> : <p className="xsmall muted">暂无与本场相关的更正记录。</p>}
+        </div></details>
       </div>
-
-      {/* 对阵 */}
-      <div className="card">
-        <div className="card__head">
-          <span className="card__title">对阵</span>
-        </div>
-
-        {/*
-          红蓝方提示：由赛程结构自动推出，不落库、不需要人工维护。
-          瑞士轮偶数轮换边；决赛八强双败不换边。
-        */}
-        {sidesInfo ? (
-          <div className="row" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
-            <span>
-              <span className="badge badge--danger" style={{ marginRight: 6 }}>
-                红方
-              </span>
-              {teamMap.get(sidesInfo.red)?.displayName ?? sidesInfo.red}
-            </span>
-            <span>
-              <span className="badge badge--info" style={{ marginRight: 6 }}>
-                蓝方
-              </span>
-              {teamMap.get(sidesInfo.blue)?.displayName ?? sidesInfo.blue}
-            </span>
-            <span className="xsmall muted">{sidesInfo.note}</span>
-          </div>
-        ) : null}
-
-        <div className="stack stack--tight">
-          {view.sides?.map((side, i) => (
-            <div
-              key={i}
-              className="row"
-              style={{
-                justifyContent: 'space-between',
-                gap: 'var(--sp-2)',
-                flexWrap: 'nowrap',
-                padding: 'var(--sp-2)',
-                borderRadius: 'var(--radius-sm)',
-                background: side.isWinner ? 'var(--advanced-bg)' : 'transparent',
-              }}
-            >
-              <div className="row" style={{ gap: 'var(--sp-2)', minWidth: 0, flex: 1 }}>
-                <span style={{ flexShrink: 0 }} aria-hidden="true">
-                  {side.isWinner ? '✔' : ''}
-                </span>
-                <TeamName team={side.team} fallback={side.sourceLabel} />
-                {side.isWinner ? <span className="visually-hidden">胜者</span> : null}
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                {side.score !== null ? (
-                  <strong className="tabular">{side.score}</strong>
-                ) : (
-                  <span className="muted small">—</span>
-                )}
-                {side.seconds !== null ? (
-                  <div className="xsmall muted tabular">{side.seconds} 秒</div>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {view.homeWins !== null && view.awayWins !== null ? (
-          <div className="small" style={{ marginTop: 'var(--sp-2)' }}>
-            系列赛比分：
-            <strong className="tabular">
-              {' '}
-              {view.homeWins} : {view.awayWins}
-            </strong>
-            {view.notNeededGames.length > 0 ? (
-              <span className="muted"> · 第 {view.notNeededGames.join('、')} 局不需要进行</span>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-
-      {/* 时间与场地 */}
-      <div className="card">
-        <div className="card__head">
-          <span className="card__title">时间与场地</span>
-        </div>
-        <div className="stack stack--tight">
-          <Row label="计划开始" value={schedule ? `${formatDate(schedule.plannedStart)} ${formatTime(schedule.plannedStart)}` : '待定'} />
-          <Row
-            label="计划结束"
-            value={schedule?.plannedEnd ? formatTime(schedule.plannedEnd) : isSeries && view.format === 'BO3' ? '取决于系列赛进程' : '未给出'}
-          />
-          <Row
-            label="场地"
-            value={
-              view.venueLabel
-                ? `${view.venueLabel}${schedule?.venueId && event.venues.find((v) => v.id === schedule.venueId)?.provisionalName ? '（暂定名称）' : ''}`
-                : '待定'
-            }
-          />
-          {schedule?.afterSeriesId ? (
-            <Row label="依赖" value={`${schedule.afterSeriesId} 结束后开始`} />
-          ) : null}
-          {schedule?.revisedStart ? (
-            <Row label="修订后开始" value={formatDateTime(schedule.revisedStart)} />
-          ) : null}
-          {schedule?.adjustmentNote ? (
-            <Row label="日程调整" value={schedule.adjustmentNote} />
-          ) : null}
-        </div>
-        {isSeries && view.format === 'BO3' ? (
-          <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
-            原文未给出 BO3 的固定结束时刻，因此不编造准确开始或结束时间。
-          </p>
-        ) : null}
-      </div>
-
-      {/* 赛制说明 */}
-      {view.groupRecord ? (
-        <div className="card">
-          <div className="card__head">
-            <span className="card__title">所在战绩组</span>
-          </div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="badge badge--info">{view.groupRecord} 组</span>
-            <span className="small muted">{view.groupDescription}</span>
-          </div>
-          {view.stakes ? (
-            <p className="small" style={{ margin: 'var(--sp-2) 0 0' }}>
-              {view.stakes}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* 小局（BO3） */}
-      {isSeries && series && series.format === 'BO3' ? (
-        <div className="card">
-          <div className="card__head">
-            <span className="card__title">小局</span>
-          </div>
-          <p className="xsmall muted" style={{ marginTop: 0 }}>
-            BO3 **每局换边**：红蓝方按局号自动交替（第 1 局第一个席位蓝方，第 2 局换边，第 3 局换回）。
-            到达最终分时间会一并列出 —— 积分相同时，它是判断本局胜负的重要依据。
-          </p>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th className="num">局</th>
-                  <th>红方</th>
-                  <th className="num">红方积分</th>
-                  <th className="num">红方到达最终分</th>
-                  <th>蓝方</th>
-                  <th className="num">蓝方积分</th>
-                  <th className="num">蓝方到达最终分</th>
-                  <th>结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...series.games]
-                  .sort((a, b) => a.index - b.index)
-                  .map((g) => {
-                    const notNeeded = view.notNeededGames.includes(g.index);
-                    /*
-                     * 该局的红蓝方。参赛双方优先用本局记录，缺省回落到
-                     * 系列赛的参赛快照（尚未录入的局也能显示谁在哪一侧）。
-                     * 归属由 `assignSides` 统一推出，不在页面里重算规则。
-                     */
-                    const first = g.homeTeamId ?? series.participantSnapshot?.[0] ?? null;
-                    const second = g.awayTeamId ?? series.participantSnapshot?.[1] ?? null;
-                    const sides =
-                      first && second ? assignSides(first, second, sidesForSeriesGame(g.index)) : null;
-                    const blueId = sides?.blue ?? null;
-                    const redId = sides?.red ?? null;
-                    const scoreOf = (id: string | null) =>
-                      id === null
-                        ? null
-                        : id === g.homeTeamId
-                          ? g.homeScore
-                          : id === g.awayTeamId
-                            ? g.awayScore
-                            : null;
-                    const secsOf = (id: string | null) =>
-                      id === null
-                        ? null
-                        : id === g.homeTeamId
-                          ? g.homeReachedSeconds
-                          : id === g.awayTeamId
-                            ? g.awayReachedSeconds
-                            : null;
-                    const nameOf = (id: string | null) =>
-                      id ? teamMap.get(id)?.displayName ?? id : '—';
-                    const secsText = (id: string | null) => {
-                      const v = secsOf(id);
-                      return v === null || v === '' ? '—' : `${v} 秒`;
-                    };
-                    return (
-                      <tr key={g.id}>
-                        <td className="num tabular">第 {g.index} 局</td>
-                        <td>
-                          <span className="badge badge--danger" style={{ marginRight: 6 }}>
-                            红
-                          </span>
-                          {nameOf(redId)}
-                        </td>
-                        <td className="num tabular">{scoreOf(redId) ?? '—'}</td>
-                        <td className="num tabular">{secsText(redId)}</td>
-                        <td>
-                          <span className="badge badge--info" style={{ marginRight: 6 }}>
-                            蓝
-                          </span>
-                          {nameOf(blueId)}
-                        </td>
-                        <td className="num tabular">{scoreOf(blueId) ?? '—'}</td>
-                        <td className="num tabular">{secsText(blueId)}</td>
-                        <td>
-                          {notNeeded ? (
-                            <span className="badge badge--neutral">不需要进行</span>
-                          ) : g.resultStatus === 'confirmed' && g.winnerId ? (
-                            <span className="badge badge--advanced">
-                              {teamMap.get(g.winnerId)?.displayName ?? g.winnerId} 胜
-                            </span>
-                          ) : g.resultStatus === 'provisional' ? (
-                            <span className="badge badge--pending">待确认</span>
-                          ) : (
-                            <span className="badge badge--neutral">未开始</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-          <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
-            先赢 2 局者胜；2–0 时第 3 局标为“不需要进行”，不计为未完赛。
-          </p>
-        </div>
-      ) : null}
-
-      {/* 异常说明 */}
-      {view.note || view.conflicts.length > 0 ? (
-        <div className="card">
-          <div className="card__head">
-            <span className="card__title">说明</span>
-          </div>
-          {view.note ? <p className="small">{view.note}</p> : null}
-          {view.conflicts.length > 0 ? (
-            <div className="badge badge--danger" style={{ whiteSpace: 'normal', display: 'block' }}>
-              {view.conflicts.join('；')}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* 上下游链接 */}
-      <div className="card">
-        <div className="card__head">
-          <span className="card__title">相关比赛</span>
-        </div>
-        <RelatedMatches matchId={matchId} />
-      </div>
-
-      <CopyLinkButton path={`/matches/${matchId}`} label="复制比赛链接" />
-
-      <div className="row">
-        <Link to="/schedule" className="btn btn--small">
-          ← 返回赛程
-        </Link>
-        <Link to="/progress" className="btn btn--small">
-          晋级视图 →
-        </Link>
-      </div>
+      <aside className="stack" style={{ gap: 26 }}>
+        <Section title="时间与场地"><div className="card stack stack--tight">
+          <DetailRow label={schedule?.revisedStart ? '调整后开始' : '计划开始'} value={schedule ? `${formatDate(effectiveStart(schedule))} ${formatTime(effectiveStart(schedule))}` : '待定'} />
+          {schedule?.revisedStart ? <DetailRow label="原计划开始" value={formatDateTime(schedule.plannedStart)} /> : null}
+          <DetailRow label="计划结束" value={schedule?.plannedEnd ? formatTime(schedule.plannedEnd) : series?.format === 'BO3' ? '随系列赛进程确定' : '待现场确认'} />
+          <DetailRow label="场地" value={view.venueLabel ?? '待定'} />
+          {schedule?.afterSeriesId ? <DetailRow label="前序安排" value={`${finalsMatchNoLabel(schedule.afterSeriesId) ?? '前一场比赛'}结束后开始`} /> : null}
+          {schedule?.adjustmentNote ? <p className="inline-notice">{schedule.adjustmentNote}</p> : null}
+          <p className="xsmall muted" style={{ marginTop: 12 }}>时间仅供参考，具体情况以现场安排为准。{series?.format === 'BO3' ? 'BO3 无固定结束时刻。' : ''}</p>
+        </div></Section>
+        <Section title="相关比赛"><div className="card"><RelatedMatches matchId={matchId} /></div></Section>
+        <Link to="/progress" className="btn">查看晋级进展<Icon name="bracket" size={18} /></Link>
+      </aside>
     </div>
-  );
+  </div>;
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}><span className="small muted">{label}</span><span className="small" style={{ textAlign: 'right' }}>{value}</span></div>;
+}
+
+/** 展示组只有演出队伍与安排，不沿用竞技比赛的双队、比分和晋级结构。 */
+function ShowcaseMatchDetail({ view }: { view: MatchView }) {
+  const { derived } = useData();
+  if (!derived) return null;
+  const schedule = view.schedule;
+  const performer = view.sides?.[0];
+  const series = derived.event.finals.series.find((entry) => entry.id === view.id);
+  const relatedIds = new Set([view.id, ...(series?.games.map((game) => game.id) ?? [])]);
+  const corrections = derived.event.corrections.filter((entry) => entry.affectedIds.some((id) => relatedIds.has(id)));
+  const records = series?.games.filter((game) => game.resultStatus !== 'none' || game.note !== null) ?? [];
+  const scheduleParams = new URLSearchParams({ stage: 'showcase' });
+  if (schedule) scheduleParams.set('date', todayInEventTz(new Date(effectiveStart(schedule))));
+  if (performer?.team) scheduleParams.set('team', performer.team.id);
   return (
-    <div className="row" style={{ justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
-      <span className="small muted" style={{ flexShrink: 0 }}>
-        {label}
-      </span>
-      <span className="small" style={{ textAlign: 'right', overflowWrap: 'anywhere' }}>
-        {value}
-      </span>
+    <div className="stack">
+      <BackButton fallback="/schedule" label="返回赛程" />
+      <div className="detail-heading">
+        <div>
+          <div className="eyebrow">SHOWCASE</div>
+          <h1>{view.title}</h1>
+          <div className="row" style={{ marginTop: 12 }}><StatusBadge status={view.executionStatus} /><span className="badge badge--neutral">单队展示</span><span className="badge badge--neutral">不计竞技排名</span></div>
+        </div>
+        <CopyLinkButton path={`/matches/${view.id}`} label="分享演出" />
+      </div>
+      <div className="detail-grid">
+        <div className="stack" style={{ gap: 26 }}>
+          <section className="detail-scoreboard" aria-label="演出队伍与安排">
+            <div className="section__head"><h2 className="section__title">演出队伍</h2></div>
+            <div className="scoreboard-row"><div className="scoreboard-name"><TeamName team={performer?.team ?? null} fallback={performer?.sourceLabel ?? '演出队伍待抽签'} /></div></div>
+            <p className="small muted" style={{ marginTop: 14 }}>{performer?.team ? '演出队伍与上台顺序已按抽签结果公布。' : '上台顺序由现场抽签决定，确认后将在这里公布。'}</p>
+            <div className="detail-timing">
+              {schedule ? <span><Icon name="clock" size={16} />{formatDate(effectiveStart(schedule))} {formatTime(effectiveStart(schedule))}</span> : null}
+              {view.venueLabel ? <span><Icon name="pin" size={16} />{view.venueLabel}</span> : null}
+              {schedule?.revisedStart ? <span className="rescheduled">已改期 · 原定 <OriginalStart schedule={schedule} /></span> : null}
+            </div>
+          </section>
+          {view.note ? <Section title="演出说明"><div className="card"><p className="small">{view.note}</p></div></Section> : null}
+          {records.length > 0 || corrections.length > 0 ? <details className="card result-history">
+            <summary>演出记录与更正<Icon name="chevron" size={17} /></summary>
+            <div className="stack" style={{ marginTop: 18 }}>
+              {records.map((record, index) => <article className="record-card" key={record.id}><strong className="small">演出记录 {index + 1}</strong>{record.confirmedAt ? <p className="xsmall muted">确认于 {formatDateTime(record.confirmedAt)}</p> : null}{record.note ? <p className="small">{record.note}</p> : null}</article>)}
+              {corrections.map((entry) => <article className="record-card" key={entry.id}><div className="record-card__meta">{formatDateTime(entry.at)}</div><p className="small">{entry.reason}</p>{entry.previousValue ? <p className="xsmall muted">更正前：{entry.previousValue}</p> : null}{entry.newValue ? <p className="xsmall">更正后：{entry.newValue}</p> : null}{entry.note ? <p className="xsmall muted">组委会说明：{entry.note}</p> : null}</article>)}
+            </div>
+          </details> : null}
+        </div>
+        <aside className="stack" style={{ gap: 26 }}>
+          <Section title="时间与场地"><div className="card stack stack--tight">
+            <DetailRow label={schedule?.revisedStart ? '调整后开始' : '计划开始'} value={schedule ? formatDateTime(effectiveStart(schedule)) : '待定'} />
+            {schedule?.revisedStart ? <DetailRow label="原计划开始" value={formatDateTime(schedule.plannedStart)} /> : null}
+            <DetailRow label="计划结束" value={schedule?.plannedEnd ? formatTime(schedule.plannedEnd) : '待现场确认'} />
+            <DetailRow label="场地" value={view.venueLabel ?? '待定'} />
+            {schedule?.adjustmentNote ? <p className="inline-notice">{schedule.adjustmentNote}</p> : null}
+            <p className="xsmall muted">时间仅供参考，具体情况以现场安排为准。</p>
+          </div></Section>
+          <Link to={`/schedule?${scheduleParams.toString()}`} className="btn">查看展示组赛程<Icon name="calendar" size={18} /></Link>
+          {performer?.team ? <Link to={`/teams/${performer.team.id}`} className="btn">查看队伍全部安排<Icon name="users" size={18} /></Link> : null}
+        </aside>
+      </div>
     </div>
   );
 }
@@ -392,77 +148,15 @@ function RelatedMatches({ matchId }: { matchId: string }) {
   const { derived } = useData();
   if (!derived) return null;
   const { event, teamMap, venueLabels, finals } = derived;
-
-  const series = event.finals.series.find((s) => s.id === matchId);
-
+  const series = event.finals.series.find((entry) => entry.id === matchId);
   if (!series) {
-    // 瑞士轮比赛：显示同轮其他场次
-    const swiss = event.swiss.matches.find((m) => m.id === matchId);
-    if (!swiss) return <EmptyState title="没有相关比赛" />;
-    const sameRound = event.swiss.matches.filter(
-      (m) => m.roundIndex === swiss.roundIndex && m.id !== matchId,
-    );
-    return (
-      <div className="stack stack--tight">
-        <div className="xsmall muted">同轮其他场次（R{swiss.roundIndex}）</div>
-        {sameRound.slice(0, 6).map((m) => {
-          const v = toSwissMatchView(m, event, teamMap, venueLabels);
-          return (
-            <Link key={m.id} to={`/matches/${m.id}`} className="small">
-              {v.sides?.[0]?.sourceLabel} vs {v.sides?.[1]?.sourceLabel}
-            </Link>
-          );
-        })}
-      </div>
-    );
+    const match = event.swiss.matches.find((entry) => entry.id === matchId);
+    const sameRound = event.swiss.matches.filter((entry) => entry.roundIndex === match?.roundIndex && entry.id !== matchId).slice(0, 6);
+    return <div className="stack stack--tight"><span className="xsmall muted">同轮其他场次</span>{sameRound.map((entry) => { const view = toSwissMatchView(entry, event, teamMap, venueLabels); return <Link key={entry.id} to={`/matches/${entry.id}`} className="related-match-link"><span>{view.sides?.map((side) => side.team?.name ?? side.sourceLabel).join(' / ') || view.title}</span><Icon name="chevron" size={15} /></Link>; })}</div>;
   }
-
-  const upstream: string[] = [];
-  const downstream: string[] = [];
-  for (const ref of series.slots ?? []) {
-    if (ref.kind === 'winner' || ref.kind === 'loser') {
-      const no = finalsMatchNoLabel(ref.seriesId);
-      upstream.push(`${no ?? ref.seriesId}（${ref.kind === 'winner' ? '胜者' : '败者'}）`);
-    }
-  }
-  for (const other of event.finals.series) {
-    for (const ref of other.slots ?? []) {
-      if ((ref.kind === 'winner' || ref.kind === 'loser') && ref.seriesId === matchId) {
-        const no = finalsMatchNoLabel(other.id);
-        downstream.push(`${no ?? other.id}（${ref.kind === 'winner' ? '胜者进入' : '败者进入'}）`);
-      }
-    }
-  }
-
-  const v = toSeriesView(series, event, teamMap, venueLabels, finals);
-  void v;
-
-  return (
-    <div className="stack stack--tight">
-      {upstream.length > 0 ? (
-        <div>
-          <div className="xsmall muted">上游（来源）</div>
-          {upstream.map((u) => (
-            <div key={u} className="small">
-              {u}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="small muted">上游：来自八强种子（无前置比赛）</div>
-      )}
-      {downstream.length > 0 ? (
-        <div>
-          <div className="xsmall muted">下游（影响）</div>
-          {downstream.map((d) => (
-            <div key={d} className="small">
-              {d}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="small muted">下游：没有后续比赛</div>
-      )}
-    </div>
-  );
+  const related: { id: string; label: string }[] = [];
+  for (const slot of series.slots ?? []) if (slot.kind === 'winner' || slot.kind === 'loser') related.push({ id: slot.seriesId, label: `来自${finalsMatchNoLabel(slot.seriesId) ?? '前场'}${slot.kind === 'winner' ? '胜者' : '败者'}` });
+  for (const other of event.finals.series) for (const slot of other.slots ?? []) if ((slot.kind === 'winner' || slot.kind === 'loser') && slot.seriesId === matchId) related.push({ id: other.id, label: `${slot.kind === 'winner' ? '胜者' : '败者'}进入${finalsMatchNoLabel(other.id) ?? '下一场'}` });
+  if (related.length === 0) return <p className="small muted">本场没有关联比赛。</p>;
+  return <div className="stack stack--tight">{related.map((entry) => { const target = event.finals.series.find((item) => item.id === entry.id); const title = target ? toSeriesView(target, event, teamMap, venueLabels, finals).title : entry.label; return <Link key={`${entry.id}-${entry.label}`} to={`/matches/${entry.id}`} className="related-match-link"><span><strong>{entry.label}</strong><span className="xsmall muted" style={{ display: 'block' }}>{title}</span></span><Icon name="chevron" size={15} /></Link>; })}</div>;
 }

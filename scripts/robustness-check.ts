@@ -9,7 +9,7 @@
  * 都没有端到端覆盖。
  *
  * 覆盖：
- *  A. 快乐路径：排位赛（44 次跑图）→ R1..R5 → 种子 → 决赛 10 场 → 冠军
+ *  A. 快乐路径：排位赛（44 次跑图）→ R1..R5 → 种子 → 决赛 14 场 → 冠军
  *  B. 异常结果类型：提前结束 / 未开赛弃权 / 行政判负中止
  *  C. 重赛（attempt 追加，旧记录保留但不计入）
  *  D. 更正已确认成绩
@@ -263,7 +263,7 @@ function playFinalsBo1(ev: EventFile, seriesId: string, winnerIsHome = true): Ev
 /** 按依赖顺序录入 8 场决赛 BO1。 */
 function playAllFinalsBo1(base: EventFile): EventFile {
   let e = base;
-  for (const id of ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF']) {
+  for (const id of ['F-M1', 'F-M2', 'F-M3', 'F-M4', 'F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF']) {
     e = playFinalsBo1(e, id);
   }
   return e;
@@ -321,7 +321,7 @@ function loserOfSeries(ev: EventFile, seriesId: string): string | null {
  * A. 快乐路径：完整赛季
  * ================================================================== */
 
-section('A. 快乐路径：排位赛（44 次跑图）→ 瑞士轮 5 轮 → 种子 → 决赛 10 场 → 冠军');
+section('A. 快乐路径：排位赛（44 次跑图）→ 瑞士轮 5 轮 → 种子 → 决赛 14 场 → 冠军');
 
 let event = loadEvent();
 must('竞技组 22 队', competitiveOf(event).length === 22, `${competitiveOf(event).length} 队`);
@@ -383,15 +383,15 @@ assertHealthy(event, '种子公布后');
 // --- 决赛 BO1：8 场（第 1..8 场）---
 event = playAllFinalsBo1(event);
 check(
-  '8 场 BO1 决赛全部已录入',
-  ['F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'].every((id) => {
+  '12 场 BO1 决赛全部已录入',
+  ['F-M1', 'F-M2', 'F-M3', 'F-M4', 'F-L1A', 'F-L1B', 'F-W1A', 'F-W1B', 'F-L2A', 'F-L2B', 'F-WSF', 'F-LSF'].every((id) => {
     const s = event.finals.series.find((x) => x.id === id);
     return s?.games.some((g) => g.resultStatus === 'confirmed') ?? false;
   }),
 );
 assertHealthy(event, 'BO1 决赛后');
 
-// --- 两个 BO3（第 9、10 场）---
+// --- 两个 BO3（第 13、14 场）---
 event = playBo3(event, 'F-QUAL', true);
 const qualSeries = event.finals.series.find((s) => s.id === 'F-QUAL')!;
 const qualWins = seriesWins(qualSeries);
@@ -1009,16 +1009,16 @@ section('G. 红蓝方：自动维护与换边');
   // 决赛 BO1
   let f = playFiveRounds(playQualification(loadEvent()));
   f = publishFinalsSeeding(f).event;
-  const fp = requireParticipants(f, 'F-L1A');
+  const fp = requireParticipants(f, 'F-M1');
   check('G8 决赛 BO1 缺时间被拒绝',
     !applyFinalsBo1(f, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
+      seriesId: 'F-M1', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
       homeScore: '16', awayScore: '4', homeReachedSeconds: '', awayReachedSeconds: '',
       winnerId: fp[0], resultKind: 'normal',
     }).ok);
   check('G8 决赛 BO1 填了时间可以保存',
     applyFinalsBo1(f, {
-      seriesId: 'F-L1A', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
+      seriesId: 'F-M1', gameIndex: 1, homeTeamId: fp[0], awayTeamId: fp[1],
       homeScore: '16', awayScore: '4', homeReachedSeconds: '85', awayReachedSeconds: '140',
       winnerId: fp[0], resultKind: 'normal',
     }).ok);
