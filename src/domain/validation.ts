@@ -148,6 +148,109 @@ export function validateEvent(event: EventFile): ValidationResult {
         err('schedule-item', item.id, 'date', 'date-outside-event', `日期 ${item.date} 不在赛事日期 ${event.event.dates.join('、')} 内`),
       );
     }
+    /*
+     * 前序依赖必须真实存在，而且不能排在它前面。
+     *
+     * BO3 与表演赛的时间块起点相同（手册只给了「16:35 起」），如果只照抄
+     * 时间块起点，就会出现三场"同时开始"——曾经的实际缺陷。这里的规则保证
+     * 这类数据要么给出错开的固定时间，要么被挡在发布之前。
+     */
+    if (item.afterSeriesId !== null) {
+      const series = event.finals.series.find((s) => s.id === item.afterSeriesId);
+      const sourceItem = event.scheduleItems.find((candidate) => candidate.referenceId === item.afterSeriesId);
+      if (!series) {
+        errors.push(
+          err('schedule-item', item.id, 'afterSeriesId', 'unknown-after-series', `前序依赖指向不存在的系列赛：${item.afterSeriesId}`),
+        );
+      } else if (!sourceItem) {
+        errors.push(
+          err('schedule-item', item.id, 'afterSeriesId', 'missing-after-schedule', `${item.afterSeriesId} 没有对应的日程项，无法判断先后顺序`),
+        );
+      } else {
+        /*
+         * 前序安排结束时间已知时，本项**不得早于**它结束（背靠背可以相等）；
+         * 结束时间未知时（手册对 BO3 只给了时间块起点），本项必须**严格晚于**
+         * 前一项开始——否则就会出现"名额争夺战与总决赛同时开始"这种重合。
+         */
+        const boundary = sourceItem.plannedEnd ?? sourceItem.plannedStart;
+        const startsEarly = sourceItem.plannedEnd !== null
+          ? Date.parse(item.plannedStart) < Date.parse(boundary)
+          : Date.parse(item.plannedStart) <= Date.parse(boundary);
+        if (startsEarly) {
+          errors.push(
+            err(
+              'schedule-item',
+              item.id,
+              'plannedStart',
+              'sequence-overlap',
+              `开始时间不晚于前序安排《${sourceItem.title}》的${sourceItem.plannedEnd ? '结束' : '开始'}时间（${boundary.slice(11, 16)}）：` +
+                '前序安排结束时间未知时必须给出更晚的固定时间，不能照抄同一时间块起点',
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /*
+   * 同一场地同一时间只能有一项安排。
+   *
+   * 两场比赛不可能同时占用主舞台；这正是"最后两场比赛时间重合"要防的问题。
+   * 只比较**同一天、同一场地、结束时间已知**的项目（跨场地并行的排位赛跑图
+   * 因此不会被误报；结束时间未定的项目另行由前序依赖规则约束）。
+   */
+  const byVenue = new Map<string, { id: string; title: string; start: number; end: number }[]>();
+  for (const item of event.scheduleItems) {
+    if (item.venueId === null || item.plannedEnd === null) continue;
+    const key = `${item.date}|${item.venueId}`;
+    const list = byVenue.get(key) ?? [];
+    list.push({
+      id: item.id,
+      title: item.title,
+      start: Date.parse(item.revisedStart ?? item.plannedStart),
+      end: Date.parse(item.plannedEnd),
+    });
+    byVenue.set(key, list);
+  }
+  for (const list of byVenue.values()) {
+    const ordered = [...list].sort((a, b) => a.start - b.start);
+    for (let index = 1; index < ordered.length; index += 1) {
+      const previous = ordered[index - 1]!;
+      const current = ordered[index]!;
+      if (current.start < previous.end) {
+        errors.push(
+          err(
+            'schedule-item',
+            current.id,
+            'plannedStart',
+            'venue-time-overlap',
+            `与《${previous.title}》在同一场地的安排重叠（${previous.id} 到 ${new Date(previous.end).toISOString().slice(11, 16)}）`,
+          ),
+        );
+      }
+    }
+  }
+
+  // 同一场地、同一时间开始且**都没有结束时间**的项目同样是冲突：一个舞台不可能
+  // 同时开始两件事（结束时间未知时，前一条规则无法发现这种重合）。
+  const openEnded = new Map<string, { id: string; title: string; start: number }>();
+  for (const item of event.scheduleItems) {
+    if (item.venueId === null || item.plannedEnd !== null) continue;
+    const key = `${item.date}|${item.venueId}|${Date.parse(item.revisedStart ?? item.plannedStart)}`;
+    const existing = openEnded.get(key);
+    if (existing) {
+      errors.push(
+        err(
+          'schedule-item',
+          item.id,
+          'plannedStart',
+          'venue-time-collision',
+          `与《${existing.title}》在同一场地、同一时间开始，且两者都没有结束时间`,
+        ),
+      );
+    } else {
+      openEnded.set(key, { id: item.id, title: item.title, start: Date.parse(item.revisedStart ?? item.plannedStart) });
+    }
   }
 
   /* ---------- 排位赛 ---------- */

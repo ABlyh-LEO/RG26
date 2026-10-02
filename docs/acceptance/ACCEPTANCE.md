@@ -9,6 +9,7 @@
 - [界面、交互与更新流程升级](2026-10-02-experience-upgrade.md)与[维护工作台验收](operator-upgrade.md)。
 - [排位赛定榜门禁与「当前排行」](2026-10-03-qualification-ranking-gate.md)。
 - [展示组「单独演出」误报自我对阵的修复](2026-10-03-showcase-performance.md)。
+- [收尾时段时间重合修复](2026-10-03-final-block-times.md)。
 - [BO3 固定红蓝方](2026-10-02-bo3-fixed-sides.md)。
 - [晋级图汇入连线与红蓝方](2026-10-02-bracket-junctions.md)及此前的[晋级图结构调整](2026-10-02-bracket-clarity.md)。
 - [CI、Pages 与移动端修复](2026-10-02-ci-mobile.md)。

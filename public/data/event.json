@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "f8bd0d619a9bcb01c4833076db3ba0af",
-  "builtAt": "2026-10-02T08:51:40.397Z",
-  "sourceCommit": "9581b69177e3eb594a94886cf31b2d7a4f9ee17a",
+  "revision": "a2fbcf8ce362f9f4a4990bcb6545b137",
+  "builtAt": "2026-10-02T20:52:41.025Z",
+  "sourceCommit": "3b763bae9adf19043167bec841c5994268d028ee",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -1017,7 +1017,7 @@
         "stage": "qualification",
         "date": "2026-10-03",
         "plannedStart": "2026-10-03T15:20:00+08:00",
-        "plannedEnd": "2026-10-03T16:00:00+08:00",
+        "plannedEnd": "2026-10-03T15:40:00+08:00",
         "afterSeriesId": null,
         "venueId": "venue-main",
         "referenceId": null,
@@ -1797,7 +1797,7 @@
         "stage": "finals",
         "date": "2026-10-04",
         "plannedStart": "2026-10-04T16:35:00+08:00",
-        "plannedEnd": null,
+        "plannedEnd": "2026-10-04T17:05:00+08:00",
         "afterSeriesId": null,
         "venueId": "venue-main",
         "referenceId": "F-QUAL",
@@ -1811,8 +1811,8 @@
         "kind": "match",
         "stage": "finals",
         "date": "2026-10-04",
-        "plannedStart": "2026-10-04T16:35:00+08:00",
-        "plannedEnd": null,
+        "plannedStart": "2026-10-04T17:05:00+08:00",
+        "plannedEnd": "2026-10-04T17:35:00+08:00",
         "afterSeriesId": "F-QUAL",
         "venueId": "venue-main",
         "referenceId": "F-GF",
@@ -1871,8 +1871,8 @@
         "kind": "match",
         "stage": "finals",
         "date": "2026-10-04",
-        "plannedStart": "2026-10-04T16:35:00+08:00",
-        "plannedEnd": null,
+        "plannedStart": "2026-10-04T17:35:00+08:00",
+        "plannedEnd": "2026-10-04T17:50:00+08:00",
         "afterSeriesId": "F-GF",
         "venueId": "venue-main",
         "referenceId": "exhibition",
@@ -2508,7 +2508,12 @@
         "confirmedAt": null,
         "sourceNote": null,
         "publicationStatus": "draft",
-        "publishedAt": null
+        "publishedAt": null,
+        "missingTeamIds": null,
+        "partialTeamIds": null,
+        "tiedTeamIds": null,
+        "reviewNote": null,
+        "overrideReason": null
       }
     },
     "swiss": {

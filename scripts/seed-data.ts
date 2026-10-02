@@ -209,7 +209,23 @@ export const R3_SLOT_TIMES: readonly { groupRecord: string; orderInGroup: number
   { groupRecord: '0-2', orderInGroup: 2, date: DAY1, start: '20:50' },
 ];
 
-/** 决赛各节点的时间（第 4.3 节）。BO3 没有给出固定结束时刻，故 plannedEnd 为 null。 */
+/**
+ * 决赛各节点的时间（赛程手册「赛段三：决赛」）。
+ *
+ * 手册原文只有一处给到时间块：「16:35 起，竞技组先行 BO3 总决赛名额争夺战…
+ * 而后，竞技组进行 BO3 总决赛…此时间段最多比赛 6 场」，并注明「16:35 之后
+ * 两项比赛的结束时间以实际赛况为准」。
+ *
+ * 这里把时间块**铺开成固定时段**，依据仍是手册自身给出的量：
+ * - 每场 10 分钟（手册「本赛段按每场 10 分钟、逐场进行编排」，赛段三每个
+ *   20 分钟区间恰好放两场 BO1，口径一致）；
+ * - 两组 BO3 合计最多 6 局，故整块上限 6 × 10 = 60 分钟，即 16:35–17:35；
+ * - 表演赛为 15 分钟 BO2。
+ *
+ * 于是：名额争夺战 16:35–17:05、总决赛 17:05–17:35、表演赛 17:35–17:50。
+ * `plannedEnd` 填的是**计划时段**，实际结束仍以赛况为准（界面保留该提示）；
+ * `afterSeriesId` 继续记录真实依赖，供排序与「前序安排」显示。
+ */
 export const FINALS_SCHEDULE: readonly {
   id: string;
   date: string;
@@ -231,13 +247,14 @@ export const FINALS_SCHEDULE: readonly {
   { id: 'F-L2A', date: DAY2, start: '15:40', end: '15:50', afterSeriesId: null },
   { id: 'F-L2B', date: DAY2, start: '15:50', end: '16:00', afterSeriesId: null },
   { id: 'showcase-final-3', date: DAY2, start: '16:00', end: '16:15', afterSeriesId: null },
-  // 半决赛：**胜者组先行、败者组随后**（新版赛程手册 16:15~16:35）
+  // 半决赛：**胜者组先行、败者组随后**（赛程手册 16:15~16:35）
   { id: 'F-WSF', date: DAY2, start: '16:15', end: '16:25', afterSeriesId: null },
   { id: 'F-LSF', date: DAY2, start: '16:25', end: '16:35', afterSeriesId: null },
-  // BO3：无固定结束时刻；依赖前序系列赛。
-  { id: 'F-QUAL', date: DAY2, start: '16:35', end: null, afterSeriesId: null },
-  { id: 'F-GF', date: DAY2, start: '16:35', end: null, afterSeriesId: 'F-QUAL' },
-  { id: 'exhibition', date: DAY2, start: '16:35', end: null, afterSeriesId: 'F-GF' },
+  // BO3 时间块：16:35–17:35，两组各占 30 分钟（上限 3 局 × 10 分钟）
+  { id: 'F-QUAL', date: DAY2, start: '16:35', end: '17:05', afterSeriesId: null },
+  { id: 'F-GF', date: DAY2, start: '17:05', end: '17:35', afterSeriesId: 'F-QUAL' },
+  // 表演赛：15 分钟 BO2，排在总决赛计划时段之后
+  { id: 'exhibition', date: DAY2, start: '17:35', end: '17:50', afterSeriesId: 'F-GF' },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -476,14 +493,15 @@ export function buildSeedEvent(now: string): EventFile {
     }
   });
 
-  // 核分与准备（15:20–16:00）：正式公布排名与十六强对阵。
+  // 核分（15:20–15:40）：正式公布排名与十六强对阵（赛程手册赛段一）。
+  // 15:40–16:00 手册未安排项目（留给检录与准备），不要在这里补成占位活动。
   scheduleItems.push({
     id: 'sched-qual-review',
     kind: 'activity',
     stage: 'qualification',
     date: DAY1,
     plannedStart: at(DAY1, '15:20'),
-    plannedEnd: at(DAY1, '16:00'),
+    plannedEnd: at(DAY1, '15:40'),
     afterSeriesId: null,
     venueId: VENUE_MAIN,
     referenceId: null,
