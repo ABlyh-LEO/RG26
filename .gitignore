@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-operator/
 dist-testrepo/
+dist-pages/
 *.tsbuildinfo
 
 # 本地缓存

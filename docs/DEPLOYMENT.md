@@ -5,7 +5,7 @@
 
 - **仓库**：<https://github.com/ABlyh-LEO/RG26>
 - **目标地址**：<https://ablyh-leo.github.io/RG26/>
-- **当前状态**：`main` 已推送（commit `d677434`）；**Pages 是否启用与部署是否成功尚未确认**
+- **当前修复状态**：CI、Pages 路径及移动晋级图修复已完成本地检查；结果见[2026-10-02 验收记录](acceptance/2026-10-02-ci-mobile.md)。提交推送后的远端状态请查看 [GitHub Actions](https://github.com/ABlyh-LEO/RG26/actions)。
 
 ---
 
@@ -76,7 +76,8 @@ Vite 的 `base` 必须与真实部署目标一致，否则静态资源与数据�
 npm run build && npm run preview
 
 # 仓库子路径
-VITE_BASE_PATH=/test-repo/ npm run build && npm run preview
+VITE_BASE_PATH=/test-repo/ npm run build
+node scripts/serve-subpath.mjs --base /test-repo/ --port 4173
 ```
 
 两种情况下都要检查：
@@ -87,6 +88,22 @@ VITE_BASE_PATH=/test-repo/ npm run build && npm run preview
 
 > 路由使用 **hash 模式**（`HashRouter`），因此深链刷新不会触发 GitHub 的 404，
 > 不需要服务端重写规则。
+
+自动化测试也必须使用同一个前缀。以下命令以已有产物为准，不重新构建：
+
+```bash
+E2E_SKIP_BUILD=1 E2E_BASE_URL=http://127.0.0.1:4173/test-repo/ npm run test:e2e
+```
+
+以上环境变量语法适用于 Bash；PowerShell 可先设置
+`$env:E2E_SKIP_BUILD='1'` 和 `$env:E2E_BASE_URL='http://127.0.0.1:4173/test-repo/'`，
+再运行 `npm run test:e2e`。省略 `E2E_SKIP_BUILD` 时，测试会按 `E2E_BASE_URL`
+对应的 base 自动构建。CI 和部署工作流都设为 `1`，确保测试的文件就是待上传的文件。
+
+`vite preview` 同样支持子路径，但会在启动时重新读取 Vite 配置。
+只给之前的构建命令设置 `VITE_BASE_PATH`，不会让后续的 preview 自动继承它；
+使用 preview 时需同时设置该变量。E2E 使用上面的静态服务，对不存在的 JS、JSON
+和维护页面返回 404，避免 SPA 回退返回 HTML 掩盖资源路径错误。
 
 ---
 

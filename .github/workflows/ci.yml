@@ -56,6 +56,9 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
 
       - name: 端到端测试
+        # 直接验证上一步的生产产物，避免测试服务器再次构建覆盖它。
+        env:
+          E2E_SKIP_BUILD: '1'
         run: npm run test:e2e
 
       - name: 上传 Playwright 报告（失败时）

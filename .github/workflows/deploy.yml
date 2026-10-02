@@ -11,6 +11,13 @@ on:
       - 'public/**'
       - 'index.html'
       - 'vite.config.ts'
+      - 'playwright.config.ts'
+      - 'vitest.config.ts'
+      - 'eslint.config.js'
+      - 'tsconfig*.json'
+      - '.nvmrc'
+      - 'scripts/**'
+      - 'tests/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/deploy.yml'
@@ -103,9 +110,9 @@ jobs:
         # 1. **不能重新构建**。上面的构建已带 VITE_BASE_PATH（仓库子路径），
         #    正是线上使用的 base；e2e 的 webServer 若再跑一次 build:only，
         #    会用一个 base:'/' 的包覆盖掉它，上传到 Pages 的产物就坏了。
-        #    因此设 E2E_SKIP_BUILD=1，只启动 preview 验现有产物。
+        #    因此设 E2E_SKIP_BUILD=1，只启动静态服务验证现有产物。
         # 2. **base 必须带子路径**。产物里资源指向 /<repo>/assets/...，
-        #    若访问根路径会拿不到应用，测试会假失败。
+        #    静态服务和浏览器导航都必须保留该前缀；缺失资源如实返回 404。
         env:
           E2E_SKIP_BUILD: '1'
           E2E_BASE_URL: http://127.0.0.1:4173/${{ github.event.repository.name }}/

@@ -68,10 +68,9 @@
 /*
   横向滚动容器：窄屏可左右滑动。
 
-  `overflow-y` 必须是 visible，不能是 hidden：
-  卡片高度由 JS 实测后写入 board 的 minHeight，若有任何一列比它更高
-  （字体加载、队名换行、测量时序），多出来的部分会被 hidden **直接裁掉，
-  而且没有任何办法滚到它**。visible 让内容自然撑开，最下方的比赛始终可见。
+  overflow-x: auto 会让另一轴的 visible 计算为 auto；绝对定位的列也
+  不会自然撑开画布。因此 JS 必须在绘制前把含列标题的完整实测高度
+  写入 board，避免图内出现额外纵向滚动和底部比赛裁切。
 */
 .bracket__scroller {
   overflow-x: auto;

@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 /** 被测站点根地址。带子路径部署时用 E2E_BASE_URL 指到真实路径。 */
-const BASE_URL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}/`;
+const target = new URL(process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}/`);
+target.pathname = `${target.pathname.replace(/\/+$/, '')}/`;
+const BASE_URL = target.href;
 
 /**
  * 是否由 Playwright 自己拉起被测站点。
@@ -10,7 +12,17 @@ const BASE_URL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}/`;
  * `E2E_NO_WEBSERVER=1` 表示外部已经有人在 `E2E_BASE_URL` 上提供服务
  * （例如手工起的 preview、或线上站点），此时不再启动本地服务。
  */
-const ownsWebServer = !process.env.E2E_NO_WEBSERVER;
+const ownsWebServer = process.env.E2E_NO_WEBSERVER !== '1';
+
+/**
+ * 被测站点是否部署在子路径下（GitHub Pages 项目站）。
+ *
+ * 从 E2E_BASE_URL 的路径部分推断，例如
+ * `http://127.0.0.1:4173/RG26/` → `/RG26/`。
+ * 与 Vite 构建和静态服务使用同一个前缀，避免资源落到站点根目录。
+ */
+const basePath = target.pathname;
+const serverCommand = 'node scripts/serve-subpath.mjs --root dist';
 
 /**
  * 浏览器来源：
@@ -30,6 +42,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: BASE_URL,
@@ -46,7 +59,7 @@ export default defineConfig({
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'], ...(channel ? { channel } : {}) } },
     { name: 'tablet-chromium', use: { ...devices['Galaxy Tab S4'], ...(channel ? { channel } : {}) } },
     // WebKit 只能由 Playwright 自带浏览器提供；下载不到时通过 E2E_SKIP_WEBKIT=1 跳过。
-    ...(process.env.E2E_SKIP_WEBKIT
+    ...(process.env.E2E_SKIP_WEBKIT === '1'
       ? []
       : [{ name: 'mobile-webkit', use: { ...devices['iPhone 13'] } }]),
   ],
@@ -55,18 +68,16 @@ export default defineConfig({
         /**
          * 启动被测站点。
          *
-         * `E2E_SKIP_BUILD=1` 时**只启动 preview、不重新构建**。
-         * 这条路径给「已经构建好、且不能让构建被覆盖」的场合用 ——
-         * 例如 deploy.yml：那里先带 `VITE_BASE_PATH=<repo>/` 构建出
-         * 线上真正要发布的产物，若 e2e 再跑一次 `build:only`，
-         * 会用一个 `base:'/'` 的包覆盖掉它，随后上传到 Pages 的就是坏的。
-         *
-         * 注意此时 `E2E_BASE_URL` 必须带上子路径（如 /RG26/），
-         * 否则会访问到 preview 的根路径而不是应用的真实入口。
+         * 默认按被测 URL 构建，再用严格静态服务托管根路径或子路径。
+         * E2E_SKIP_BUILD=1 只验证已有 dist，部署时不会覆盖待发布产物。
+         * Vite preview 支持 base，但在启动时重新读取配置；构建步骤的
+         * VITE_BASE_PATH 不会自动传给后续步骤。这里直接挂载目标路径，
+         * 且缺失资源返回 404，避免 SPA 回退掩盖路径错误。
          */
-        command: process.env.E2E_SKIP_BUILD
-          ? `npm run preview -- --port ${PORT} --strictPort`
-          : `npm run build:only && npm run preview -- --port ${PORT} --strictPort`,
+        command: process.env.E2E_SKIP_BUILD === '1'
+          ? serverCommand
+          : `npm run build:only && ${serverCommand}`,
+        env: { E2E_BASE_URL: BASE_URL, VITE_BASE_PATH: basePath },
         url: BASE_URL,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

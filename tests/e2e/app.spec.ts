@@ -1,29 +1,59 @@
 /**
  * 端到端验收（docs/IMPLEMENTATION_PLAN.md 第 13.2、13.3 节）。
  *
- * 这些测试跑在**生产构建**上（playwright.config.ts 的 webServer 会先 build:only）。
+ * 这些测试跑在生产构建上。只有明确验证赛前状态的用例注入固定数据与时间；
+ * 其他用例仍读取待发布产物，避免正式赛果更新触发过期的赛前断言。
  */
 import { expect, test, type Page } from '@playwright/test';
+import { buildSeedEvent } from '../../scripts/seed-data';
+import { publicSnapshotSchema } from '../../src/domain/schema';
+import { waitForData } from './helpers';
+
+/** 仅给赛前状态用例使用，不替换生产数据文件，也不冻结计时器或布局动画。 */
+async function usePreEventSnapshot(page: Page): Promise<void> {
+  const time = '2026-10-02T12:00:00+08:00';
+  const snapshot = publicSnapshotSchema.parse({
+    schemaVersion: 1,
+    revision: 'e2e-pre-event',
+    builtAt: time,
+    sourceCommit: null,
+    data: buildSeedEvent(time),
+  });
+  await page.clock.setFixedTime(new Date(time));
+  await page.route('**/data/event.json', (route) => route.fulfill({ json: snapshot }));
+}
+
+/**
+ * 应用入口的路径前缀（含前后斜杠，根路径时为 `/`）。
+ *
+ * 部署到 GitHub Pages 项目站时地址是 `/<repo>/`，本地/CI 根路径是 `/`。
+ * baseURL 只能提供「协议+主机+路径」，而 **以 `/` 开头的相对地址会丢掉
+ * baseURL 的路径部分**（URL 解析规则），因此这里必须自己把前缀取出来，
+ * 否则子路径下会导航到 `http://host/#/...` 而落到应用之外。
+ */
+const APP_BASE = (() => {
+  const base = process.env.E2E_BASE_URL ?? '/';
+  try {
+    const p = new URL(base, 'http://127.0.0.1').pathname;
+    return p.endsWith('/') ? p : `${p}/`;
+  } catch {
+    return '/';
+  }
+})();
 
 /**
  * 导航到某个 hash 路由。
  *
  * 应用使用 HashRouter（为了在 GitHub Pages 上刷新深链不 404），
- * 因此路由必须写在 hash 内：/#/schedule 而不是 /schedule。
+ * 因此路由必须写在 hash 内：<base>#/schedule 而不是 <base>/schedule。
  */
 async function goto(page: Page, route: string): Promise<void> {
-  await page.goto(`/#${route}`);
-}
-
-/** 等待数据加载完成（元信息条出现即表示数据已就绪）。 */
-async function waitForData(page: Page): Promise<void> {
-  await expect(page.locator('.meta-bar')).toBeVisible({ timeout: 15_000 });
-  // 等待派生视图渲染
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.goto(`${APP_BASE}#${route}`);
 }
 
 test.describe('13.2 用户流程', () => {
   test('1. 首屏能看到赛事状态与下一批比赛，并可搜索长队名', async ({ page }) => {
+    await usePreEventSnapshot(page);
     await goto(page, '/');
     await waitForData(page);
 
@@ -58,6 +88,7 @@ test.describe('13.2 用户流程', () => {
   });
 
   test('2b. 总览与赛程都要能看到排位赛', async ({ page }) => {
+    await usePreEventSnapshot(page);
     // 总览：下一批比赛必须包含排位赛跑图（而不是只显示瑞士轮）
     await goto(page, '/');
     await waitForData(page);
@@ -191,17 +222,9 @@ test.describe('13.2 用户流程', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  /**
-   * 晋级图必须显示**已完成**比赛的结果 —— 这是曾经的静默缺陷。
-   *
-   * 早先瑞士轮卡片只塞了队名，从不设 `isWinner`、也不算比分，
-   * 于是 33 张瑞士轮卡片**分不出谁赢了**（只有决赛卡片有 ✔）。
-   * 由于正式数据里所有成绩都是空的，这个 bug 一直没被发现。
-   *
-   * 这里用**注入的完整赛季快照**验证：构造好数据再断言，
-   * 而不是假装空数据能证明这件事。
-   */
-  test('13.4 晋级图显示已完赛结果：胜者、比分、时间', async ({ page }) => {
+  // 已确认比赛刷新后的展示由 bracket-mobile.spec.ts 的明确赛果 fixture 覆盖。
+  test('13.4 赛前晋级图不编造成绩、胜者与红蓝方', async ({ page }) => {
+    await usePreEventSnapshot(page);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await goto(page, '/progress?view=journey');
     await waitForData(page);
@@ -222,22 +245,12 @@ test.describe('13.2 用户流程', () => {
       };
     });
 
-    /*
-     * 正式数据里赛事未开始，此时没有已完成比赛可显示；
-     * 那种情况下只断言"不编造"（无胜者、无比分）。
-     * 一旦有已结算比赛，则必须同时出现胜者标记与比分。
-     */
-    if (stats.done > 0) {
-      expect(stats.winnerRows, '已结算比赛必须标出胜者').toBeGreaterThan(0);
-      expect(stats.rowsWithScore, '已结算比赛必须显示比分').toBeGreaterThan(0);
-      expect(stats.rowsWithSeconds, '已结算比赛必须显示到达最终分时间').toBeGreaterThan(0);
-      // 每个已结算场次都应有一行胜者
-      expect(stats.winnerRows).toBeGreaterThanOrEqual(stats.done);
-    } else {
-      expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
-      expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
-      expect(stats.sideBadges, '对阵未确定时不得编造红蓝方').toBe(0);
-    }
+    expect(stats.cards, '完整赛前晋级图仍展示全部场次').toBe(43);
+    expect(stats.done, '赛前不得标出已结算比赛').toBe(0);
+    expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
+    expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
+    expect(stats.rowsWithSeconds, '无成绩时不得凭空显示到达最终分时间').toBe(0);
+    expect(stats.sideBadges, '对阵未确定时不得编造红蓝方').toBe(0);
   });
 
   test('13.4 总览页包含完整晋级图', async ({ page }) => {
@@ -312,6 +325,7 @@ test.describe('13.2 用户流程', () => {
   });
 
   test('3. 展示组抽签未录入时不虚构演出队伍', async ({ page }) => {
+    await usePreEventSnapshot(page);
     await goto(page, '/progress?view=finals');
     await waitForData(page);
     // 种子未公布时明确显示待公布，不显示编造的队伍
@@ -736,6 +750,7 @@ test.describe('13.4 列式赛程图', () => {
   });
 
   test('未决出名额显示为「第 N 场胜者/败者」，可与卡片上的场次号对上', async ({ page }) => {
+    await usePreEventSnapshot(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=finals&mode=bracket');
     await waitForData(page);
@@ -913,6 +928,7 @@ test.describe('13.4 列式赛程图', () => {
   }
 
   test('对阵未确定时说明在等什么，不编造名次', async ({ page }) => {
+    await usePreEventSnapshot(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await goto(page, '/progress?view=journey');
     await waitForData(page);
@@ -1017,14 +1033,19 @@ test.describe('13.2 发布与读取健壮性', () => {
     expect(body).not.toContain('operator.html');
 
     // operator.html 不得作为独立文档存在于公开产物中。
-    // 注意：vite preview 对未知路径会回退到 index.html（SPA fallback），
-    // 因此不能只看状态码——要确认返回的确实是观众站首页，而不是维护页面。
-    const response = await page.request.get('/operator.html');
+    // 路径必须带上应用前缀，否则子路径部署时请求的是应用之外的位置，
+    // 测的就不是「产物里有没有维护页」了。
+    const response = await page.request.get(`${APP_BASE}operator.html`);
     if (response.status() === 200) {
+      // 若托管方对未知路径做了 SPA 回退，这里会拿到观众站首页：
+      // 那不算缺陷，但必须确认它**不是**维护页面。
       const html = await response.text();
       expect(html).toContain('RoboGame2026 赛程与结果');
       expect(html).not.toContain('维护工具');
       expect(html).not.toContain('src/operator');
+    } else {
+      // 真实的静态托管（含 GitHub Pages）对不存在的文件返回 404，同样合格。
+      expect(response.status()).toBe(404);
     }
   });
 

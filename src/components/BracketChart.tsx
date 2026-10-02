@@ -75,11 +75,40 @@ const SECTION_GAP = 20;
 const FALLBACK_HEIGHT = 84;
 
 /**
+ * 按视口宽度决定可见列数（不做拖拽缩放）。
+ *
+ * 手机 2 列、平板 3 列、桌面按屏宽尽量多。
+ *
+ * 这个函数必须能在**首帧同步调用**：`visibleColumns` 决定列宽，列宽决定
+ * 卡片里队名换几行，换行决定节点高度，节点高度决定画布高度。若初始值
+ * 拍错了（比如先按"全部列"算），首帧就会画出一个偏矮的画布，最下面
+ * 几场比赛被裁掉；要等 effect 纠正后才恢复，中间那几帧就是"糊成一团"。
+ * 因此初始 state 直接用本函数计算，而不是先给一个占位值再纠正。
+ */
+function visibleColumnCount(innerWidth: number, total: number): number {
+  const byWidth = innerWidth >= 1400 ? 6 : innerWidth >= 1100 ? 5 : innerWidth >= 860 ? 4 : innerWidth >= 620 ? 3 : 2;
+  return Math.max(1, Math.min(byWidth, total));
+}
+
+/** 首帧可用的视口宽度（SSR/测试环境没有 window 时退回桌面宽度）。 */
+function initialViewportWidth(): number {
+  return typeof window === 'undefined' ? 1440 : window.innerWidth;
+}
+
+/**
  * 横线离卡片的最小留白。也是横向段被占用后左右挪动的**步长**：
  * 两条同高度的横线分开 18px，视觉上一眼能看出是两条。
  */
 const CLEAR = 18;
 const CLEAR_STEP = CLEAR;
+
+interface ConnectorPath {
+  key: string;
+  fromId: string;
+  toId: string;
+  d: string;
+  via: 'winner' | 'loser';
+}
 
 export function BracketChart({
   columns,
@@ -94,8 +123,15 @@ export function BracketChart({
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [heights, setHeights] = useState<Record<string, number>>({});
   const [viewportWidth, setViewportWidth] = useState(0);
-  const [visibleColumns, setVisibleColumns] = useState(columns.length);
+  /**
+   * 可见列数。初始值就用真实视口宽度算出来，不留"全部列"这种占位值：
+   * 占位值会让首帧列宽偏窄、卡片偏高，画布高度随之算错，底部比赛被裁。
+   */
+  const [visibleColumns, setVisibleColumns] = useState(() =>
+    visibleColumnCount(initialViewportWidth(), columns.length),
+  );
   const [measuredHeight, setMeasuredHeight] = useState(0);
+  const [paths, setPaths] = useState<ConnectorPath[]>([]);
 
   /**
    * 列宽。首次渲染 viewportWidth 还是 0，用 minColumnWidth 兜底，
@@ -122,7 +158,8 @@ export function BracketChart({
     board.querySelectorAll<HTMLElement>('[data-node-id]').forEach((el) => {
       const id = el.dataset.nodeId;
       if (!id) return;
-      next[id] = el.offsetHeight;
+      // 保留小数像素，避免窄屏多行文字在逐张累加时丢失高度。
+      next[id] = el.getBoundingClientRect().height;
     });
 
     setHeights((prev) => {
@@ -136,10 +173,11 @@ export function BracketChart({
     // 画布真实高度：最高的那一列（含列标题）延伸到哪里
     let bottom = 0;
     board.querySelectorAll<HTMLElement>('.bracket__column').forEach((col) => {
-      const b = col.offsetTop + col.offsetHeight;
+      const b = col.offsetTop + col.getBoundingClientRect().height;
       if (b > bottom) bottom = b;
     });
-    setMeasuredHeight((prev) => (prev === bottom ? prev : bottom));
+    const measured = Math.ceil(bottom);
+    setMeasuredHeight((prev) => (prev === measured ? prev : measured));
 
     const scroller = scrollerRef.current;
     if (scroller) {
@@ -148,28 +186,29 @@ export function BracketChart({
     }
   }, []);
 
-  // 首帧、数据变化、以及**列宽变化**后都要重测。
-  //
-  // 列宽变化必须重测：窄屏下 columnWidth 收敛到 minColumnWidth，
-  // 卡片变窄会让队名多换一行，节点高度随之变大。不重测就会一直
-  // 用旧的偏小高度，最下面一场被裁掉。
+  // 每次 DOM 提交后同步测量，包括密度、队名和比分更新。
+  // heights 引起的下一次提交会应用新 top，再测列底边；相同值不会更新 state。
+  // 这轮收敛在浏览器绘制前完成，不依赖下一帧或偶然的容器 resize。
   useLayoutEffect(() => {
     measure();
-  }, [measure, columns, connections, columnWidth]);
+  });
 
   /**
    * 容器尺寸变化（旋转、窗口缩放）后重测。
    *
-   * 观察的是**滚动容器**：它是外部给的宽度，不会因为内部布局改变而改变。
-   * 观察 board 会形成"测量→改宽度→再测量"的自反馈。
+   * 宽度取滚动容器，节点另行观察字体或内容引起的高度变化。
+   * 绝对定位节点不会撑开容器，单独观察容器无法发现这些变化。
    */
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(() => measure());
     ro.observe(scroller);
+    boardRef.current?.querySelectorAll<HTMLElement>('[data-node-id]').forEach((node) => {
+      ro.observe(node);
+    });
     return () => ro.disconnect();
-  }, [measure]);
+  }, [measure, columns]);
 
   // 字体加载完成后高度可能变化
   useEffect(() => {
@@ -184,13 +223,10 @@ export function BracketChart({
     };
   }, [measure]);
 
-  /** 按视口宽度决定可见列数（不做拖拽缩放）。 */
+  /** 视口宽度变化时更新可见列数。 */
   useEffect(() => {
     const compute = () => {
-      const w = window.innerWidth;
-      // 手机 2 列、平板 3 列、桌面按屏宽尽量多
-      const byWidth = w >= 1400 ? 6 : w >= 1100 ? 5 : w >= 860 ? 4 : w >= 620 ? 3 : 2;
-      setVisibleColumns(Math.max(1, Math.min(byWidth, columns.length)));
+      setVisibleColumns(visibleColumnCount(window.innerWidth, columns.length));
     };
     compute();
     window.addEventListener('resize', compute);
@@ -212,10 +248,12 @@ export function BracketChart({
   const density = resolveDensity(visibleColumns);
   const showSecondary = showsSecondaryInfo(density);
 
-  /** 连线端点坐标：基于实测 DOM 位置，而不是自己算。 */
-  const paths = useMemo(() => {
+  // 连线必须在提交后读 DOM。render 内的 useMemo 读到的是上一版 top，
+  // 即使随后节点高度不变，路径也会停在旧位置，窄屏和旋转时尤其明显。
+  // 依赖同时包含影响 DOM 的布局、密度、内容和实测高度；路径相等时复用 state。
+  useLayoutEffect(() => {
     const board = boardRef.current;
-    if (!board) return [];
+    if (!board) return;
     const boardRect = board.getBoundingClientRect();
 
     const nodeEls = new Map<string, HTMLElement>();
@@ -224,7 +262,7 @@ export function BracketChart({
       if (id && !nodeEls.has(id)) nodeEls.set(id, el);
     });
 
-    const out: { key: string; d: string; via: 'winner' | 'loser' }[] = [];
+    const out: ConnectorPath[] = [];
 
     const columnOfNode = new Map<string, number>();
     const columnBounds: { left: number; right: number }[] = [];
@@ -584,12 +622,15 @@ export function BracketChart({
         }
       }
 
-      out.push({ key: `${conn.fromId}->${conn.toId}-${conn.via}`, d, via: conn.via });
+      out.push({ key: `${conn.fromId}->${conn.toId}-${conn.via}`, fromId: conn.fromId, toId: conn.toId, d, via: conn.via });
     }
-    return out;
-    // 依赖的是已经应用到 DOM 上的 top/left 与实测高度：位置变化必须重算。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connections, heights, columnWidth, columns]);
+    setPaths((previous) =>
+      previous.length === out.length &&
+      previous.every((path, index) => path.key === out[index]!.key && path.d === out[index]!.d)
+        ? previous
+        : out,
+    );
+  }, [columns, connections, layout, columnWidth, density, renderNode, sectionLabel, measuredHeight]);
 
   /**
    * 画布高度。
@@ -643,7 +684,13 @@ export function BracketChart({
               <path key={`c-${p.key}`} className="bracket__link-casing" d={p.d} />
             ))}
             {paths.map((p) => (
-              <path key={p.key} className={`bracket__link bracket__link--${p.via}`} d={p.d} />
+              <path
+                key={p.key}
+                className={`bracket__link bracket__link--${p.via}`}
+                data-from-id={p.fromId}
+                data-to-id={p.toId}
+                d={p.d}
+              />
             ))}
           </svg>
 
