@@ -35,6 +35,14 @@ export interface QualificationCompleteness {
   reason: string | null;
 }
 
+/** 定榜时写下的复核记录（用于事后追问"当时知道成绩不全吗、谁批准的"）。 */
+export interface QualificationReviewRecord {
+  missingTeamIds: string[] | null;
+  partialTeamIds: string[] | null;
+  tiedTeamIds: string[] | null;
+  reviewNote: string | null;
+}
+
 /** 存储的排位赛名次是否可以作为"正式名次"对外使用。 */
 export interface OfficialQualificationRanking {
   /** 存储的名次已被一次显式动作确认。 */
@@ -42,7 +50,7 @@ export interface OfficialQualificationRanking {
   /** 成绩完整性成立。 */
   complete: boolean;
   /**
-   * 成绩不完整，但有明确的人为来源说明（裁判组核分表 / 组委会决定）。
+   * 成绩不完整，但有明确的人为来源（豁免原因或来源说明）。
    * 不完整的名次只能由人负责，不能由自动计算产生。
    */
   overridden: boolean;
@@ -52,6 +60,10 @@ export interface OfficialQualificationRanking {
   orderedTeamIds: string[];
   bestResultLabels: string[] | null;
   sourceNote: string | null;
+  /** 成绩不完整却定榜时的豁免原因。 */
+  overrideReason: string | null;
+  /** 定榜时持久化的复核记录（当前完整性另见 `completeness`）。 */
+  review: QualificationReviewRecord;
   completeness: QualificationCompleteness;
 }
 
@@ -107,7 +119,9 @@ export function officialQualificationRanking(event: EventFile): OfficialQualific
   const completeness = assessQualificationCompleteness(event);
   const confirmed = stored.status === 'confirmed';
   const sourceNote = stored.sourceNote?.trim() ? stored.sourceNote : null;
-  const overridden = confirmed && !completeness.ok && sourceNote !== null;
+  const overrideReason = stored.overrideReason?.trim() ? stored.overrideReason : null;
+  // 人工定榜的历史数据只写了 sourceNote；新数据两者都会写。
+  const overridden = confirmed && !completeness.ok && (overrideReason !== null || sourceNote !== null);
 
   return {
     confirmed,
@@ -117,6 +131,13 @@ export function officialQualificationRanking(event: EventFile): OfficialQualific
     orderedTeamIds: confirmed ? stored.orderedTeamIds : [],
     bestResultLabels: confirmed ? stored.bestResultLabels : null,
     sourceNote,
+    overrideReason,
+    review: {
+      missingTeamIds: stored.missingTeamIds,
+      partialTeamIds: stored.partialTeamIds,
+      tiedTeamIds: stored.tiedTeamIds,
+      reviewNote: stored.reviewNote,
+    },
     completeness,
   };
 }

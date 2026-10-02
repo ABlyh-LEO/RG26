@@ -21,7 +21,7 @@ import {
 } from '../domain/standings';
 import { describeGroup, groupStakes, ROUND_GROUP_ORDER } from '../domain/swiss';
 import { computeQualificationRanking, liveQualificationRanking, type LiveQualificationRanking } from '../domain/qualification-ranking';
-import { type QualificationCompleteness, officialQualificationRanking } from '../domain/qualification-completeness';
+import { type QualificationCompleteness, type QualificationReviewRecord, officialQualificationRanking } from '../domain/qualification-completeness';
 import { type Sides, sidesForFinals, sidesForSwiss } from '../domain/sides';
 import {
   type Awards,
@@ -473,6 +473,10 @@ export interface DerivedEvent {
     completeness: QualificationCompleteness;
     /** 人工定榜的来源说明。 */
     sourceNote: string | null;
+    /** 成绩不完整却定榜时的豁免原因（非空即代表名次由人负责）。 */
+    overrideReason: string | null;
+    /** 定榜时持久化的复核记录（当时缺谁 / 谁只录一轮 / 哪些并列 / 复核说明）。 */
+    review: QualificationReviewRecord;
     /**
      * **实时排行（「当前排行」）**：由已确认成绩现场派生。
      *
@@ -571,6 +575,8 @@ export function deriveEvent(event: EventFile): DerivedEvent {
       overridden: official.overridden,
       completeness: official.completeness,
       sourceNote: official.sourceNote,
+      overrideReason: official.overrideReason,
+      review: official.review,
       live: liveQualificationRanking(event),
       bestByTeam: computeBestRounds(event),
     },

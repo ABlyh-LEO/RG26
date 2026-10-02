@@ -228,6 +228,11 @@ export function rankingFixtureFrom(orderedTeamIds: readonly string[]): Qualifica
     sourceNote: '测试数据',
     publicationStatus: 'published',
     publishedAt: '2026-10-03T15:30:00+08:00',
+    missingTeamIds: null,
+    partialTeamIds: null,
+    tiedTeamIds: null,
+    reviewNote: null,
+    overrideReason: null,
   };
 }
 
@@ -264,6 +269,11 @@ export function makeEmptyEvent(teams: Team[] = makeTeams()): EventFile {
         sourceNote: null,
         publicationStatus: 'draft',
         publishedAt: null,
+        missingTeamIds: null,
+        partialTeamIds: null,
+        tiedTeamIds: null,
+        reviewNote: null,
+        overrideReason: null,
       },
     },
     swiss: { rounds: [], matches: [] },

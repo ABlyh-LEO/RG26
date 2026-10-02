@@ -218,6 +218,27 @@ export const qualificationRankingSchema = z
     sourceNote: z.string().nullable().default(null),
     publicationStatus: publicationStatusSchema,
     publishedAt: isoDateTimeSchema.nullable().default(null),
+    /*
+     * 定榜时的复核记录（可选，向后兼容）。
+     *
+     * 名次一旦对外公布就要能被追问"当时知道成绩不全吗、谁批准的"。
+     * 只把这些信息留在一次性的界面提示里，等于没有记录。
+     */
+    /** 定榜时没有可比成绩的队伍。 */
+    missingTeamIds: z.array(z.string()).nullable().default(null),
+    /** 定榜时只录到一轮成绩的队伍。 */
+    partialTeamIds: z.array(z.string()).nullable().default(null),
+    /** 定榜时积分与用时完全相同、名次无法由数据区分的队伍。 */
+    tiedTeamIds: z.array(z.string()).nullable().default(null),
+    /** 复核说明：谁在何时核对了上述名单。 */
+    reviewNote: z.string().nullable().default(null),
+    /**
+     * 成绩不完整却定榜时的**豁免原因**。
+     *
+     * 与 `sourceNote` 的区别：`sourceNote` 是名次依据（例如"裁判组核分表"），
+     * 本字段专门记录"为什么可以不完整"。非空即代表名次由人负责。
+     */
+    overrideReason: z.string().nullable().default(null),
   })
   .strict();
 

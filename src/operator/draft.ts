@@ -471,6 +471,11 @@ export function applyQualificationRun(event: EventFile, entry: QualificationRunE
 /**
  * 批量确认某队（或全部）待确认的跑图成绩。
  * 排位赛核分时段一次性确认是常见操作，因此提供批量入口。
+ *
+ * 注意：
+ * - 本函数**只改成绩状态**，与单条录入一样**不会**定榜；
+ * - 当前工作台没有接这个入口（只有测试与脚本使用），
+ *   若将来接回 UI，定榜仍必须走 `confirmQualificationRanking`。
  */
 export function confirmQualificationRuns(
   event: EventFile,
@@ -527,6 +532,12 @@ export function qualificationProgress(event: EventFile): {
  * 排位赛
  * ------------------------------------------------------------------ */
 
+/** 定榜时可附带的复核记录。 */
+export interface ConfirmQualificationRankingOptions {
+  /** 复核说明：谁在何时核对了"只录到一轮 / 并列"的名单。 */
+  reviewNote?: string | null;
+}
+
 /**
  * 按「积分高者优，同分时到达最终分时间早者优」**定榜**排位赛 1–22 名。
  *
@@ -539,8 +550,14 @@ export function qualificationProgress(event: EventFile): {
  *
  * **本函数不会被任何一次成绩录入隐式调用**：成绩不完整时直接失败并列出
  * 缺哪些队伍。想给观众看排名请用 `liveQualificationRanking`（派生，不落库）。
+ *
+ * 定榜会把当时的缺成绩 / 只录一轮 / 并列名单与复核说明一并写入数据，
+ * 以便事后追问"当时知道成绩不全吗、谁批准的"。
  */
-export function confirmQualificationRanking(event: EventFile): ApplyResult {
+export function confirmQualificationRanking(
+  event: EventFile,
+  options: ConfirmQualificationRankingOptions = {},
+): ApplyResult {
   const completeness = assessQualificationCompleteness(event);
   if (!completeness.ok) {
     return {
@@ -555,9 +572,11 @@ export function confirmQualificationRanking(event: EventFile): ApplyResult {
 
   const result = computeQualificationRanking(event);
   const messages: string[] = [];
+  const reviewNote = options.reviewNote?.trim() ? options.reviewNote.trim() : null;
 
   if (completeness.partialTeamIds.length > 0) {
     messages.push(`${completeness.partialTeamIds.length} 支队伍只录到一轮成绩，名次按该轮最优计算。`);
+    if (reviewNote === null) messages.push('建议填写「复核说明」，记录这次只录到一轮的处理依据。');
   }
   if (completeness.tiedTeamIds.length > 0) {
     const names = completeness.tiedTeamIds
@@ -566,6 +585,7 @@ export function confirmQualificationRanking(event: EventFile): ApplyResult {
     messages.push(
       `积分与用时完全相同的并列，名次无法由数据区分，请人工复核：${names.join('、')}`,
     );
+    if (reviewNote === null) messages.push('并列名次必须留下「复核说明」，否则事后无法解释谁在前。');
   }
 
   const now = new Date().toISOString();
@@ -581,11 +601,18 @@ export function confirmQualificationRanking(event: EventFile): ApplyResult {
           ...event.qualification.ranking,
           orderedTeamIds,
           bestResultLabels,
-          sourceNote: event.qualification.ranking.sourceNote ?? '按积分与到达最终分时间自动排序',
+          // 名次由成绩算出，来源注明自动排序；人工来源说明不再适用。
+          sourceNote: '按积分与到达最终分时间自动排序',
           status: 'confirmed',
           confirmedAt: now,
           publicationStatus: 'published',
           publishedAt: now,
+          missingTeamIds: completeness.missingTeamIds,
+          partialTeamIds: completeness.partialTeamIds,
+          tiedTeamIds: completeness.tiedTeamIds,
+          reviewNote,
+          // 自动定榜永远不豁免：成绩不完整时上面的门禁已经拦住了。
+          overrideReason: null,
         },
       },
       event: { ...event.event, contentUpdatedAt: now },
@@ -652,6 +679,13 @@ export function applyQualificationRanking(
           sourceNote,
           publicationStatus: 'published',
           publishedAt: now,
+          // 复核记录：定榜时的完整性状况必须留在数据里，而不是只闪一次提示。
+          missingTeamIds: completeness.missingTeamIds,
+          partialTeamIds: completeness.partialTeamIds,
+          tiedTeamIds: completeness.tiedTeamIds,
+          reviewNote: sourceNote,
+          // 成绩不完整却定榜 → 记录豁免原因（人工名次由人负责）。
+          overrideReason: completeness.ok ? null : sourceNote,
         },
       },
       event: { ...event.event, contentUpdatedAt: now },

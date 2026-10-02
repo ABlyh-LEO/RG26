@@ -33,6 +33,11 @@ function ranking16(): QualificationRanking {
     sourceNote: '测试',
     publicationStatus: 'published',
     publishedAt: '2026-10-03T15:30:00+08:00',
+    missingTeamIds: null,
+    partialTeamIds: null,
+    tiedTeamIds: null,
+    reviewNote: null,
+    overrideReason: null,
   };
 }
 

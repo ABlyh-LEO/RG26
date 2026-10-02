@@ -21,13 +21,21 @@ export function audienceEvent(scenario: AudienceScenario): EventFile {
     return event;
   }
   if (scenario === 'qualification-partial') {
-    // 只确认 7 条成绩（3 支队伍两轮齐全 + 1 支只跑了一轮，其余 18 支没有成绩），
-    // 且**不定榜**。用于验证观众端只显示「当前排行」、绝不断言晋级。
-    // 索引 0–21 为第 1 轮，22–43 为第 2 轮，同一队伍同序号。
-    for (const [order, index] of [0, 22, 1, 23, 2, 24, 3].entries()) {
+    // 只确认 7 条成绩，且**不定榜**。用于验证观众端只显示「当前排行」、绝不断言晋级：
+    // - 索引 0–21 为第 1 轮，22–43 为第 2 轮，同一队伍同序号；
+    // - 前两支队伍两轮成绩完全相同 → 触发并列标记；
+    // - 第四支队伍只跑了一轮 → 触发"仅一轮"标记；
+    // - 其余 18 支没有成绩 → 触发"无成绩"标记。
+    const plan: Array<[index: number, score: string, elapsed: string]> = [
+      [0, '20', '40'], [22, '20', '40'],
+      [1, '20', '40'], [23, '20', '40'],
+      [2, '18', '45'], [24, '17', '46'],
+      [3, '16', '50'],
+    ];
+    for (const [index, score, elapsed] of plan) {
       const run = event.qualification.runs[index]!;
       const result = applyQualificationRun(event, {
-        runId: run.id, score: String(20 - order), elapsedSeconds: String(40 + order),
+        runId: run.id, score, elapsedSeconds: elapsed,
         rawResult: '测试成绩', judgeNote: null, confirm: true,
       });
       if (!result.ok) throw new Error(result.messages.join('；'));

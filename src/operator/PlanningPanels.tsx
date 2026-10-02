@@ -26,6 +26,7 @@ export function QualificationEntry({
   const computed = useMemo(() => computeQualificationRanking(draft), [draft]);
   /** 定榜门禁：每支竞技组队伍都要有已确认的积分成绩。 */
   const completeness = useMemo(() => assessQualificationCompleteness(draft), [draft]);
+  const [reviewNote, setReviewNote] = useFormField('planning.qualification', 'reviewNote', '');
   const bestOf = (teamId: string) => computed.standings.find((s) => s.teamId === teamId)?.best ?? null;
 
   const move = (index: number, delta: number) => {
@@ -111,12 +112,29 @@ export function QualificationEntry({
           </table>
         </div>
 
+        {completeness.partialTeamIds.length > 0 || completeness.tiedTeamIds.length > 0 ? (
+          <div className="operator-field" style={{ marginTop: 'var(--sp-2)' }}>
+            <label htmlFor="qual-review">复核说明{completeness.tiedTeamIds.length > 0 ? '（并列必填）' : '（建议填写）'}</label>
+            <input
+              id="qual-review"
+              className="input"
+              value={reviewNote}
+              aria-invalid={completeness.tiedTeamIds.length > 0 && reviewNote.trim() === ''}
+              onChange={(e) => setReviewNote(e.target.value)}
+              placeholder="例如：只录到一轮的队伍已电话确认；并列按第 1 轮成绩区分，裁判组已签字"
+            />
+            <p className="xsmall muted" style={{ marginTop: 4 }}>
+              这条说明会随名次一起写入数据，事后可以追问"当时是谁、按什么依据核对的"。
+            </p>
+          </div>
+        ) : null}
+
         <button
           type="button"
           className="btn btn--primary"
           style={{ marginTop: 'var(--sp-3)' }}
-          disabled={!completeness.ok}
-          onClick={() => onApply(confirmQualificationRanking(draft))}
+          disabled={!completeness.ok || (completeness.tiedTeamIds.length > 0 && reviewNote.trim() === '')}
+          onClick={() => onApply(confirmQualificationRanking(draft, { reviewNote }))}
         >
           核对无误，定榜并写入草稿
         </button>
@@ -124,6 +142,13 @@ export function QualificationEntry({
           定榜后名次成为<b>正式名次</b>，观众端才会显示「晋级十六强 / 优秀奖」。
           成绩不完整时按钮不可用；确需在成绩不全时定榜，请走下方「人工覆盖」并填写来源说明。
         </p>
+        {draft.qualification.ranking.status === 'confirmed' ? (
+          <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
+            本名次已于 {draft.qualification.ranking.confirmedAt?.slice(0, 16).replace('T', ' ') ?? '（时间缺失）'} 定榜
+            {draft.qualification.ranking.reviewNote ? `；复核说明：${draft.qualification.ranking.reviewNote}` : '；未填写复核说明'}
+            {draft.qualification.ranking.overrideReason ? `；豁免原因：${draft.qualification.ranking.overrideReason}` : ''}。
+          </p>
+        ) : null}
       </div>
 
       <div className="card operator-draft">

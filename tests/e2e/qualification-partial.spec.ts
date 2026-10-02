@@ -30,6 +30,9 @@ test('部分成绩：只显示「当前排行」，不出现晋级结论，且�
   await expect(ranking).toContainText('实时 · 成绩不完整');
   await expect(ranking).toContainText('不作为晋级依据');
   await expect(ranking).toContainText('无成绩');
+  // 数据状态必须逐行说清：没有成绩 / 只录到一轮 / 并列，不能静默排成确定位次。
+  await expect(ranking).toContainText('仅一轮');
+  await expect(ranking).toContainText('并列');
   // 表头是「当前位次」，不是「名次」；且整列没有「晋级状态」。
   await expect(ranking).toContainText('当前位次');
   await expect(ranking).not.toContainText('晋级状态');

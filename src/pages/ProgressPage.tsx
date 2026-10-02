@@ -165,6 +165,18 @@ function QualificationView() {
   const live = qualification.live;
   const showLive = !official && live.hasAnyScore;
   const missingCount = qualification.completeness.missingTeamIds.length;
+  /*
+   * 名次表里的诚实标记：并列与"只录到一轮"必须在正式榜上也能看见，
+   * 不能因为定了榜就消失。优先用定榜时持久化的记录，回退到当前计算。
+   * `tiedTeamIds` 只标记"与前一名相同"的那一支，因此把它的前一名也算进并列。
+   */
+  const tiedIds = new Set(qualification.review.tiedTeamIds ?? qualification.completeness.tiedTeamIds);
+  const tiedBothIds = new Set(tiedIds);
+  qualification.orderedTeamIds.forEach((teamId, index) => {
+    if (tiedIds.has(teamId) && index > 0) tiedBothIds.add(qualification.orderedTeamIds[index - 1]!);
+  });
+  const partialIds = new Set(qualification.review.partialTeamIds ?? qualification.completeness.partialTeamIds);
+  const missingAtConfirm = qualification.review.missingTeamIds?.length ?? missingCount;
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-4)' }}>
@@ -194,10 +206,16 @@ function QualificationView() {
             </p>
             {qualification.overridden ? (
               <div className="inline-notice">
-                <strong>本次名次由人工录入。</strong>
-                成绩尚不完整（{missingCount} 支队伍没有可比成绩），名次依据：
+                <strong>本次名次由人工录入，成绩不完整由人负责。</strong>
+                定榜时 {missingAtConfirm} 支队伍没有可比成绩；名次依据：
                 {qualification.sourceNote ?? '未填写来源说明'}
+                {qualification.overrideReason && qualification.overrideReason !== qualification.sourceNote
+                  ? `；豁免原因：${qualification.overrideReason}`
+                  : ''}
               </div>
+            ) : null}
+            {qualification.review.reviewNote ? (
+              <p className="xsmall muted">复核说明：{qualification.review.reviewNote}</p>
             ) : null}
             <div className="table-wrap">
               <table className="table">
@@ -215,7 +233,10 @@ function QualificationView() {
                   {qualification.orderedTeamIds.map((teamId, index) => {
                     if (selectedTeam && teamId !== selectedTeam) return null;
                     const team = teamMap.get(teamId)?.team ?? null;
-                    const label = qualification.bestResultLabels?.[index] ?? '—';
+                    const marks = [tiedBothIds.has(teamId) ? '并列' : null, partialIds.has(teamId) ? '仅一轮' : null]
+                      .filter(Boolean)
+                      .join(' · ');
+                    const label = `${qualification.bestResultLabels?.[index] ?? '—'}${marks ? `（${marks}）` : ''}`;
                     const advanced = index < 16;
                     return (
                       <tr key={teamId}>
@@ -261,9 +282,12 @@ function QualificationView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {live.entries.map((entry) => {
+                  {live.entries.map((entry, index) => {
                     if (selectedTeam && entry.teamId !== selectedTeam) return null;
                     const team = teamMap.get(entry.teamId)?.team ?? null;
+                    // 并列是双向的：与前一名相同，同时也意味着后一名与自己相同。
+                    const tied = entry.tiedWithPrevious || live.entries[index + 1]?.tiedWithPrevious === true;
+                    const hasMark = entry.incomplete || entry.partial || tied;
                     return (
                       <tr key={entry.teamId}>
                         <td className="num tabular">{entry.position}</td>
@@ -272,16 +296,11 @@ function QualificationView() {
                         </td>
                         <td className="num tabular">{team?.number ?? '—'}</td>
                         <td className="tabular">{entry.label}</td>
-                        <td>
-                          {entry.incomplete ? (
-                            <span className="badge badge--neutral">无成绩</span>
-                          ) : entry.partial ? (
-                            <span className="badge badge--pending">仅一轮</span>
-                          ) : entry.tiedWithPrevious ? (
-                            <span className="badge badge--pending">与上位并列</span>
-                          ) : (
-                            <span className="xsmall muted">第 {entry.round ?? '—'} 轮成绩</span>
-                          )}
+                        <td className="row" style={{ gap: 4 }}>
+                          {entry.incomplete ? <span className="badge badge--neutral">无成绩</span> : null}
+                          {entry.partial ? <span className="badge badge--pending">仅一轮</span> : null}
+                          {tied ? <span className="badge badge--pending">并列</span> : null}
+                          {!hasMark ? <span className="xsmall muted">第 {entry.round ?? '—'} 轮成绩</span> : null}
                         </td>
                       </tr>
                     );

@@ -24,6 +24,7 @@ import {
   applyQualificationRanking,
   applyQualificationRun,
   confirmQualificationRanking,
+  confirmQualificationRuns,
   generateNextRound,
 } from '../../src/operator/draft';
 import { proposeResult, type ResultInput, type ResultTarget } from '../../src/operator/result-edit';
@@ -195,5 +196,87 @@ describe('发布校验拦住"已确认但不完整"的排名', () => {
     const event = forceConfirmed(play(BASE, COMPETITIVE[0]!.id, 1, '20'), '裁判组核分表');
     const codes = validateEvent(event).errors.map((e) => e.code);
     expect(codes).not.toContain('ranking-confirmed-incomplete');
+  });
+});
+
+describe('定榜留下可审计的复核记录', () => {
+  it('自动定榜写入完整性名单与复核说明，且不写豁免原因', () => {
+    let event = BASE;
+    for (const team of COMPETITIVE) event = play(event, team.id, 1, '20');
+
+    const result = confirmQualificationRanking(event, { reviewNote: '只录到一轮，已电话确认' });
+    expect(result.ok).toBe(true);
+    const ranking = result.event.qualification.ranking;
+    expect(ranking.partialTeamIds).toHaveLength(22);
+    expect(ranking.missingTeamIds).toEqual([]);
+    expect(ranking.reviewNote).toBe('只录到一轮，已电话确认');
+    expect(ranking.overrideReason).toBeNull();
+    expect(officialQualificationRanking(result.event).review.reviewNote).toBe('只录到一轮，已电话确认');
+  });
+
+  it('并列名单会随名次一起写入数据', () => {
+    let event = BASE;
+    COMPETITIVE.forEach((team, index) => {
+      const score = index < 2 ? '20' : String(100 - index);
+      event = play(event, team.id, 1, score);
+      event = play(event, team.id, 2, score);
+    });
+
+    const result = confirmQualificationRanking(event, { reviewNote: '并列按第 1 轮成绩区分，裁判组签字' });
+    expect(result.ok).toBe(true);
+    // `tiedTeamIds` 只标记"与**前一名**相同"的那一支（两支队并列 → 1 条）。
+    expect(result.event.qualification.ranking.tiedTeamIds).toHaveLength(1);
+    expect(assessQualificationCompleteness(result.event).tiedTeamIds).toHaveLength(1);
+  });
+
+  it('人工定榜在不完整时写入豁免原因与复核记录', () => {
+    const played = play(BASE, COMPETITIVE[0]!.id, 1, '20');
+    const order = COMPETITIVE.map((t) => t.id);
+    const manual = applyQualificationRanking(played, order, '裁判组核分表');
+    expect(manual.ok).toBe(true);
+
+    const ranking = manual.event.qualification.ranking;
+    expect(ranking.missingTeamIds).toHaveLength(21);
+    expect(ranking.reviewNote).toBe('裁判组核分表');
+    expect(ranking.overrideReason).toBe('裁判组核分表');
+
+    const official = officialQualificationRanking(manual.event);
+    expect(official.overridden).toBe(true);
+    expect(official.overrideReason).toBe('裁判组核分表');
+  });
+
+  it('批量确认成绩不会顺手定榜（两条确认路径行为一致）', () => {
+    // 先录成"待确认"，再用批量确认入口确认。
+    let event = BASE;
+    for (const team of COMPETITIVE) {
+      const run = event.qualification.runs.find((r) => r.teamId === team.id && r.round === 1)!;
+      const recorded = applyQualificationRun(event, {
+        runId: run.id, rawResult: '完成', score: '20', elapsedSeconds: '60', judgeNote: null, confirm: false,
+      });
+      if (!recorded.ok) throw new Error(recorded.messages.join('；'));
+      event = recorded.event;
+    }
+
+    const confirmed = confirmQualificationRuns(event);
+    expect(confirmed.ok).toBe(true);
+    expect(confirmed.event.qualification.ranking.status).toBe('none');
+    expect(confirmed.event.qualification.ranking.orderedTeamIds).toEqual([]);
+  });
+
+  it('旧快照缺少复核字段时仍可解析（向后兼容）', () => {
+    const legacy = {
+      ...BASE,
+      qualification: {
+        ...BASE.qualification,
+        ranking: {
+          orderedTeamIds: [], bestResultLabels: null, status: 'none', confirmedAt: null,
+          sourceNote: null, publicationStatus: 'draft', publishedAt: null,
+        },
+      },
+    };
+    const parsed = eventFileSchema.parse(legacy);
+    expect(parsed.qualification.ranking.overrideReason).toBeNull();
+    expect(parsed.qualification.ranking.missingTeamIds).toBeNull();
+    expect(parsed.qualification.ranking.reviewNote).toBeNull();
   });
 });
