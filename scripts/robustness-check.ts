@@ -136,7 +136,7 @@ function requireParticipants(ev: EventFile, seriesId: string): [string, string] 
  * 录入完整的排位赛两轮成绩（44 次跑图）。
  *
  * 名次越高（i 越小）积分越高、用时越短，从而产生确定的排位顺序
- * （用于后续首尾配对与种子推演）。
+ * （用于后续 R1 前后两半对位与种子推演）。
  */
 function playQualification(
   base: EventFile,

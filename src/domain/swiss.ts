@@ -1,9 +1,13 @@
 /**
- * 瑞士轮配对（docs/IMPLEMENTATION_PLAN.md 第 5.4 节）。
+ * 瑞士轮配对（赛程手册「赛段二」+ 附一）。
  *
- * 规则要点：
- * - R1 按正式排位首尾配对：1v16、2v15 …… 8v9。
- * - R2 起按相同战绩分组，组内按 R↓/P↓/T↑/排位名次↑ 排序，相邻配对（1v2、3v4 …）。
+ * 规则要点（手册原文为准）：
+ * - R1：按正式排位**分为前后两半对位**——「依次安排第1名对第9名、第2名对第10名，
+ *   直至第8名对第16名」，即 1v9、2v10 …… 8v16。
+ * - R2 起：按相同战绩分组，组内按 R↓/P↑…（准确说是 R↓/P↓/T↑/排位名次↑）排序后
+ *   **首尾配对**——手册附一简例「甲对辛、乙对庚、丙对己、丁对戊」，
+ *   并给出「六队组为第1名对第6名、第2名对第5名、第3名对第4名；四队组为
+ *   第1名对第4名、第2名对第3名」。
  * - 配对组顺序：R2 [1-0, 0-1]；R3 [2-0, 1-1, 0-2]；R4 [2-1, 1-2]；R5 [2-2]。
  * - 原文没有“避免重复对阵”，因此不实现避重、跨组调队、随机或轮空。
  * - 分组人数为奇数 / 名单异常 / 名额变化时：停止自动配对并报因，交组委会处置。
@@ -139,14 +143,18 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
   const pairs: PairingProposal['pairs'] = [];
 
   if (ctx.roundIndex === 1) {
-    // R1：在**晋级的 16 队**中按正式排位首尾配对 —— 第 1 名对第 16 名、第 2 名对第 15 名……
-    // 注意：排位赛排名含全部 22 队，必须只取前 N 名（N = 瑞士轮参赛队数），
-    // 否则会把第 17–22 名（已结算优秀奖）错误地配进瑞士轮。
+    /*
+     * R1：在**晋级的 16 队**中按正式排位**前后两半对位**配对：
+     * 第 1 名对第 9 名、第 2 名对第 10 名……第 8 名对第 16 名（手册赛段二）。
+     *
+     * 注意：排位赛排名含全部 22 队，必须只取前 N 名（N = 瑞士轮参赛队数），
+     * 否则会把第 17–22 名（已结算优秀奖）错误地配进瑞士轮。
+     */
     const ordered = ctx.qualification.orderedTeamIds.slice(0, ctx.teamIds.length);
     const half = Math.floor(ordered.length / 2);
     for (let i = 0; i < half; i += 1) {
       const home = ordered[i];
-      const away = ordered[ordered.length - 1 - i];
+      const away = ordered[i + half];
       if (!home || !away) continue;
       pairs.push({ groupRecord: '0-0', orderInGroup: i + 1, homeTeamId: home, awayTeamId: away });
     }
@@ -180,13 +188,19 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
       );
       continue;
     }
-    for (let i = 0; i < inGroup.length; i += 2) {
+    /*
+     * 组内**首尾配对**：第 1 名对末名、第 2 名对倒数第 2 名……（手册附一简例
+     * 「甲对辛、乙对庚、丙对己、丁对戊」；六队组 1v6/2v5/3v4；四队组 1v4/2v3）。
+     * 场次顺序与配对顺序一致，即 orderInGroup 1 = 第 1 名对末名。
+     */
+    const half = Math.floor(inGroup.length / 2);
+    for (let i = 0; i < half; i += 1) {
       const home = inGroup[i];
-      const away = inGroup[i + 1];
+      const away = inGroup[inGroup.length - 1 - i];
       if (!home || !away) continue;
       pairs.push({
         groupRecord: record,
-        orderInGroup: i / 2 + 1,
+        orderInGroup: i + 1,
         homeTeamId: home.teamId,
         awayTeamId: away.teamId,
       });

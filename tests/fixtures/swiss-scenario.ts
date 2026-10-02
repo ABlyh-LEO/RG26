@@ -128,8 +128,8 @@ export function makeRound(index: number, matches: SwissMatch[], published = true
  * 这是固定的确定性输入，不是随机生成。
  *
  * 结果约定（每队 5 轮内达到 3 胜或 3 负即停止）：
- * - R1: 1v16, 2v15, ... 8v9（首尾配对）
- * - 之后按战绩组配对
+ * - R1: 1v9, 2v10, ... 8v16（手册：按排位分为前后两半对位）
+ * - 之后按战绩组配对，组内首尾（第 1 名对末名）
  */
 export interface FullSwissScenario {
   matches: SwissMatch[];
@@ -166,7 +166,7 @@ export function simulateSwiss(
       const half = Math.floor(qualificationOrder.length / 2);
       for (let i = 0; i < half; i += 1) {
         const home = qualificationOrder[i];
-        const away = qualificationOrder[qualificationOrder.length - 1 - i];
+        const away = qualificationOrder[i + half];
         if (!home || !away) continue;
         const winner = decideWinner(roundIndex, home, away);
         const attemptId = `a-r1-${i + 1}`;
@@ -185,11 +185,12 @@ export function simulateSwiss(
             return `${r.wins}-${r.losses}` === record;
           })
           .sort((a, b) => qualificationOrder.indexOf(a) - qualificationOrder.indexOf(b));
-        for (let i = 0; i + 1 < inGroup.length; i += 2) {
-          const home = inGroup[i];
-          const away = inGroup[i + 1];
+        const half = Math.floor(inGroup.length / 2);
+        for (let pair = 0; pair < half; pair += 1) {
+          const home = inGroup[pair];
+          const away = inGroup[inGroup.length - 1 - pair];
           if (!home || !away) continue;
-          const order = i / 2 + 1;
+          const order = pair + 1;
           const winner = decideWinner(roundIndex, home, away);
           const attemptId = `a-r${roundIndex}-${record.replace('-', '')}-${order}`;
           roundMatches.push(

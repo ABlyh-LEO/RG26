@@ -247,8 +247,8 @@ describe('D07 同一对手出现两次', () => {
   });
 });
 
-describe('D09 R1 首尾配对，R2 起同组相邻', () => {
-  it('R1 严格按排位 1v16、2v15 … 8v9', () => {
+describe('D09 R1 前后两半对位，R2 起同组首尾配对', () => {
+  it('R1 严格按排位前后两半：1v9、2v10 … 8v16', () => {
     const proposal = generateSwissPairings({
       roundIndex: 1,
       teamIds: TEAM_IDS,
@@ -260,12 +260,12 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
     expect(proposal.blockers).toEqual([]);
     expect(proposal.pairs).toHaveLength(8);
     const pairs = proposal.pairs.map((p) => [p.homeTeamId, p.awayTeamId]);
-    expect(pairs[0]).toEqual([t(1), t(16)]);
-    expect(pairs[1]).toEqual([t(2), t(15)]);
-    expect(pairs[7]).toEqual([t(8), t(9)]);
+    expect(pairs[0]).toEqual([t(1), t(9)]);
+    expect(pairs[1]).toEqual([t(2), t(10)]);
+    expect(pairs[7]).toEqual([t(8), t(16)]);
   });
 
-  it('R2 起按相同战绩分组相邻配对，无避重与随机', () => {
+  it('R2 起按相同战绩分组、组内首尾配对，无避重与随机', () => {
     // 构造 R1：低编号获胜，得到 8 个 1-0 与 8 个 0-1
     const scenario = simulateSwiss(TEAM_IDS, lowerWins);
     const r1 = scenario.matches.filter((m) => m.roundIndex === 1);
@@ -285,11 +285,13 @@ describe('D09 R1 首尾配对，R2 起同组相邻', () => {
     const groups = proposal.pairs.map((p) => p.groupRecord);
     expect(groups.slice(0, 4)).toEqual(['1-0', '1-0', '1-0', '1-0']);
     expect(groups.slice(4)).toEqual(['0-1', '0-1', '0-1', '0-1']);
-    // 1-0 组内相邻配对：R1 中 1..8 号获胜，故应为 1v2、3v4、5v6、7v8
+    // 1-0 组内首尾配对：R1 中 1..8 号获胜，组内顺序为 1..8，故应为 1v8、2v7、3v6、4v5
     expect(proposal.pairs[0]!.homeTeamId).toBe(t(1));
-    expect(proposal.pairs[0]!.awayTeamId).toBe(t(2));
-    expect(proposal.pairs[1]!.homeTeamId).toBe(t(3));
-    expect(proposal.pairs[1]!.awayTeamId).toBe(t(4));
+    expect(proposal.pairs[0]!.awayTeamId).toBe(t(8));
+    expect(proposal.pairs[1]!.homeTeamId).toBe(t(2));
+    expect(proposal.pairs[1]!.awayTeamId).toBe(t(7));
+    expect(proposal.pairs[3]!.homeTeamId).toBe(t(4));
+    expect(proposal.pairs[3]!.awayTeamId).toBe(t(5));
   });
 
   it('轮次门禁：上一轮未确认时拒绝生成', () => {
@@ -497,9 +499,9 @@ describe('D17 三审排名与排位赛名次不同', () => {
       qualificationOfficial: { ok: true, reason: null },
       rounds: [],
     });
-    // 首尾配对基于 reversed：第 1 名是 t16，对第 16 名（t1）
+    // 前后两半对位基于 reversed：第 1 名是 t16，对第 9 名（t8）
     expect(proposal.pairs[0]!.homeTeamId).toBe(t(16));
-    expect(proposal.pairs[0]!.awayTeamId).toBe(t(1));
+    expect(proposal.pairs[0]!.awayTeamId).toBe(t(8));
 
     // 同分比较也用正式排位
     const standings = calculateSwissStandings(

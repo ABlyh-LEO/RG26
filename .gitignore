@@ -27,6 +27,10 @@ coverage/
 Thumbs.db
 *.swp
 
+# Word / Office 打开文件时生成的临时锁文件（绝不入库）
+~$*
+.~lock.*#
+
 # 日志
 *.log
 npm-debug.log*

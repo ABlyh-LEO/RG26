@@ -66,12 +66,12 @@ const r1 = generateNextRound(event, 1);
 if (!r1.ok || !r1.proposal) fail(`R1 候选生成失败：${r1.messages.join('；')}`);
 if (r1.proposal.pairs.length !== 8) fail(`R1 应有 8 场，实际 ${r1.proposal.pairs.length}`);
 
-// 验证首尾配对
+// 验证 R1 按手册「前后两半对位」：第 1 名对第 9 名
 const first = r1.proposal.pairs[0]!;
-if (first.homeTeamId !== orderedIds[0] || first.awayTeamId !== orderedIds[15]) {
-  fail(`R1 首场应为第 1 名对第 16 名，实际 ${first.homeTeamId} vs ${first.awayTeamId}`);
+if (first.homeTeamId !== orderedIds[0] || first.awayTeamId !== orderedIds[8]) {
+  fail(`R1 首场应为第 1 名对第 9 名，实际 ${first.homeTeamId} vs ${first.awayTeamId}`);
 }
-ok('R1 首尾配对正确（第 1 名 vs 第 16 名）');
+ok('R1 前后两半对位正确（第 1 名 vs 第 9 名）');
 
 const published = publishRound(event, 1, r1.proposal);
 if (!published.ok) fail(`R1 公布失败：${published.messages.join('；')}`);
