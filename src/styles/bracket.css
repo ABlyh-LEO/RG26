@@ -279,12 +279,6 @@ a.bracket-card:hover {
 .bracket-card__slot-sides { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 7px; color: var(--text-muted); font-size: 11px; }
 .bracket-card__slot-sides > span { display: inline-flex; gap: 4px; align-items: center; }
 .bracket-card .side-badge { width: 20px; height: 20px; font-size: 12px; }
-.bracket-card__game-sides { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 9px; font-size: 11px; }
-.bracket-card__game-sides caption { text-align: left; color: var(--text-muted); padding: 0 0 4px; font-size: 11px; }
-.bracket-card__game-sides th, .bracket-card__game-sides td { padding: 5px 2px; text-align: center; border-top: 1px solid var(--border); white-space: normal; }
-.bracket-card__game-sides th { color: var(--text-muted); font-weight: 500; }
-.bracket-card__game-sides th:first-child { width: 32%; text-align: left; }
-.bracket-card__not-needed { display: block; font-size: 10px; color: var(--text-muted); }
 
 .bracket-card__row {
   display: flex;

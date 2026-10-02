@@ -815,7 +815,7 @@ section('F. 确定性：同样输入 → 同样输出');
  * G. 红蓝方
  * ================================================================== */
 
-section('G. 红蓝方：自动维护与换边');
+section('G. 红蓝方：瑞士轮按轮次派生，决赛固定颜色');
 
 {
   // G1. 完整赛季里，每场瑞士轮都有确定的红蓝方
@@ -866,15 +866,15 @@ section('G. 红蓝方：自动维护与换边');
     return s.first === 'blue' && s.second === 'red';
   })());
 
-  // G5. BO3 每局交替
+  // G5. BO3 全系列赛不换边
   const g1 = sidesForSeriesGame(1);
   const g2 = sidesForSeriesGame(2);
   const g3 = sidesForSeriesGame(3);
   check('G5 BO3 第 1 局：第一蓝、第二红', g1.first === 'blue' && g1.second === 'red');
-  check('G5 BO3 第 2 局换边：第一红、第二蓝', g2.first === 'red' && g2.second === 'blue');
-  check('G5 BO3 第 3 局换回：第一蓝、第二红', g3.first === 'blue' && g3.second === 'red');
-  check('G5 同一队在 3 局里两种颜色都打过',
-    new Set([1, 2, 3].map((i) => sideOfTeamInSeriesGame('A', 'A', 'B', i))).size === 2);
+  check('G5 BO3 第 2 局保持：第一蓝、第二红', g2.first === 'blue' && g2.second === 'red');
+  check('G5 BO3 第 3 局保持：第一蓝、第二红', g3.first === 'blue' && g3.second === 'red');
+  check('G5 双方在 3 局里分别固定为蓝方、红方',
+    [1, 2, 3].every((i) => sideOfTeamInSeriesGame('A', 'A', 'B', i) === 'blue' && sideOfTeamInSeriesGame('B', 'A', 'B', i) === 'red'));
 }
 
 {
@@ -912,16 +912,16 @@ section('G. 红蓝方：自动维护与换边');
       sideOfTeamInSeriesGame(g.awayTeamId, qp[0], qp[1], g.index),
     ];
   });
-  check('G6 第 2 局相对第 1 局换边',
-    sidePerGame[0]?.[0] === 'blue' && sidePerGame[1]?.[0] === 'red',
+  check('G6 第 1、2 局的参赛队伍保持相同红蓝归属',
+    sidePerGame.slice(0, 2).every((sides) => sides?.[0] === 'blue' && sides?.[1] === 'red'),
     `第1局 ${sidePerGame[0]?.join('/')}，第2局 ${sidePerGame[1]?.join('/')}`);
-  check('G6 第 3 局相对第 2 局换回', sidePerGame[2]?.[0] === 'blue',
+  check('G6 第 3 局仍为第一蓝、第二红', sidePerGame[2]?.[0] === 'blue' && sidePerGame[2]?.[1] === 'red',
     `第3局 ${sidePerGame[2]?.join('/')}`);
 }
 
 {
   // G7. 时间字段：**必填**、空值不等于 0、原样保存
-  // F-QUAL 的参赛双方依赖上游 8 场 BO1，因此这里跑完整链路再测。
+  // F-QUAL 的参赛双方依赖上游决赛 BO1，因此这里跑完整链路再测。
   let ev = playFiveRounds(playQualification(loadEvent()));
   ev = publishFinalsSeeding(ev).event;
   ev = playAllFinalsBo1(ev);

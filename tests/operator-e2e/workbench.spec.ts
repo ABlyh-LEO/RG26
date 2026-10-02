@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
+import type { PublicSnapshot } from '../../src/domain/schema';
 
 async function loaded(page: Page) {
   // Initialization performs real source, draft and Git checks before opening the editor.
@@ -74,21 +75,45 @@ test('校验定位缺失字段，预览不改变正式文件、暂存区和提�
   await page.screenshot({ path: `.tmp-operator-screenshots/${testInfo.project.name}-preview.png`, fullPage: true });
 });
 
-test('BO3 各局输入互不串用，确认胜局后可继续下一局', async ({ page }) => {
+test('BO3 各局固定同队同色且输入互不串用，确认胜局后可继续下一局', async ({ page, request }, testInfo) => {
+  const snapshot = await (await request.get('/public-test/data/event.json')).json() as PublicSnapshot;
+  const series = snapshot.data.finals.series.find(series => series.id === 'F-QUAL')!;
+  const names = series.participantSnapshot!.map(id => snapshot.data.teams.find(team => team.id === id)!.name);
+  const fixedSides = async () => {
+    for (const [index, color] of ['blue', 'red'].entries()) {
+      const heading = page.locator(`.operator-score-side--${color} h3`);
+      await expect(heading).toContainText(names[index]!);
+      await expect(heading.locator('span')).toHaveText(index === 0 ? '蓝方' : '红方');
+    }
+  };
   await page.getByLabel('搜索队伍或比赛').fill('总决赛名额');
   await page.locator('.operator-item').first().click();
+  await expect(page.locator('.operator-games')).toContainText('全系列赛不换边');
+  await fixedSides();
   await page.locator('#result-homeScore').fill('16'); await page.locator('#result-awayScore').fill('7');
   await page.locator('#result-homeSeconds').fill('90'); await page.locator('#result-awaySeconds').fill('200');
   await saved(page);
   await page.getByRole('button', { name: '第 2 局', exact: true }).click();
+  await fixedSides();
   await expect(page.locator('#result-homeScore')).toHaveValue('');
   await page.locator('#result-homeScore').fill('8'); await saved(page);
+  await mkdir('.tmp-operator-screenshots', { recursive: true });
+  await page.screenshot({ path: `.tmp-operator-screenshots/${testInfo.project.name}-bo3-game2.png`, fullPage: true });
+  await page.getByRole('button', { name: '第 3 局', exact: true }).click();
+  await fixedSides();
+  await expect(page.locator('#result-homeScore')).toHaveValue('');
+  await page.locator('#result-homeScore').fill('11'); await saved(page);
   await page.getByRole('button', { name: '第 1 局', exact: true }).click();
+  await fixedSides();
   await expect(page.locator('#result-homeScore')).toHaveValue('16');
   await page.locator('.operator-winner button').first().click();
   await page.getByRole('button', { name: '保存并录入下一场', exact: true }).click();
   await expect(page.getByText('系列赛比分 1 : 0')).toBeVisible();
+  await fixedSides();
   await expect(page.locator('#result-homeScore')).toHaveValue('8'); await saved(page);
+  await page.getByRole('button', { name: '第 3 局', exact: true }).click();
+  await fixedSides();
+  await expect(page.locator('#result-homeScore')).toHaveValue('11');
 });
 
 test('公告与改期使用北京时间输入，并保存为独立修订字段', async ({ page }) => {

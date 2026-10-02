@@ -45,8 +45,6 @@ export interface BracketNodeContent {
   }[];
   /** 未公布配对时标明席位规则，不把颜色分配给尚未确定的队伍。 */
   slotSides?: Sides;
-  /** BO3 每局换边；不需要进行的小局不显示出场颜色。 */
-  gameSides?: { gameIndex: number; sides: Sides; notNeeded: boolean }[];
   /** 次要行（比分、状态）。 */
   meta?: string | null;
   status?: 'upcoming' | 'live' | 'done';
@@ -837,14 +835,6 @@ function NodeCard({
         <span>第一席位 <SideBadge side={content.slotSides.first} /></span>
         <span>第二席位 <SideBadge side={content.slotSides.second} /></span>
       </div> : null}
-      {content.gameSides ? <table className="bracket-card__game-sides" aria-label="BO3 每局红蓝方">
-        <caption>每局交换红蓝方</caption>
-        <thead><tr><th scope="col">队伍</th>{content.gameSides.map(game => <th scope="col" key={game.gameIndex}>第 {game.gameIndex} 局{game.notNeeded ? <span className="bracket-card__not-needed">免赛</span> : null}</th>)}</tr></thead>
-        <tbody>{(['first', 'second'] as const).map((slot, index) => <tr key={slot}>
-          <th scope="row">{index === 0 ? '上方队伍' : '下方队伍'}</th>
-          {content.gameSides!.map(game => <td key={game.gameIndex}>{game.notNeeded ? <span aria-label="不需要进行">—</span> : <SideBadge side={game.sides[slot]} />}</td>)}
-        </tr>)}</tbody>
-      </table> : null}
     </>
   );
 

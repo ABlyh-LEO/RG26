@@ -5,8 +5,8 @@
  * 1. 默认：第一个席位 = **蓝方**，第二个席位 = **红方**。
  * 2. 瑞士轮**偶数轮（R2/R4）反向**。
  * 3. 八强双败（决赛）**不反向**。
- * 4. 决赛 BO3 **每局交替换边**（第 2 局反向，第 3 局换回）。
- * 5. 决赛 8 场 BO1 **不换边**。
+ * 4. 决赛 BO3 **全系列赛不换边**，每局第一席位蓝、第二席位红。
+ * 5. 决赛 BO1 **不换边**。
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -109,18 +109,17 @@ describe('红蓝方：决赛', () => {
     expect(sidesForSeriesGame(1)).toEqual(DEFAULT_SIDES);
   });
 
-  it('BO3 每局交替：第 1 局默认、第 2 局反向、第 3 局换回', () => {
+  it('BO3 全系列赛固定颜色：第 1、2、3 局都是第一蓝、第二红', () => {
     expect(sidesForSeriesGame(1)).toEqual({ first: 'blue', second: 'red' });
-    expect(sidesForSeriesGame(2)).toEqual({ first: 'red', second: 'blue' });
+    expect(sidesForSeriesGame(2)).toEqual({ first: 'blue', second: 'red' });
     expect(sidesForSeriesGame(3)).toEqual({ first: 'blue', second: 'red' });
   });
 
-  it('BO3 换边后同一队的颜色逐局变化', () => {
-    expect(sideOfTeamInSeriesGame('A', 'A', 'B', 1)).toBe('blue');
-    expect(sideOfTeamInSeriesGame('A', 'A', 'B', 2)).toBe('red');
-    expect(sideOfTeamInSeriesGame('A', 'A', 'B', 3)).toBe('blue');
-    expect(sideOfTeamInSeriesGame('B', 'A', 'B', 1)).toBe('red');
-    expect(sideOfTeamInSeriesGame('B', 'A', 'B', 2)).toBe('blue');
+  it('BO3 同一队的颜色不随局号改变', () => {
+    for (const index of [1, 2, 3]) {
+      expect(sideOfTeamInSeriesGame('A', 'A', 'B', index)).toBe('blue');
+      expect(sideOfTeamInSeriesGame('B', 'A', 'B', index)).toBe('red');
+    }
   });
 
   it('BO3 双方每局恰好一红一蓝', () => {
@@ -131,9 +130,9 @@ describe('红蓝方：决赛', () => {
     }
   });
 
-  it('BO3 三局下来双方各打过红蓝（均衡）', () => {
-    const aSides = [1, 2, 3].map((i) => sideOfTeamInSeriesGame('A', 'A', 'B', i));
-    expect(aSides).toEqual(['blue', 'red', 'blue']);
+  it('BO3 逐局颜色映射保持相同的实际队伍归属', () => {
+    const teams = [1, 2, 3].map((index) => assignSides('蓝方队伍', '红方队伍', sidesForSeriesGame(index)));
+    expect(teams).toEqual(Array.from({ length: 3 }, () => ({ blue: '蓝方队伍', red: '红方队伍' })));
   });
 
   it('非参赛队伍没有颜色', () => {

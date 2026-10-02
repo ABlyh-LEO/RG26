@@ -169,9 +169,8 @@ test.describe('13.2 用户流程', () => {
 
   test('2f. 红蓝方由赛程结构自动推出，页面上明确标出', async ({ page }) => {
     /*
-     * 当前正式数据里 33 场瑞士轮与全部决赛都还没有参赛双方
-     * （赛事未开始），因此红蓝方**正确地**推不出来 —— 页面不应显示，
-     * 更不应猜测。
+     * 当前正式数据里瑞士轮还没有公布参赛双方，因此不能把颜色归给
+     * 一支尚未公布的队伍。晋级图可以单独解释第一、第二席位的规则。
      *
      * 红蓝方规则本身（含偶数轮换边）由 area 2g/2h 与单元测试
      * tests/domain/sides.test.ts 覆盖；这里断言的是"没有双方就不编造"。
@@ -189,13 +188,13 @@ test.describe('13.2 用户流程', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('2g. 决赛 BO3 说明每局换边，并列出到达最终分时间', async ({ page }) => {
+  test('2g. 决赛 BO3 说明全系列赛不换边，并列出到达最终分时间', async ({ page }) => {
     await goto(page, '/matches/F-QUAL');
     await waitForData(page);
 
     const body = await page.locator('body').innerText();
-    // 换边规则与时间口径必须写在页面上（不依赖是否有成绩）
-    expect(body, 'BO3 页应说明每局换边').toContain('每局换边');
+    // 固定颜色规则与时间口径必须写在页面上（不依赖是否有成绩）
+    expect(body, 'BO3 页应说明全系列赛不换边').toContain('全系列赛不换边');
     expect(body, 'BO3 页应说明时间用途').toContain('到达最终分');
 
     const games = page.locator('section').filter({ has: page.getByRole('heading', { name: '小局记录', exact: true }) }).locator('article');
@@ -235,8 +234,7 @@ test.describe('13.2 用户流程', () => {
         // 有比分的行：形如 "16 分 · 81 秒"
         rowsWithScore: rows.filter((r) => /\d+\s*分/.test(r.innerText)).length,
         rowsWithSeconds: rows.filter((r) => /\d+\s*秒/.test(r.innerText)).length,
-        finalsBo1Sides: [...document.querySelectorAll<HTMLElement>('[data-bracket-zone] [data-node-id]')]
-          .filter(node => !['F-QUAL', 'F-GF'].includes(node.dataset.nodeId!))
+        finalsSides: [...document.querySelectorAll<HTMLElement>('[data-bracket-zone] [data-node-id]')]
           .map(node => [...node.querySelectorAll('.bracket-card__row .side-badge')].map(badge => badge.getAttribute('aria-label'))),
         swissPendingSlots: document.querySelectorAll('[data-journey-stage="swiss"] .bracket-card__slot-sides').length,
       };
@@ -247,7 +245,7 @@ test.describe('13.2 用户流程', () => {
     expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
     expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
     expect(stats.rowsWithSeconds, '无成绩时不得凭空显示到达最终分时间').toBe(0);
-    expect(stats.finalsBo1Sides, 'BO1 席位颜色由赛程确定，不依赖队名和赛果').toEqual(Array.from({ length: 12 }, () => ['蓝方', '红方']));
+    expect(stats.finalsSides, '决赛席位颜色由赛程确定，BO1 与 BO3 均不依赖队名和赛果').toEqual(Array.from({ length: 14 }, () => ['蓝方', '红方']));
     expect(stats.swissPendingSlots, '尚未公布的瑞士轮只说明第一、第二席位颜色').toBe(33);
     const swiss = page.locator('[data-journey-stage="swiss"]');
     await expect(swiss.locator('.bracket-card__row')).toHaveCount(33);

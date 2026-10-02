@@ -1,11 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { audienceSnapshot } from '../fixtures/audience-scenarios';
+import { applyBo3Game } from '../../src/operator/draft';
 import { treeGeometryProblems } from '../support/bracket-geometry';
 import { refreshSnapshot, waitForData } from './helpers';
-
-async function sideMatrix(page: Page, id: string) {
-  return page.locator(`[data-node-id="${id}"] .bracket-card__game-sides tbody tr`).evaluateAll(rows => rows.map(row => [...row.querySelectorAll('td')].map(cell => cell.querySelector('.side-badge')?.getAttribute('aria-label') ?? cell.textContent?.trim())));
-}
 
 async function expectMobileGeometry(page: Page) {
   await expect.poll(async () => {
@@ -21,26 +18,25 @@ async function expectMobileGeometry(page: Page) {
       };
     }));
     return boards.flatMap(treeGeometryProblems);
-  }, { message: '红蓝方说明改变卡片尺寸后，晋级线仍在正确汇点相接' }).toEqual([]);
+  }, { message: '队伍旁标明红蓝方后，晋级线仍在正确汇点相接' }).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-  const overflow = await page.locator('.bracket-card__game-sides').evaluateAll(tables => tables.filter(table => {
-    const card = table.closest('.bracket-card')!.getBoundingClientRect();
-    const box = table.getBoundingClientRect();
-    return box.left < card.left || box.right > card.right || table.scrollWidth - table.clientWidth > 1;
-  }).length);
-  expect(overflow, '手机逐局颜色表不得撑出比赛卡片').toBe(0);
 }
 
-test('待定队伍的决赛 BO1 标明蓝红席位，未公布瑞士轮只显示席位规则', async ({ page }) => {
+test('待定队伍的决赛标明固定蓝红席位，未公布瑞士轮只显示席位规则', async ({ page }) => {
   const snapshot = audienceSnapshot('before');
   await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  for (const series of snapshot.data.finals.series.filter(series => series.countsForStandings && series.format === 'BO1')) {
+  for (const series of snapshot.data.finals.series.filter(series => series.countsForStandings)) {
     const rows = page.locator(`[data-node-id="${series.id}"] .bracket-card__row`);
     await expect(rows).toHaveCount(2);
     expect(await rows.locator('.side-badge').evaluateAll(badges => badges.map(badge => badge.getAttribute('aria-label')))).toEqual(['蓝方', '红方']);
+    if (series.format === 'BO3') {
+      const card = page.locator(`[data-node-id="${series.id}"] .bracket-card`);
+      await expect(card.locator('.side-badge')).toHaveCount(2);
+      await expect(card.getByRole('table')).toHaveCount(0);
+    }
   }
   for (const roundIndex of [1, 2, 3, 4, 5]) {
     const match = snapshot.data.swiss.matches.find(match => match.roundIndex === roundIndex)!;
@@ -79,7 +75,7 @@ test('已公布瑞士轮按奇偶轮次把颜色标在正确的两支队伍旁',
   }
 });
 
-test('手机 BO3 明确逐局换边，2 比 0 后第三局免赛且连线仍无交叉', async ({ page }) => {
+test('手机 BO3 仅在队伍旁标明固定颜色，2 比 0 后提示第三局免赛且连线无交叉', async ({ page }) => {
   let snapshot = audienceSnapshot('bo3');
   await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
   await page.setViewportSize({ width: 360, height: 780 });
@@ -87,9 +83,16 @@ test('手机 BO3 明确逐局换边，2 比 0 后第三局免赛且连线仍无�
   await waitForData(page);
   for (const id of ['F-QUAL', 'F-GF']) {
     const card = page.locator(`[data-node-id="${id}"] .bracket-card`);
-    await expect(card.locator('.bracket-card__row .side-badge')).toHaveCount(0);
-    await expect(card.getByRole('table', { name: 'BO3 每局红蓝方' })).toHaveCount(1);
-    expect(await sideMatrix(page, id)).toEqual([['蓝方', '红方', '蓝方'], ['红方', '蓝方', '红方']]);
+    expect(await card.locator('.bracket-card__row .side-badge').evaluateAll(badges => badges.map(badge => badge.getAttribute('aria-label')))).toEqual(['蓝方', '红方']);
+    await expect(card.locator('.side-badge')).toHaveCount(2);
+    await expect(card.getByRole('table')).toHaveCount(0);
+    const series = snapshot.data.finals.series.find(series => series.id === id)!;
+    if (series.participantSnapshot) {
+      for (const [index, teamId] of series.participantSnapshot.entries()) {
+        const name = snapshot.data.teams.find(team => team.id === teamId)!.name;
+        await expect(card.locator('.bracket-card__team').nth(index)).toHaveText(name);
+      }
+    }
   }
   await expect(page.locator('.bracket__link')).toHaveCount(11);
   await expectMobileGeometry(page);
@@ -97,12 +100,70 @@ test('手机 BO3 明确逐局换边，2 比 0 后第三局免赛且连线仍无�
   await refreshSnapshot(page, snapshot.revision);
   await expect(page.locator('[data-node-id="F-GF"] .bracket-card--done')).toHaveCount(1, { timeout: 15_000 });
   for (const id of ['F-QUAL', 'F-GF']) {
-    const rows = await sideMatrix(page, id);
-    expect(rows.map(row => row.slice(0, 2))).toEqual([['蓝方', '红方'], ['红方', '蓝方']]);
-    const table = page.locator(`[data-node-id="${id}"] .bracket-card__game-sides`);
-    await expect(table.locator('thead th').last()).toContainText('免赛');
-    await expect(table.locator('tbody tr td:nth-of-type(3) [aria-label="不需要进行"]')).toHaveCount(2);
-    await expect(table.locator('tbody tr td:nth-of-type(3) .side-badge')).toHaveCount(0);
+    const card = page.locator(`[data-node-id="${id}"] .bracket-card`);
+    expect(await card.locator('.bracket-card__row .side-badge').evaluateAll(badges => badges.map(badge => badge.getAttribute('aria-label')))).toEqual(['蓝方', '红方']);
+    await expect(card.locator('.side-badge')).toHaveCount(2);
+    await expect(card.getByRole('table')).toHaveCount(0);
+    await expect(card).toContainText(/系列赛\s*2\s*:\s*0/);
+    await expect(card).toContainText('第 3 局不需要进行');
+    await expect(card.locator('.bracket-card__row.is-winner .side-badge')).toHaveAttribute('aria-label', '蓝方');
+    const series = snapshot.data.finals.series.find(series => series.id === id)!;
+    for (const [index, teamId] of series.participantSnapshot!.entries()) {
+      const name = snapshot.data.teams.find(team => team.id === teamId)!.name;
+      await expect(card.locator('.bracket-card__team').nth(index)).toContainText(name);
+    }
   }
   await expectMobileGeometry(page);
+});
+
+test('BO3 第二局赛果与队伍颜色在详情、赛程卡和轮次卡一致，第三局继续沿用', async ({ page }) => {
+  const snapshot = audienceSnapshot('bo3');
+  const qualifier = snapshot.data.finals.series.find(series => series.id === 'F-QUAL')!;
+  const [home, away] = qualifier.participantSnapshot!;
+  const result = applyBo3Game(snapshot.data, {
+    seriesId: qualifier.id, gameIndex: 2, homeTeamId: home, awayTeamId: away,
+    homeScore: '9', awayScore: '16', homeReachedSeconds: '180', awayReachedSeconds: '80',
+    winnerId: away, resultKind: 'normal',
+  });
+  expect(result.ok).toBe(true);
+  snapshot.data = result.event;
+  snapshot.revision = 'test-bo3-one-all-fixed-sides';
+  const names = [home, away].map(id => snapshot.data.teams.find(team => team.id === id)!.name);
+  await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
+  await page.goto('./#/matches/F-QUAL');
+  await waitForData(page);
+  const scoreboard = page.getByRole('region', { name: '对阵与比分' });
+  await expect(scoreboard).toContainText('全系列赛不换边');
+  await expect(scoreboard).toContainText(/系列赛比分\s*1\s*:\s*1/);
+  for (const [index, color] of ['蓝方', '红方'].entries()) {
+    const row = scoreboard.locator('.scoreboard-row').nth(index);
+    await expect(row.getByLabel(color, { exact: true })).toBeVisible();
+    await expect(row.locator('.team-name')).toHaveText(names[index]!);
+  }
+  const games = page.locator('section').filter({ has: page.getByRole('heading', { name: '小局记录', exact: true }) }).locator('article');
+  await expect(games).toHaveCount(3);
+  for (const [index, game] of (await games.all()).entries()) {
+    for (const [teamIndex, color] of ['蓝方', '红方'].entries()) {
+      const row = game.locator('.match-side').filter({ has: page.getByLabel(color, { exact: true }) });
+      await expect(row.locator('.team-name')).toHaveText(names[teamIndex]!);
+      const expectedScores = [['16', '7'], ['9', '16'], ['—', '—']];
+      await expect(row.locator('.match-side__result strong')).toHaveText(expectedScores[index]![teamIndex]!);
+    }
+  }
+  await expect(games.nth(1).locator('.match-side--winner .team-name')).toHaveText(names[1]!);
+  await expect(games.nth(1).locator('.match-side--winner .side-badge')).toHaveAttribute('aria-label', '红方');
+
+  const schedule = snapshot.data.scheduleItems.find(item => item.id === qualifier.scheduleItemId)!;
+  const date = (schedule.revisedStart ?? schedule.plannedStart).slice(0, 10);
+  for (const route of [`/schedule?date=${date}&stage=finals`, '/progress?view=finals&finalsRound=f-qual']) {
+    await page.goto(`./#${route}`);
+    await waitForData(page);
+    const card = page.locator('[data-match-id="F-QUAL"]');
+    await expect(card).toContainText(/系列赛\s*1\s*:\s*1/);
+    for (const [index, color] of ['蓝方', '红方'].entries()) {
+      const row = card.locator('.match-card__sides .match-side').nth(index);
+      await expect(row.locator('.team-name')).toHaveText(names[index]!);
+      await expect(row.getByLabel(color, { exact: true })).toBeVisible();
+    }
+  }
 });

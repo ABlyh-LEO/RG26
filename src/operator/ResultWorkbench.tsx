@@ -98,7 +98,7 @@ function ContestEditor({ item, draft, onApply, onNext }: { item: QueueItem; draf
         aria-pressed={gameIndex === game.index} disabled={!!wins?.winnerId && game.resultStatus !== 'confirmed'} onClick={() => setGameIndex(game.index)}>
         第 {game.index} 局{game.resultStatus === 'confirmed' ? ' · 已确认' : wins?.winnerId ? ' · 无需进行' : ''}
       </button>)}</div>
-      <p className="small muted">每局换边，先赢 2 局结束。小局输入分别保存。</p>
+      <p className="small muted">全系列赛不换边，先赢 2 局结束。小局输入分别保存。</p>
     </div>}
     <ResultEditor key={`${item.target.id}:${gameIndex}`} target={{ ...item.target, gameIndex }} draft={draft} onApply={onApply} onNext={(nextEvent) => {
       const updated = nextEvent.finals.series.find((s) => s.id === item.target.id);

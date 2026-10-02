@@ -1,5 +1,7 @@
 # RG26 界面、交互与发布流程升级验收
 
+> 本文保留体验升级当时的实现、测试与发布记录。BO3 已按 2026-10-02 后续用户确认改为全系列不换边，第一席位蓝、第二席位红；以下旧截图中的 BO3 换边信息已失效。当前规则与专项截图见 [BO3 固定红蓝方](2026-10-02-bo3-fixed-sides.md)。
+
 ## 资料和数据
 
 使用 `docs/RoboGame2026赛程安排（暂定） (1).docx` 与 `docs/RoboGame2026 竞技组规则手册4_6.pdf`；根目录旧赛程没有用于生成此次数据。完整 SHA-256 和规则核对见 [RULES.md](../RULES.md)。
@@ -34,7 +36,7 @@ WebKit 回归实际发现并修复了筛选弹层关闭后的焦点恢复，以�
 升级前基线保留在 [此前 CI 与移动端修复验收](2026-10-02-ci-mobile.md)。本次截图均保存在 `screenshots/upgrade-*`，测试比分属于合成场景：
 
 - [观众首页 · 手机](screenshots/upgrade-home-mobile.png)、[桌面](screenshots/upgrade-home-desktop.png)
-- [排位进行中](screenshots/upgrade-qualification-mobile.png)、[瑞士轮](screenshots/upgrade-swiss-mobile.png)、[BO3 详情](screenshots/upgrade-bo3-mobile.png)
+- [排位进行中](screenshots/upgrade-qualification-mobile.png)、[瑞士轮](screenshots/upgrade-swiss-mobile.png)、[BO3 详情（历史，换边信息已失效）](screenshots/upgrade-bo3-mobile.png)
 - [赛后结果](screenshots/upgrade-after-mobile.png)、[改期](screenshots/upgrade-rescheduled-mobile.png)
 - [赛程筛选](screenshots/upgrade-schedule-mobile.png)、[队伍详情](screenshots/upgrade-team-mobile.png)
 - [晋级轮次 · 手机](screenshots/upgrade-progress-rounds-mobile.png)、[完整图 · 手机](screenshots/upgrade-progress-journey-mobile.png)、[完整图 · 桌面](screenshots/upgrade-progress-journey-desktop.png)

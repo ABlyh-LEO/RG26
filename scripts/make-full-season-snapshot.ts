@@ -113,7 +113,7 @@ for (const id of ['F-M1', 'F-M2', 'F-M3', 'F-M4', 'F-L1A', 'F-L1B', 'F-W1A', 'F-
   e = res.event;
 }
 
-// 5. 两组 BO3：F-QUAL 打满 3 局（换边可见），F-GF 直落两局
+// 5. 两组 BO3 全系列赛不换边：F-QUAL 打满 3 局，F-GF 直落两局
 {
   const [a, b] = players(e, 'F-QUAL');
   for (const [idx, winner] of [

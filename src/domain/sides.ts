@@ -8,6 +8,7 @@
  *    这样每支队伍在整个瑞士轮里红蓝大致均衡，避免固定一侧带来的
  *    场地/视角优势（原文未规定，此为组委会确认的操作口径）。
  * 3. **八强双败（决赛全部场次）不反向** —— 一律第一个蓝、第二个红。
+ *    2026-10-02 最新约定：BO3 全系列赛保持此归属，各小局不换边。
  *
  * 关键性质：红蓝方**完全由赛程结构推出**，不需要人工维护。
  * 只要参赛双方与轮次确定，红蓝方就是确定的；因此不存在
@@ -57,8 +58,7 @@ export function sidesForSwiss(roundIndex: number): Sides {
  * 保留成函数而不是直接暴露常量，是为了让调用方的意图清晰，
  * 也让"决赛不反向"这条规则有唯一的落点。
  *
- * 注意这是**系列赛第一局**的归属；BO3 后续小局要换边，
- * 见 `sidesForSeriesGame`。
+ * BO1 与 BO3 全系列赛共用此归属，后续小局不改变颜色。
  */
 export function sidesForFinals(): Sides {
   return DEFAULT_SIDES;
@@ -67,21 +67,12 @@ export function sidesForFinals(): Sides {
 /**
  * 决赛 BO3 某一小局的红蓝方归属。
  *
- * **每局交替**（组委会确认）：一个系列赛内打完一局就换边，
- * 让双方在不同小局里都打过红方与蓝方。
- *
- * - 第 1 局：第一席位蓝、第二席位红（= 八强双败的默认）
- * - 第 2 局：第一席位红、第二席位蓝
- * - 第 3 局：第一席位蓝、第二席位红
- *
- * 换边**由局号推出**，不需要人工维护，因此不会出现两局漏换边。
- *
- * 只对 BO3 有意义；BO1 与 BO2 用第 1 局的归属即可
- * （组委会确认：决赛 8 场 BO1 不换边）。
+ * 最新约定：第 1、2、3 局均为第一席位蓝、第二席位红。
+ * 保留局号参数兼容小局查询接口；颜色只由系列赛席位决定。
+ * 本函数也适用于 BO1 与展示赛，不改变瑞士轮偶数轮反向规则。
  */
-export function sidesForSeriesGame(gameIndex: number): Sides {
-  // 局号从 1 起；奇数局用默认，偶数局反向。
-  return (gameIndex - 1) % 2 === 0 ? sidesForFinals() : SWAPPED_SIDES;
+export function sidesForSeriesGame(_gameIndex: number): Sides {
+  return sidesForFinals();
 }
 
 /** 系列赛某一局里某队的颜色。 */

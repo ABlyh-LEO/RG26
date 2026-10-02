@@ -23,7 +23,7 @@ import { BracketChart, type BracketNodeContent } from '../components/BracketChar
 import { FinalsBracket } from '../components/FinalsBracket';
 import { FINAL_ROUNDS, finalsIncoming, finalsOutgoing } from '../data/finals-presentation';
 import { buildSwissModel, nodeParticipants } from '../data/bracket-model';
-import { sidesForFinals, sidesForSeriesGame, sidesForSwiss } from '../domain/sides';
+import { sidesForFinals, sidesForSwiss } from '../domain/sides';
 import { FINALS_MATCH_ORDER, FINALS_SEED_ORDER, finalsSeedLabel, type FinalsResolution } from '../domain/finals';
 import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
@@ -774,21 +774,16 @@ function useSeriesNode() {
       // 未确定的对阵显示"在等什么"，绝不显示一个看起来像真的名次
       /*
        * 决赛红蓝方：八强双败不换边（第一席位蓝、第二红）。
-       * BO3 逐局标色，系列赛层面不给单一归属。
+       * BO3 全系列赛保持同一红蓝方，各小局沿用对应席位颜色。
        * 队伍待定仍可标出正式赛制已确定的席位颜色。
        */
-      const finalsSides = series.format === 'BO3' ? null : sidesForFinals();
+      const finalsSides = sidesForFinals();
       const sideRow = (side: typeof home, index: number): BracketNodeContent['rows'][number] => ({
         label: '',
         team: side?.team ? `${side.team.name}${series.format === 'BO1' && side.score !== null ? ` · ${side.score} 分${side.seconds !== null ? ` · ${side.seconds} 秒` : ''}` : ''}` : (side?.sourceLabel ?? '待定'),
         isWinner: side?.isWinner ?? false,
         dim: !side?.team,
-        side:
-          finalsSides === null
-            ? null
-            : index === 0
-              ? finalsSides.first
-              : finalsSides.second,
+        side: index === 0 ? finalsSides.first : finalsSides.second,
       });
 
       const parts: string[] = [];
@@ -812,11 +807,6 @@ function useSeriesNode() {
       return {
         title: view.title,
         rows: [sideRow(home, 0), sideRow(away, 1)],
-        gameSides: series.format === 'BO3' ? [1, 2, 3].map(gameIndex => ({
-          gameIndex,
-          sides: sidesForSeriesGame(gameIndex),
-          notNeeded: res?.notNeededGameIndexes.includes(gameIndex) ?? false,
-        })) : undefined,
         meta: parts.length > 0 ? parts.join(' · ') : null,
         status,
         to: `/matches/${nodeId}`,

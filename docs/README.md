@@ -13,11 +13,14 @@
 
 赛程以 [docs 中的新赛程](RoboGame2026赛程安排（暂定）%20(1).docx)为准，规则参考[竞技组规则手册 4_6](RoboGame2026%20竞技组规则手册4_6.pdf)。根目录旧赛程与 `reference/schedule-extracted.md` 是历史资料，不用于更新正式赛程。
 
+**2026-10-02 最新确认：决赛 BO3 全系列不换边，第一席位蓝、第二席位红。** 此条用户确认优先于此前逐局换边的说明和截图；原始 DOCX/PDF 保留原件，未改写。完整口径见[红蓝方归属](RULES.md#red-blue-sides)。
+
 ## 验收证据
 
 - [界面、交互与更新流程升级](acceptance/2026-10-02-experience-upgrade.md)：升级范围、本地检查、截图及对应发布记录。
 - [维护工作台验收](acceptance/operator-upgrade.md)：草稿、预览隔离、发布故障恢复与交接。
-- [晋级图汇入连线与红蓝方](acceptance/2026-10-02-bracket-junctions.md)：最新晋级图专项回归与截图。
+- [BO3 固定红蓝方](acceptance/2026-10-02-bo3-fixed-sides.md)：当前规则、实现范围及最新回归与截图。
+- [晋级图汇入连线与红蓝方](acceptance/2026-10-02-bracket-junctions.md)：此前连线修复；其中旧 BO3 颜色说明和截图已被最新约定取代。
 - [晋级图结构调整](acceptance/2026-10-02-bracket-clarity.md)、[CI 与移动端修复](acceptance/2026-10-02-ci-mobile.md)：此前专项修复记录。
 
 验收记录只说明对应提交当时实际执行的检查，不替代当前操作手册。

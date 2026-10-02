@@ -172,15 +172,15 @@ export interface MatchView {
   format: 'BO1' | 'BO2' | 'BO3' | null;
   executionStatus: ScheduleItem['executionStatus'];
   resultStatus: 'none' | 'provisional' | 'confirmed';
-  /** 双方已确定队伍时才有值，用于自我对阵等异常提示。 */
+  /** 对抗赛的双方席位；队伍未定时由 sourceLabel 说明来源。 */
   sides: [MatchSideView, MatchSideView] | null;
   /**
    * 本场红蓝方归属（第一个席位 / 第二个席位的颜色）。
    *
    * 由赛程结构推出（`domain/sides.ts`），不落库：
    * 默认第一席位蓝、第二红；瑞士轮偶数轮反向；八强双败不反向。
-   * 对阵未确定时为 null —— **不猜测**颜色。
-   * BO3 的每一局另有归属，见比赛详情页。
+   * 瑞士轮未公布配对时为 null；决赛可标注已知席位，不虚构队伍。
+   * 决赛 BO1 与 BO3 全系列赛保持第一席位蓝、第二席位红。
    */
   sidesInfo: Sides | null;
   homeWins: number | null;
@@ -434,10 +434,9 @@ export function toSeriesView(
     sides,
     /*
      * 决赛红蓝方：八强双败**不换边**，一律第一席位蓝、第二红。
-     * BO3 的每一局各自换边，因此系列赛层面不给单一归属 ——
-     * 那种情况在比赛详情页按局展示，避免把"第 1 局的归属"误当成整个系列赛的。
+     * BO3 全系列赛及各小局保持同一归属，列表与详情共用这一标注。
      */
-    sidesInfo: sides && series.slots && series.format !== 'BO3' ? sidesForFinals() : null,
+    sidesInfo: sides && series.slots ? sidesForFinals() : null,
     homeWins: res?.homeWins ?? null,
     awayWins: res?.awayWins ?? null,
     notNeededGames: res?.notNeededGameIndexes ?? [],

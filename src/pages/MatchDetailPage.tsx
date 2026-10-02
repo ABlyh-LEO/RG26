@@ -18,7 +18,7 @@ export function MatchDetailPage() {
   if (!view) return <EmptyState title="找不到这场比赛" hint="该链接可能已经调整，请从赛程重新选择比赛。" action={<Link to="/schedule" className="btn">返回赛程</Link>} />;
   if (view.stage === 'showcase') return <ShowcaseMatchDetail view={view} />;
   const schedule = view.schedule;
-  const sideNote = swiss ? `第 ${swiss.roundIndex} 轮${swiss.roundIndex % 2 === 0 ? ' · 偶数轮换边' : ''}` : series?.format === 'BO3' ? '每局交换红蓝方' : '八强双败不换边';
+  const sideNote = swiss ? `第 ${swiss.roundIndex} 轮${swiss.roundIndex % 2 === 0 ? ' · 偶数轮换边' : ''}` : series?.format === 'BO3' ? '全系列赛不换边' : '八强双败不换边';
   const relatedIds = new Set([matchId, ...(swiss ? [swiss.roundId] : []), ...(series?.games.map((game) => game.id) ?? [])]);
   const corrections = event.corrections.filter((entry) => entry.affectedIds.some((id) => relatedIds.has(id)));
   const records = swiss?.attempts ?? series?.games ?? [];
@@ -36,7 +36,7 @@ export function MatchDetailPage() {
           <div className="detail-timing">{schedule ? <span><Icon name="clock" size={16} />{formatDate(effectiveStart(schedule))} {formatTime(effectiveStart(schedule))}</span> : null}{view.venueLabel ? <span><Icon name="pin" size={16} />{view.venueLabel}</span> : null}{schedule?.revisedStart ? <span className="rescheduled">已改期 · 原定 <OriginalStart schedule={schedule} /></span> : null}</div>
         </section>
 
-        {series?.format === 'BO3' ? <Section title="小局记录" action={<span className="xsmall muted">三局两胜 · 每局换边</span>}><div className="stack">{[...series.games].sort((a, b) => a.index - b.index).map((game) => {
+        {series?.format === 'BO3' ? <Section title="小局记录" action={<span className="xsmall muted">三局两胜 · 全系列赛不换边</span>}><div className="stack">{[...series.games].sort((a, b) => a.index - b.index).map((game) => {
           const notNeeded = view.notNeededGames.includes(game.index);
           const first = game.homeTeamId ?? series.participantSnapshot?.[0] ?? view.sides?.[0]?.team?.id ?? null;
           const second = game.awayTeamId ?? series.participantSnapshot?.[1] ?? view.sides?.[1]?.team?.id ?? null;
