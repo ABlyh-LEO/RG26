@@ -19,6 +19,7 @@
 
 ## 验收证据
 
+- [瑞士轮晋级呈现优化](acceptance/2026-10-03-swiss-progress.md)：共享战绩分组全景、晋级名单、实际对阵和单队历程，修复历史分组丢队伍，含桌面与手机截图。
 - [界面、交互与更新流程升级](acceptance/2026-10-02-experience-upgrade.md)：升级范围、本地检查、截图及对应发布记录。
 - [排位赛定榜门禁与「当前排行」](acceptance/2026-10-03-qualification-ranking-gate.md)：修复“确认一组成绩就断言晋级”的缺陷，含门禁口径、回归范围与未验证项。
 - [展示组「单独演出」误报自我对阵的修复](acceptance/2026-10-03-showcase-performance.md)：展示组不再被当成两队比赛，抽签后可直接发布。

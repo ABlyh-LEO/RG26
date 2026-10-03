@@ -315,19 +315,20 @@ export function toSwissMatchView(
   venueLabels: Map<string, string>,
 ): MatchView {
   const schedule = event.scheduleItems.find((s) => s.id === match.scheduleItemId) ?? null;
-  const effective = match.attempts.find((a) => a.id === match.effectiveAttemptId) ?? null;
-  const snapshot = match.participantSnapshot;
+  const published = event.swiss.rounds.some((round) => round.index === match.roundIndex && round.publicationStatus === 'published');
+  const effective = published ? match.attempts.find((a) => a.id === match.effectiveAttemptId) ?? null : null;
+  const snapshot = published ? match.participantSnapshot : null;
 
   const sides: [MatchSideView, MatchSideView] | null = snapshot
     ? [
-        makeSide(snapshot[0], effective, true, teamMap),
-        makeSide(snapshot[1], effective, false, teamMap),
+        { ...makeSide(snapshot[0], effective, true, teamMap), isWinner: effective?.resultStatus === 'confirmed' && effective.winnerId === snapshot[0] },
+        { ...makeSide(snapshot[1], effective, false, teamMap), isWinner: effective?.resultStatus === 'confirmed' && effective.winnerId === snapshot[1] },
       ]
     : null;
 
   const fallbackSides: [MatchSideView, MatchSideView] = [
-    { team: null, sourceLabel: slotSourceLabel(match, 0, teamMap), score: null, seconds: null, isWinner: false },
-    { team: null, sourceLabel: slotSourceLabel(match, 1, teamMap), score: null, seconds: null, isWinner: false },
+    { team: null, sourceLabel: published ? slotSourceLabel(match, 0, teamMap) : '对阵待公布', score: null, seconds: null, isWinner: false },
+    { team: null, sourceLabel: published ? slotSourceLabel(match, 1, teamMap) : '对阵待公布', score: null, seconds: null, isWinner: false },
   ];
 
   const [w = '0', l = '0'] = match.groupRecord.split('-');
@@ -346,7 +347,7 @@ export function toSwissMatchView(
     schedule,
     venueLabel: schedule?.venueId ? (venueLabels.get(schedule.venueId) ?? null) : null,
     format: 'BO1',
-    executionStatus: match.executionStatus,
+    executionStatus: published ? match.executionStatus : 'scheduled',
     resultStatus: effective?.resultStatus ?? 'none',
     sides: sides ?? fallbackSides,
     // 瑞士轮：偶数轮换边，由轮次推出
@@ -354,7 +355,7 @@ export function toSwissMatchView(
     homeWins: null,
     awayWins: null,
     notNeededGames: [],
-    note: match.note,
+    note: published ? match.note : null,
     conflicts: [],
     countsForStandings: true,
   };
@@ -855,7 +856,7 @@ export interface RoundGroupView {
   description: string;
   stakes: string | null;
   matches: MatchView[];
-  /** 该组在本轮的排名（用于展示参考排名）。 */
+  /** 本组实际参赛队的赛前排名；跨组调整后仍保留其真实战绩与组内名次。 */
   entries: Standings['groups'][number]['entries'];
 }
 
@@ -877,42 +878,50 @@ export function deriveRounds(derived: DerivedEvent): RoundView[] {
   const { event, teamMap, venueLabels } = derived;
   const rounds = [...event.swiss.rounds].sort((a, b) => a.index - b.index);
 
-  // 每一轮的排名快照：优先用已冻结的快照，否则用“截至该轮已确认结果”的实时计算。
+  const publishedRounds = new Set(rounds.filter((round) => round.publicationStatus === 'published').map((round) => round.index));
+  const teamIds = qualifiedTeamIds(event);
+  // 赛前参考排名只使用此前已公布轮次的有效确认结果。配对快照可能只含部分队伍，
+  // 不能拿它当完整名单，也不能让本轮及以后结果改变该轮参赛队的赛前战绩。
   return rounds.map((round) => {
     const matches = round.matchIds
       .map((id) => event.swiss.matches.find((m) => m.id === id))
       .filter((m): m is SwissMatch => m !== undefined);
 
-    const settledUpToRound = event.swiss.matches.filter((m) => {
-      if (m.roundIndex > round.index) return false;
+    const settledBeforeRound = event.swiss.matches.filter((m) => {
+      if (m.roundIndex >= round.index || !publishedRounds.has(m.roundIndex)) return false;
       return m.attempts.some((a) => a.id === m.effectiveAttemptId && a.resultStatus === 'confirmed');
     });
     const standingsForRound = calculateSwissStandings(
-      displayPoolTeamIds(event),
-      settledUpToRound,
+      teamIds,
+      settledBeforeRound,
       event.qualification.ranking,
     );
 
     const groupOrder = ROUND_GROUP_ORDER[round.index] ?? ['0-0'];
     const groups: RoundGroupView[] = groupOrder
       .map((record) => {
-        const groupMatches = matches
+        const sourceMatches = matches
           .filter((m) => m.groupRecord === record)
-          .sort((a, b) => a.orderInGroup - b.orderInGroup)
-          .map((m) => toSwissMatchView(m, event, teamMap, venueLabels));
+          .sort((a, b) => a.orderInGroup - b.orderInGroup);
+        const participants = new Set(round.publicationStatus === 'published'
+          ? sourceMatches.flatMap((match) => match.participantSnapshot ?? [])
+          : []);
+        const entries = [...standingsForRound.byTeam.values()]
+          .filter((entry) => participants.has(entry.teamId))
+          .sort((a, b) => b.wins - a.wins || a.losses - b.losses || a.rankWithinGroup - b.rankWithinGroup);
         const [w = '0', l = '0'] = record.split('-');
         return {
           record,
           description: describeGroup(record),
           stakes: groupStakes(Number(w), Number(l)),
-          matches: groupMatches,
-          entries: standingsForRound.groups.find((g) => g.record === record)?.entries ?? [],
+          matches: sourceMatches.map((match) => toSwissMatchView(match, event, teamMap, venueLabels)),
+          entries,
         };
       })
       .filter((g) => g.matches.length > 0);
 
     const complete =
-      matches.length > 0 &&
+      round.publicationStatus === 'published' && matches.length > 0 &&
       matches.every((m) =>
         m.attempts.some((a) => a.id === m.effectiveAttemptId && a.resultStatus === 'confirmed'),
       );
@@ -923,7 +932,7 @@ export function deriveRounds(derived: DerivedEvent): RoundView[] {
       publicationStatus: round.publicationStatus,
       publishedAt: round.publishedAt,
       closedAt: round.closedAt,
-      revisionNote: round.revisionNote,
+      revisionNote: round.publicationStatus === 'published' ? round.revisionNote : null,
       groups,
       complete,
       basedOnRound: round.basedOnRound,

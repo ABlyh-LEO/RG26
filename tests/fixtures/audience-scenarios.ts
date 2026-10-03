@@ -5,7 +5,7 @@ import type { EventFile, PublicSnapshot } from '../../src/domain/schema';
 import { swapPairingSlots, type PairingAdjustment } from '../../src/domain/swiss';
 import { applyBo1Entry, applyBo3Game, applyFinalsBo1, applyQualificationRun, confirmQualificationRanking, confirmRound, generateNextRound, publishFinalsSeeding, publishRound } from '../../src/operator/draft';
 
-export type AudienceScenario = 'before' | 'qualification' | 'qualification-partial' | 'swiss' | 'swiss-adjusted' | 'bo3' | 'after' | 'rescheduled';
+export type AudienceScenario = 'before' | 'qualification' | 'qualification-partial' | 'swiss' | 'swiss-adjusted' | 'swiss-r4' | 'bo3' | 'after' | 'rescheduled';
 export function audienceEvent(scenario: AudienceScenario): EventFile {
   let event = buildSeedEvent('2026-10-02T12:00:00+08:00');
   if (scenario === 'before') return event;
@@ -75,6 +75,7 @@ export function audienceEvent(scenario: AudienceScenario): EventFile {
     if (!published.ok) throw new Error(published.messages.join('；'));
     event = published.event;
     const matches = event.swiss.matches.filter(m => m.roundIndex === index);
+    if (scenario === 'swiss-r4' && index === 4) return event;
     if (scenario === 'swiss' && index === 2) {
       const current = matches[0]!; current.executionStatus = 'running';
       event.scheduleItems.find(s => s.id === current.scheduleItemId)!.executionStatus = 'running';

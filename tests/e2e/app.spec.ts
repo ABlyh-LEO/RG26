@@ -296,20 +296,21 @@ test.describe('13.2 用户流程', () => {
         rowsWithSeconds: rows.filter((r) => /\d+\s*秒/.test(r.innerText)).length,
         finalsSides: [...document.querySelectorAll<HTMLElement>('[data-bracket-zone] [data-node-id]')]
           .map(node => [...node.querySelectorAll('.bracket-card__row .side-badge')].map(badge => badge.getAttribute('aria-label'))),
-        swissPendingSlots: document.querySelectorAll('[data-journey-stage="swiss"] .bracket-card__slot-sides').length,
       };
     });
 
-    expect(stats.cards, '完整赛前晋级图仍展示全部场次').toBe(47);
+    expect(stats.cards, '决赛保留全部 14 场，瑞士轮按组查看对阵').toBe(14);
     expect(stats.done, '赛前不得标出已结算比赛').toBe(0);
     expect(stats.winnerRows, '无成绩时不得凭空标出胜者').toBe(0);
     expect(stats.rowsWithScore, '无成绩时不得凭空显示比分').toBe(0);
     expect(stats.rowsWithSeconds, '无成绩时不得凭空显示到达最终分时间').toBe(0);
     expect(stats.finalsSides, '决赛席位颜色由赛程确定，BO1 与 BO3 均不依赖队名和赛果').toEqual(Array.from({ length: 14 }, () => ['蓝方', '红方']));
-    expect(stats.swissPendingSlots, '尚未公布的瑞士轮只说明第一、第二席位颜色').toBe(33);
     const swiss = page.locator('[data-journey-stage="swiss"]');
-    await expect(swiss.locator('.bracket-card__row')).toHaveCount(33);
-    await expect(swiss.locator('.bracket-card__row .side-badge')).toHaveCount(0);
+    await expect(swiss.locator('.swiss-map button[data-swiss-group]')).toHaveCount(9);
+    await expect(swiss.locator('.match-card')).toHaveCount(8);
+    await expect(swiss.locator('.swiss-match__side .side-badge')).toHaveCount(0);
+    await expect(swiss.locator('.swiss-match__slot-sides')).toHaveCount(8);
+    await expect(swiss.locator('[aria-label="胜者"], .match-side__result strong')).toHaveCount(0);
     const swissText = await swiss.innerText();
     for (const team of buildSeedEvent('2026-10-02T12:00:00+08:00').teams) expect(swissText, '席位颜色不能被误解为已经公布某支队伍').not.toContain(team.name);
   });
@@ -320,8 +321,9 @@ test.describe('13.2 用户流程', () => {
     await expect(page.locator('.bracket')).toHaveCount(0);
     await page.getByRole('link', { name: /完整晋级图/ }).first().click();
     await expect(page.locator('.bracket__scroller').first()).toBeVisible();
-    await expect(page.locator('.bracket-card')).toHaveCount(47);
-    await expect(page.locator('.bracket__column')).toHaveCount(13);
+    await expect(page.locator('.swiss-progress')).toBeVisible();
+    await expect(page.locator('.bracket-card')).toHaveCount(14);
+    await expect(page.locator('.bracket__column')).toHaveCount(8);
   });
 
   test('13.4 赛程页标出红蓝方', async ({ page }) => {
@@ -691,12 +693,24 @@ test.describe('13.4 分区晋级图', () => {
 
   test('完整晋级图将瑞士轮与分区决赛顺序展示，所有比赛完整且无重复', async ({ page }) => {
     await goto(page, '/progress?view=journey'); await waitForData(page);
-    await expect(page.locator('[data-journey-stage="swiss"] .bracket-card')).toHaveCount(33);
+    const swiss = page.locator('[data-journey-stage="swiss"]');
+    await expect(swiss.locator('.swiss-progress')).toBeVisible();
+    await expect(swiss.locator('.bracket')).toHaveCount(0);
+    const swissIds = new Set<string>();
+    for (const [index, count] of [8, 8, 8, 6, 3].entries()) {
+      await swiss.getByRole('button', { name: `R${index + 1}`, exact: true }).click();
+      const matches = swiss.locator('.match-card');
+      await expect(matches).toHaveCount(count);
+      const roundIds = await matches.evaluateAll(cards => cards.map(card => (card as HTMLElement).dataset.matchId!));
+      expect(new Set(roundIds).size).toBe(count);
+      for (const id of roundIds) swissIds.add(id);
+    }
+    expect(swissIds.size, '五轮的全部 33 场瑞士轮均可访问').toBe(33);
     await expect(page.locator('[data-journey-stage="finals"] .bracket-card')).toHaveCount(14);
-    await expect(page.locator('.bracket__board')).toHaveCount(4);
-    await expect(page.locator('.bracket__column')).toHaveCount(13);
+    await expect(page.locator('.bracket__board')).toHaveCount(3);
+    await expect(page.locator('.bracket__column')).toHaveCount(8);
     const ids = await page.locator('.bracket__node').evaluateAll(nodes => nodes.map(node => (node as HTMLElement).dataset.nodeId));
-    expect(new Set(ids).size).toBe(47);
+    expect(new Set(ids).size).toBe(14);
     const text = (await page.locator('.bracket').allInnerTexts()).join('\n');
     expect(text).not.toContain('单独跑图');
     expect(text).not.toMatch(/排位赛第 \d+ 轮/);
@@ -710,7 +724,7 @@ test.describe('13.4 分区晋级图', () => {
       bodyMax: Math.max(0, ...[...board.querySelectorAll<HTMLElement>('.bracket__column-body')].map(body => parseFloat(body.style.height) || 0)),
       columns: [...board.querySelectorAll<HTMLElement>('.bracket__column')].map(column => ({ left: parseFloat(column.style.left), top: parseFloat(column.style.top) })),
     })));
-    expect(layouts).toHaveLength(4);
+    expect(layouts).toHaveLength(3);
     for (const layout of layouts) {
       expect(layout.height).toBeGreaterThan(0);
       /*
@@ -740,10 +754,10 @@ test.describe('13.4 分区晋级图', () => {
       const bodies = [...chart.querySelectorAll<HTMLElement>('.bracket__column-body')].map(body => parseFloat(body.style.height));
       return { board: board.clientHeight, scroll: scroller.scrollHeight, bodies: [...new Set(bodies)] };
     }));
-    expect(metrics).toHaveLength(4);
+    expect(metrics).toHaveLength(3);
     expect(metrics[0]!.bodies.length).toBeGreaterThan(1);
     expect(metrics[1]!.bodies.length).toBeGreaterThan(1);
-    expect(metrics[3]!.board).toBeLessThan(metrics[1]!.board);
+    expect(metrics[2]!.board).toBeLessThan(metrics[0]!.board);
     for (const metric of metrics) expect(metric.scroll - metric.board).toBeLessThan(120);
   });
 
@@ -768,15 +782,21 @@ test.describe('13.4 分区晋级图', () => {
     await usePreEventSnapshot(page);
     await goto(page, '/progress?view=journey'); await waitForData(page);
     const swiss = page.locator('[data-journey-stage="swiss"]');
-    expect(await swiss.innerText()).toMatch(/等待第 \d 轮结果确认后公布/);
+    await swiss.getByRole('button', { name: 'R2', exact: true }).click();
+    await expect(swiss.locator('.swiss-round-details')).toContainText('等待排位赛正式名次确认后公布对阵');
     expect(await swiss.innerText()).not.toMatch(/排位赛第 \d+ 名\s*\n\s*排位赛第 \d+ 名/);
     await expect(swiss.locator('.bracket__link')).toHaveCount(0);
+    await page.route('**/data/event.json', route => route.fulfill({ json: audienceSnapshot('swiss') }));
+    await goto(page, '/progress?view=journey&round=3');
+    await waitForData(page);
+    await page.getByRole('button', { name: '立即刷新', exact: true }).click();
+    await expect(swiss.locator('.swiss-round-details')).toContainText('等待第 2 轮结果确认后公布对阵');
   });
 
   test('窄屏每个分区独立横向滚动，页面本体不溢出', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await goto(page, '/progress?view=journey'); await waitForData(page);
-    await expect(page.locator('.bracket__scroller')).toHaveCount(4);
+    await expect(page.locator('.bracket__scroller')).toHaveCount(3);
     const metrics = await page.locator('.bracket__scroller').evaluateAll(scrollers => scrollers.map(scroller => {
       scroller.scrollLeft = 400;
       return { width: scroller.clientWidth, content: scroller.scrollWidth, moved: scroller.scrollLeft };

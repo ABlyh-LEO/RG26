@@ -33,13 +33,13 @@ function fixture(withResult: boolean) {
 async function geometryProblems(page: Page) {
   return page.locator('.bracket__board').evaluateAll((boards) => {
     const issues: string[] = [];
-    if (boards.length !== 4) issues.push('完整晋级图应有四个独立画布');
+    if (boards.length !== 3) issues.push('决赛应有三个独立画布，瑞士轮使用分组全景');
     for (const [boardIndex, board] of boards.entries()) {
       const bounds = board.getBoundingClientRect();
       const nodes = new Map([...board.querySelectorAll<HTMLElement>('[data-node-id]')]
         .map((node) => [node.dataset.nodeId!, node.getBoundingClientRect()]));
       const paths = [...board.querySelectorAll<SVGPathElement>('.bracket__link')];
-      // 未公布的瑞士轮没有固定连线；三个决赛区域必须实际绘制区内路径。
+      // 三个决赛区域必须实际绘制区内路径。
       if (board.closest('[data-bracket-zone]') && paths.length === 0) issues.push(`决赛画布${boardIndex}尚无连线`);
       for (const path of paths) {
         const from = nodes.get(path.dataset.fromId ?? '');
@@ -75,7 +75,7 @@ async function geometryProblems(page: Page) {
 /**
  * 轮询到"卡片与连线完全对齐"。
  *
- * 几何检查要遍历 47 个节点做两两重叠判定，在 CI/本机满并发（WebKit 与其它
+ * 几何检查要遍历决赛节点做两两重叠判定，在 CI/本机满并发（WebKit 与其它
  * 项目抢 CPU）时，默认 5 秒轮询会在布局稳定前超时，报出假红——而部署门禁
  * 正是这套 e2e。这里只放宽等待时间，判定条件一字不改。
  */
@@ -91,7 +91,8 @@ test('移动晋级图首次加载、横竖屏切换及横向滚动后保持对�
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  await expect(page.locator('.bracket__node')).toHaveCount(47);
+  await expect(page.locator('.bracket__node')).toHaveCount(14);
+  await expect(page.locator('.swiss-progress')).toBeVisible();
   await expectAligned(page);
 
   for (const [width, height] of [[844, 390], [360, 780], [1440, 900], [390, 844]] as const) {
@@ -113,7 +114,7 @@ test('移动晋级图收到成绩及长队名后重新测量，字体增大后�
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  await expect(page.locator('.bracket__node')).toHaveCount(47);
+  await expect(page.locator('.bracket__node')).toHaveCount(14);
   await expectAligned(page);
 
   snapshot = fixture(true);

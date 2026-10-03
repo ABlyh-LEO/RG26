@@ -1,0 +1,119 @@
+[
+  {
+    "summary": [
+      "已晋级\n2/8",
+      "仍在争夺\n12",
+      "已淘汰\n2"
+    ],
+    "currentRound": "第 4 轮对阵",
+    "modelCounts": {
+      "advanced": 2,
+      "active": 12,
+      "eliminated": 2
+    }
+  },
+  {
+    "name": "desktop-1440",
+    "viewport": "1440x1000",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 9
+  },
+  {
+    "keyboard": {
+      "focusedClass": "swiss-round-details",
+      "hash": "#/progress?view=swiss&round=3&group=1-1"
+    },
+    "selectedGroupMatches": 4
+  },
+  {
+    "name": "desktop-team",
+    "viewport": "1440x1000",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 9
+  },
+  {
+    "r5Names": 0,
+    "r5Matches": 3,
+    "r5Pending": 3
+  },
+  {
+    "mobileDefaultOverview": 0
+  },
+  {
+    "name": "mobile-390-default",
+    "viewport": "390x844",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 0
+  },
+  {
+    "name": "mobile-390-overview",
+    "viewport": "390x844",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 9
+  },
+  {
+    "name": "mobile-rotated-overview",
+    "viewport": "844x390",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 9
+  },
+  {
+    "name": "mobile-returned-round",
+    "viewport": "390x844",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 0
+  },
+  {
+    "name": "mobile-360",
+    "viewport": "360x800",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 0
+  },
+  {
+    "name": "tablet-768",
+    "viewport": "768x1024",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 9
+  },
+  {
+    "name": "mobile-390-long-names",
+    "viewport": "390x844",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 0
+  },
+  {
+    "longNameSample": "保卫萝卜队——面向未来的跨学科智能机器人协同创新联合实验室代表队"
+  },
+  {
+    "name": "mobile-390-font-200-percent",
+    "viewport": "390x844",
+    "overflow": 0,
+    "clippedNames": [],
+    "arrowCrossings": [],
+    "groupCount": 0
+  },
+  {
+    "font200RoundTabOverflow": 0
+  },
+  {
+    "pageErrors": []
+  }
+]

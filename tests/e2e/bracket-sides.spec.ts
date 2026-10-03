@@ -22,7 +22,7 @@ async function expectMobileGeometry(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 }
 
-test('待定队伍的决赛标明固定蓝红席位，未公布瑞士轮只显示席位规则', async ({ page }) => {
+test('待定队伍的决赛标明固定蓝红席位，未公布瑞士轮不把颜色归给未知队伍', async ({ page }) => {
   const snapshot = audienceSnapshot('before');
   await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
   await page.setViewportSize({ width: 390, height: 844 });
@@ -38,17 +38,27 @@ test('待定队伍的决赛标明固定蓝红席位，未公布瑞士轮只显�
       await expect(card.getByRole('table')).toHaveCount(0);
     }
   }
+  const swiss = page.locator('[data-journey-stage="swiss"]');
+  const seen = new Set<string>();
   for (const roundIndex of [1, 2, 3, 4, 5]) {
-    const match = snapshot.data.swiss.matches.find(match => match.roundIndex === roundIndex)!;
-    const card = page.locator(`[data-node-id="${match.id}"] .bracket-card`);
-    await expect(card.locator('.bracket-card__row')).toHaveCount(1);
-    await expect(card.locator('.bracket-card__row .side-badge')).toHaveCount(0);
-    const slots = card.locator('.bracket-card__slot-sides');
-    await expect(slots).toContainText('第一席位');
-    await expect(slots).toContainText('第二席位');
-    expect(await slots.locator('.side-badge').evaluateAll(badges => badges.map(badge => badge.getAttribute('aria-label')))).toEqual(roundIndex % 2 ? ['蓝方', '红方'] : ['红方', '蓝方']);
+    await swiss.getByRole('button', { name: `R${roundIndex}`, exact: true }).click();
+    const matches = snapshot.data.swiss.matches.filter(match => match.roundIndex === roundIndex);
+    await expect(swiss.locator('.match-card')).toHaveCount(matches.length);
+    for (const match of matches) {
+      const card = swiss.locator(`.match-card[data-match-id="${match.id}"]`);
+      await expect(card).toBeVisible();
+      await expect(card.locator('.swiss-match__side .side-badge, [aria-label="胜者"], .match-side__result strong')).toHaveCount(0);
+      const slots = card.locator('.swiss-match__slot-sides');
+      await expect(slots).toContainText('第一席位');
+      await expect(slots).toContainText('第二席位');
+      expect(await slots.locator('.side-badge').evaluateAll(badges => badges.map(badge => badge.getAttribute('aria-label')))).toEqual(roundIndex % 2 ? ['蓝方', '红方'] : ['红方', '蓝方']);
+      const text = await card.innerText();
+      for (const team of snapshot.data.teams) expect(text).not.toContain(team.name);
+      seen.add(match.id);
+    }
   }
-  const swissText = await page.locator('[data-journey-stage="swiss"]').innerText();
+  expect(seen.size).toBe(33);
+  const swissText = await swiss.innerText();
   for (const team of snapshot.data.teams) expect(swissText).not.toContain(team.name);
   await expect(page.locator('.bracket-card--done, .bracket-card__row.is-winner')).toHaveCount(0);
 });
@@ -58,21 +68,27 @@ test('已公布瑞士轮按奇偶轮次把颜色标在正确的两支队伍旁',
   await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
   await page.goto('./#/progress?view=journey');
   await waitForData(page);
-  const cards = await page.locator('[data-journey-stage="swiss"] [data-node-id]').evaluateAll(nodes => nodes.map(node => ({
-    id: (node as HTMLElement).dataset.nodeId,
-    rows: [...node.querySelectorAll('.bracket-card__row')].map(row => ({ team: row.querySelector('.bracket-card__team')?.textContent, side: row.querySelector('.side-badge')?.getAttribute('aria-label') })),
-    pendingSlots: node.querySelectorAll('.bracket-card__slot-sides').length,
-  })));
-  expect(cards).toHaveLength(33);
-  for (const card of cards) {
-    const match = snapshot.data.swiss.matches.find(match => match.id === card.id)!;
-    expect(card.rows.map(row => row.side)).toEqual(match.roundIndex % 2 ? ['蓝方', '红方'] : ['红方', '蓝方']);
-    expect(card.pendingSlots).toBe(0);
-    for (const [index, row] of card.rows.entries()) {
-      const team = snapshot.data.teams.find(team => team.id === match.participantSnapshot![index])!;
-      expect(row.team).toContain(team.name);
+  const swiss = page.locator('[data-journey-stage="swiss"]');
+  const seen = new Set<string>();
+  for (const roundIndex of [1, 2, 3, 4, 5]) {
+    await swiss.getByRole('button', { name: `R${roundIndex}`, exact: true }).click();
+    const expected = snapshot.data.swiss.matches.filter(match => match.roundIndex === roundIndex);
+    await expect(swiss.locator('.match-card')).toHaveCount(expected.length);
+    const cards = await swiss.locator('.match-card').evaluateAll(nodes => nodes.map(node => ({
+      id: (node as HTMLElement).dataset.matchId!,
+      rows: [...node.querySelectorAll('.swiss-match__side')].map(row => ({ team: row.querySelector('.team-name')?.textContent, side: row.querySelector('.side-badge')?.getAttribute('aria-label') })),
+    })));
+    for (const card of cards) {
+      const match = expected.find(match => match.id === card.id)!;
+      expect(card.rows.map(row => row.side)).toEqual(roundIndex % 2 ? ['蓝方', '红方'] : ['红方', '蓝方']);
+      for (const [index, row] of card.rows.entries()) {
+        const team = snapshot.data.teams.find(team => team.id === match.participantSnapshot![index])!;
+        expect(row.team).toContain(team.name);
+      }
+      seen.add(card.id);
     }
   }
+  expect(seen.size).toBe(33);
 });
 
 test('手机 BO3 仅在队伍旁标明固定颜色，2 比 0 后提示第三局免赛且连线无交叉', async ({ page }) => {

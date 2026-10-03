@@ -14,6 +14,7 @@ test('晋级默认当前阶段和已公布轮次，排名显示队名，手机�
   await expect(page.getByRole('button', { name: '立即刷新' })).toBeEnabled({ timeout: 15_000 });
   await expect(page.getByRole('button', { name: '瑞士轮', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'R2', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: '展开评分明细' }).first().click();
   await expect(page.locator('.table').first()).toContainText('Uniforest队');
   expect(await page.locator('main').innerText()).not.toMatch(/competitive-\d+/);
 });
@@ -41,6 +42,7 @@ test('完整晋级图可定位阶段并高亮队伍真实参赛路径', async ({
   const team = snapshot.data.finals.series.find(s => s.id === 'F-QUAL')!.participantSnapshot![0];
   await page.route('**/data/event.json', route => route.fulfill({ json: snapshot }));
   await page.goto(`./#/progress?view=journey&team=${team}`); await waitForData(page);
+  await expect(page.locator('.swiss-team-journey')).toBeVisible();
   await expect(page.locator('.bracket__node.is-highlighted')).not.toHaveCount(0);
   await expect(page.locator('.bracket__link.is-highlighted')).not.toHaveCount(0);
   await page.getByRole('group', { name: '定位完整晋级图', exact: true }).getByRole('button', { name: '八强决赛', exact: true }).click();

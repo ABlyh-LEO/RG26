@@ -3,29 +3,27 @@
  *
  * 三个视图：排位赛、瑞士轮、决赛。
  * - 排位赛区分“出场安排（三审顺序）”与“正式排名”。
- * - 瑞士轮按轮次显示战绩分组，默认只显示名次/队伍/战绩/R，展开看 A/B/P/O/T。
+ * - 瑞士轮共享战绩分组全景、实际对阵与单队历程。
  * - 决赛桌面用固定流向图，手机按实际比赛顺序纵向卡片。
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQueryParams } from '../app/useQueryParams';
 import { useData } from '../data/DataProvider';
 import { useEventClock } from '../data/clock';
 import {
-  deriveRounds,
   formatDate,
   formatTime,
   effectiveStart,
-  type RoundGroupView,
 } from '../data/view-model';
 import { toSeriesView } from '../data/view-model';
 import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
-import { BracketChart, type BracketNodeContent } from '../components/BracketChart';
+import type { BracketNodeContent } from '../components/BracketChart';
 import { FinalsBracket } from '../components/FinalsBracket';
+import { SwissProgress } from '../components/SwissProgress';
 import { FINAL_ROUNDS, finalsIncoming, finalsOutgoing } from '../data/finals-presentation';
-import { buildSwissModel, nodeParticipants } from '../data/bracket-model';
-import { sidesForFinals, sidesForSwiss } from '../domain/sides';
+import { nodeParticipants } from '../data/bracket-model';
+import { sidesForFinals } from '../domain/sides';
 import { FINALS_MATCH_ORDER, FINALS_SEED_ORDER, finalsSeedLabel, type FinalsResolution } from '../domain/finals';
-import type { StandingsEntry } from '../domain/standings';
 import type { EventFile } from '../domain/schema';
 
 type View = 'qualification' | 'swiss' | 'finals' | 'journey';
@@ -482,170 +480,7 @@ function RunCell({ runs }: { runs: EventFile['qualification']['runs'] }) {
  * ------------------------------------------------------------------ */
 
 function SwissView() {
-  const { derived } = useData();
-  const { params, setParams } = useQueryParams();
-  const now = useEventClock();
-  if (!derived) return null;
-  const { event } = derived;
-
-  const rounds = deriveRounds(derived);
-  const requested = Number(params.get('round') ?? '');
-  const published = rounds.filter((r) => r.publicationStatus === 'published');
-  const scheduled = rounds.filter((r) => r.groups.some((g) => g.matches.some((m) => m.schedule && Date.parse(effectiveStart(m.schedule)) <= now.getTime())));
-  const fallbackRound = published.find((r) => !r.complete)?.index ?? published.at(-1)?.index ?? scheduled.at(-1)?.index ?? 1;
-  const roundIndex = Number.isFinite(requested) && requested >= 1 && requested <= 5 ? requested : fallbackRound;
-  const round = rounds.find((r) => r.index === roundIndex) ?? rounds[0];
-
-  if (!round) return <EmptyState title="尚无瑞士轮数据" />;
-
-  const anyResult = event.swiss.matches.some((m) => m.attempts.some((a) => a.resultStatus === 'confirmed'));
-
-  return (
-    <div className="stack" style={{ gap: 'var(--sp-3)' }}>
-      <div className="segmented" role="group" aria-label="选择瑞士轮轮次">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            className="segmented__item"
-            aria-pressed={n === roundIndex}
-            onClick={() => setParams({ round: String(n), group: null })}
-          >
-            R{n}
-          </button>
-        ))}
-      </div>
-
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <span className="small">
-            第 {round.index} 轮 · {round.index === 1 ? '依据排位赛名次' : `依据第 ${round.basedOnRound} 轮成绩`}
-          </span>
-          <PublicationBadge status={round.publicationStatus} />
-        </div>
-        {round.publishedAt ? (
-          <div className="xsmall muted" style={{ marginTop: 'var(--sp-1)' }}>
-            公布时间：{formatDate(round.publishedAt)} {formatTime(round.publishedAt)}
-          </div>
-        ) : null}
-        {round.revisionNote ? (
-          <div className="xsmall" style={{ marginTop: 'var(--sp-1)', color: 'var(--pending)' }}>
-            组委会修订：{round.revisionNote}
-          </div>
-        ) : null}
-        {round.publicationStatus === 'draft' ? (
-          <div className="xsmall muted" style={{ marginTop: 'var(--sp-1)' }}>
-            本轮对阵尚未正式公布。以下是赛程预留的时间槽，参赛队伍在公布前不确定。
-          </div>
-        ) : null}
-        {round.index === 3 ? (
-          <div className="xsmall" style={{ marginTop: 'var(--sp-1)', color: 'var(--pending)' }}>
-            第三轮全部 8 场在第二轮结束后一次性公布，于 10 月 3 日晚进行。
-          </div>
-        ) : null}
-      </div>
-
-      {!anyResult ? <p className="xsmall muted">尚无已确认成绩，以下先展示本轮安排。</p> : null}
-
-      <div className="round-tabs" role="group" aria-label="选择战绩组">
-        {[null, ...round.groups.map((g) => g.record)].map((record) => <button key={record ?? 'all'} type="button" className="btn" aria-pressed={(params.get('group') ?? null) === record} onClick={() => setParams({ group: record })}>{record ? `${record} 组` : '全部战绩组'}</button>)}
-      </div>
-      {round.groups.filter((g) => !params.get('group') || g.record === params.get('group')).map((group) => (
-        <GroupBlock key={group.record} group={group} roundIndex={round.index} />
-      ))}
-
-      {round.groups.length === 0 ? (
-        <EmptyState title="本轮没有可显示的对阵" hint={round.publicationStatus === 'draft' ? '等待上一轮结束后公布。' : undefined} />
-      ) : null}
-    </div>
-  );
-}
-
-function GroupBlock({ group, roundIndex }: { group: RoundGroupView; roundIndex: number }) {
-  const { derived } = useData();
-  const { params } = useQueryParams();
-  if (!derived) return null;
-  const teamId = params.get('team');
-  const matches = group.matches.filter((m) => !teamId || m.sides?.some((s) => s.team?.id === teamId));
-  if (teamId && !matches.length && !group.entries.some((e) => e.teamId === teamId)) return null;
-
-  return (
-    <section>
-      <div className="card__head" style={{ marginBottom: 'var(--sp-2)' }}>
-        <h3 className="card__title">
-          {group.record} 组
-          <span className="muted small" style={{ fontWeight: 400, marginLeft: 'var(--sp-2)' }}>
-            {group.description}
-          </span>
-        </h3>
-        {group.stakes ? <span className="badge badge--info">{group.stakes}</span> : null}
-      </div>
-
-      {/* 组内排名（参考排名，标注结算截止轮次） */}
-      {group.entries.length > 0 ? (
-        <div className="card" style={{ marginBottom: 'var(--sp-2)' }}>
-          <div className="xsmall muted" style={{ marginBottom: 'var(--sp-2)' }}>
-            排名依据：{roundIndex === 1 ? '排位赛名次' : `截至 R${roundIndex - 1} 已确认成绩`}
-          </div>
-          <StandingsMiniTable entries={group.entries} />
-        </div>
-      ) : null}
-
-      <div className="stack">
-        {matches.map((m) => (
-          <MatchCard key={m.id} match={m} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/** 紧凑排名表：默认只有名次/队伍/战绩/R，展开看完整指标。 */
-export function StandingsMiniTable({
-  entries,
-  showQualificationRank = true,
-}: {
-  entries: StandingsEntry[];
-  showQualificationRank?: boolean;
-}) {
-  const { derived } = useData();
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <div>
-      <button className="btn btn--small" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? '收起评分明细' : '展开评分明细'}</button>
-      <div className="table-wrap">
-      <table className="table">
-        <thead>
-          <tr>
-            <th className="num">#</th>
-            <th className="table__team">队伍</th>
-            <th className="num">战绩</th>
-            <th className="num">R</th>
-            {expanded ? (['A', 'B', 'P', 'O', 'T'] as const).map(key => <th className="num" key={key}>{key}</th>) : null}
-            {expanded && showQualificationRank ? <th className="num">排位</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((e) => (
-            <tr key={e.teamId}>
-              {/* 组内名次由领域计算给出；缺失时显示「—」，绝不用数组下标冒充名次。 */}
-              <td className="num tabular">{e.rankWithinGroup > 0 ? e.rankWithinGroup : '—'}</td>
-              <td className="table__team">
-                <TeamName team={derived?.teamMap.get(e.teamId)?.team ?? null} fallback="队伍待核对" />
-              </td>
-              <td className="num tabular">{e.record}</td>
-              <td className="num tabular">{e.display.r}</td>
-              {expanded ? (['a', 'b', 'p', 'o', 't'] as const).map(key => <td className="num tabular" key={key}>{e.display[key]}</td>) : null}
-              {expanded && showQualificationRank ? (
-                <td className="num tabular">{e.qualificationRank ?? '—'}</td>
-              ) : null}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  );
+  return <SwissProgress />;
 }
 
 /* ------------------------------------------------------------------ *
@@ -961,134 +796,12 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
   const renderSeriesNode = useSeriesNode();
 
   const journeyRef = useRef<HTMLDivElement>(null);
-  const model = useMemo(() => (derived ? buildSwissModel(derived.event) : null), [derived]);
+  const renderNode = useMemo(
+    () => renderSeriesNode ?? ((nodeId: string): BracketNodeContent => ({ title: nodeId, rows: [] })),
+    [renderSeriesNode],
+  );
 
-  /** 瑞士轮与排位赛的节点用各自的数据描述，不借用决赛的解析结果。 */
-  const renderNode = useMemo(() => {
-    const fallbackNode = (nodeId: string): BracketNodeContent => ({ title: nodeId, rows: [] });
-    const seriesNode = renderSeriesNode ?? fallbackNode;
-    if (!derived) return fallbackNode;
-
-    const { event, teamMap, finals } = derived;
-    const swissById = new Map(event.swiss.matches.map((m) => [m.id, m]));
-
-    return (nodeId: string): BracketNodeContent => {
-      const match = swissById.get(nodeId);
-      if (match) {
-        const { home, away, pending } = nodeParticipants(nodeId, event, finals);
-
-        /**
-         * 本次结算的 attempt（只认 effectiveAttemptId，重赛的旧记录不算）。
-         * 用它判断胜者与比分 —— 早先这里只塞了队名，
-         * 于是**瑞士轮卡片从来不标胜者、也不显示比分**，
-         * 图上分不出每场谁赢了。
-         */
-        const effective =
-          match.effectiveAttemptId === null
-            ? null
-            : match.attempts.find((a) => a.id === match.effectiveAttemptId) ?? null;
-        const decided = effective !== null && effective.resultStatus === 'confirmed';
-        const winnerId = decided ? effective.winnerId : null;
-
-        /**
-         * 待公布时两侧是同一句"在等什么"，重复两遍只会把卡片撑高。
-         * 这种情况合并成一行说明，绝不编造具体名次。
-         */
-        const refReason = (): string | null => {
-          for (const ref of match.slots) {
-            if (ref.kind === 'pending') return ref.reason;
-            if (ref.kind === 'qualification-rank') return `等待排位赛第 ${ref.rank} 名`;
-          }
-          return null;
-        };
-
-        const label = (teamId: string | null, index: number): string => {
-          if (teamId) return teamMap.get(teamId)?.displayName ?? teamId;
-          const ref = match.slots[index];
-          if (!ref) return '待定';
-          if (ref.kind === 'pending') return ref.reason;
-          if (ref.kind === 'qualification-rank') return `排位赛第 ${ref.rank} 名`;
-          if (ref.kind === 'team') return teamMap.get(ref.teamId)?.displayName ?? ref.teamId;
-          return '待定';
-        };
-
-        const swissNo = derived.matchNumbers.byId.get(match.id);
-        // 全局比赛编号（瑞士轮 45–77）：图上直接能看到"第 45 场 ·"。
-        const matchNoPrefix = swissNo === undefined ? '' : `第 ${swissNo} 场 · `;
-
-        if (pending) {
-          return {
-            title: `R${match.roundIndex}`,
-            rows: [{ label: '', team: refReason() ?? '对阵待公布', dim: true }],
-            slotSides: sidesForSwiss(match.roundIndex),
-            meta: matchNoPrefix === '' ? `${match.groupRecord} 战绩组` : `${matchNoPrefix}${match.groupRecord} 战绩组`,
-            status: 'upcoming',
-            to: `/matches/${nodeId}`,
-          };
-        }
-
-        /** 表现统计只在有效比赛上有意义；弃权/行政中止无比分。 */
-        const isPerformance =
-          effective !== null &&
-          (effective.resultKind === 'normal' || effective.resultKind === 'early-end');
-        const scoreOf = (teamId: string | null): string | null => {
-          if (!isPerformance || !effective || teamId === null) return null;
-          if (teamId === effective.homeTeamId) return effective.homeScore;
-          if (teamId === effective.awayTeamId) return effective.awayScore;
-          return null;
-        };
-        const secsOf = (teamId: string | null): string | null => {
-          if (!isPerformance || !effective || teamId === null) return null;
-          if (teamId === effective.homeTeamId) return effective.homeReachedSeconds;
-          if (teamId === effective.awayTeamId) return effective.awayReachedSeconds;
-          return null;
-        };
-
-        /**
-         * 每行末尾附上该队的比分与到达最终分时间，让图上能看出谁赢、赢多少；
-         * 同时标出红蓝方（瑞士轮偶数轮换边，由轮次推出）。
-         */
-        const sideColor = sidesForSwiss(match.roundIndex);
-        const rowOf = (teamId: string | null, index: number): BracketNodeContent['rows'][number] => {
-          const score = scoreOf(teamId);
-          const secs = secsOf(teamId);
-          const suffix =
-            score !== null
-              ? ` ${score} 分${secs !== null && secs !== '' ? ` · ${secs} 秒` : ''}`
-              : '';
-          return {
-            label: '',
-            team: `${label(teamId, index)}${suffix}`,
-            isWinner: winnerId !== null && teamId === winnerId,
-            dim: teamId === null,
-            side: index === 0 ? sideColor.first : sideColor.second,
-          };
-        };
-
-        const metaParts: string[] = [`${matchNoPrefix}${match.groupRecord} 战绩组`];
-        if (decided) {
-          metaParts.push('已结算');
-          if (effective && !isPerformance) {
-            metaParts.push(effective.resultKind === 'walkover-before-start' ? '未开赛弃权' : '行政判负中止');
-          }
-        }
-
-        return {
-          title: `R${match.roundIndex}`,
-          rows: [rowOf(home, 0), rowOf(away, 1)],
-          meta: metaParts.join(' · '),
-          status: decided ? 'done' : 'upcoming',
-          to: `/matches/${nodeId}`,
-        };
-      }
-
-      return seriesNode(nodeId);
-    };
-  }, [derived, renderSeriesNode]);
-
-  const sectionLabel = useMemo(() => (section: string) => section, []);
-
-  if (!derived || !model) return null;
+  if (!derived) return null;
 
   return (
     <div className="stack journey-bracket" ref={journeyRef}>
@@ -1101,17 +814,8 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
       </div>
       <section className="journey-stage" data-journey-stage="swiss">
       <h2 tabIndex={-1}>瑞士轮 · 争夺八强席位</h2>
-      {legend ? <p className="small muted">每轮重新配对，3 胜晋级、3 负淘汰。仅已公布的对阵显示同队跨轮轨迹，未公布的配对不预画连线。</p> : null}
-      <BracketChart
-        columns={model.columns}
-        connections={model.connections}
-        renderNode={renderNode}
-        sectionLabel={sectionLabel}
-        minColumnWidth={240}
-        ariaLabel="瑞士轮晋级图，可横向滚动"
-        showStageNavigation
-        highlightedNodeIds={highlightedNodes(derived.event, derived.finals, params.get('team'))}
-      />
+      {legend ? <p className="small muted">按战绩组查看常规赛制，选择队伍查看真实参赛历程。</p> : null}
+      <SwissProgress />
       </section>
       <section className="journey-stage" data-journey-stage="finals">
         <h2 tabIndex={-1}>八强决赛 · 双败晋级</h2>
@@ -1140,7 +844,7 @@ function FullJourneyView() {
     <div className="stack" style={{ gap: 'var(--sp-2)' }}>
       <FullJourneyBracket />
       <p className="xsmall muted">
-        瑞士轮 5 轮后 3 胜晋级八强；决赛分区内实线表示胜者晋级，跨组去向可点击场次定位。
+        瑞士轮最多五轮，累计三胜即晋级八强；决赛分区内实线表示胜者晋级，跨组去向可点击场次定位。
         排位赛不在本图内 —— 它是 44 次单队跑图，与瑞士轮没有逐场对应关系，
         请见上方「排位赛」页签。
       </p>
