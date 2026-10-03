@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T05:52:18.987Z",
+    "contentUpdatedAt": "2026-10-03T06:07:25.107Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -762,7 +762,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r2-rank06",
       "title": "排位赛第 2 轮 · 三审第 6 名 萝卜施工队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -837,7 +837,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r2-rank11",
       "title": "排位赛第 2 轮 · 三审第 11 名 煽风点火队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2263,13 +2263,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank06",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "10",
+        "elapsedSeconds": "143",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T06:04:56.167Z"
       },
       {
         "id": "qual-r2-rank07",
@@ -2333,13 +2333,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank11",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
-        "judgeNote": null,
-        "confirmedAt": null
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
+        "judgeNote": "放弃第二轮",
+        "confirmedAt": "2026-10-03T06:07:25.107Z"
       },
       {
         "id": "qual-r2-rank12",
