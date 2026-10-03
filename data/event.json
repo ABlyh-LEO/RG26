@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T01:17:13.955Z",
+    "contentUpdatedAt": "2026-10-03T02:12:30.964Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -387,7 +387,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank03",
       "title": "排位赛第 1 轮 · 三审第 3 名 保卫萝卜队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -402,7 +402,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank04",
       "title": "排位赛第 1 轮 · 三审第 4 名 All Last队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -417,7 +417,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank05",
       "title": "排位赛第 1 轮 · 三审第 5 名 沫日堡垒队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -432,7 +432,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank06",
       "title": "排位赛第 1 轮 · 三审第 6 名 萝卜施工队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -447,7 +447,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank07",
       "title": "排位赛第 1 轮 · 三审第 7 名 吃饭要排队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -462,7 +462,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank08",
       "title": "排位赛第 1 轮 · 三审第 8 名 组一辈子战队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -492,7 +492,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank10",
       "title": "排位赛第 1 轮 · 三审第 10 名 拼好队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -507,7 +507,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank11",
       "title": "排位赛第 1 轮 · 三审第 11 名 煽风点火队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -552,7 +552,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank14",
       "title": "排位赛第 1 轮 · 三审第 14 名 我也要打rg吗，队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1913,13 +1913,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank03",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "14",
+        "elapsedSeconds": "267",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:41:15.926Z"
       },
       {
         "id": "qual-r1-rank04",
@@ -1927,13 +1927,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank04",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "4",
+        "elapsedSeconds": "179",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:41:41.170Z"
       },
       {
         "id": "qual-r1-rank05",
@@ -1941,13 +1941,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank05",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "11",
+        "elapsedSeconds": "110",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:42:57.144Z"
       },
       {
         "id": "qual-r1-rank06",
@@ -1955,13 +1955,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank06",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "29",
+        "elapsedSeconds": "346",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:43:13.159Z"
       },
       {
         "id": "qual-r1-rank07",
@@ -1969,13 +1969,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank07",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T02:10:02.793Z"
       },
       {
         "id": "qual-r1-rank08",
@@ -1983,13 +1983,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank08",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T02:10:37.901Z"
       },
       {
         "id": "qual-r1-rank09",
@@ -2011,13 +2011,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank10",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "3",
+        "elapsedSeconds": "292",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T02:12:14.082Z"
       },
       {
         "id": "qual-r1-rank11",
@@ -2025,13 +2025,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank11",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "4",
+        "elapsedSeconds": "134",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T02:11:31.658Z"
       },
       {
         "id": "qual-r1-rank12",
@@ -2067,13 +2067,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank14",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T02:12:30.964Z"
       },
       {
         "id": "qual-r1-rank15",
