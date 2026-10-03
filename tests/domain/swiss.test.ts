@@ -478,10 +478,14 @@ describe('D18 退赛造成分组奇数', () => {
       rounds: [makeRound(1, matches)],
     });
 
-    expect(proposal.blockers.length).toBeGreaterThan(0);
-    expect(proposal.blockers.join(' ')).toContain('奇数');
+    // 门禁本身通过（上一轮已结束），问题出在自动配对无法凑出完整对阵。
+    expect(proposal.blockers).toEqual([]);
+    expect(proposal.compositionIssues.length).toBeGreaterThan(0);
+    expect(proposal.compositionIssues.join(' ')).toContain('奇数');
     // 不应通过轮空来凑数
-    expect(proposal.blockers.join(' ')).toContain('不擅自轮空');
+    expect(proposal.compositionIssues.join(' ')).toContain('不擅自轮空');
+    // 人工微调的基准名单仍然完整：6 支队伍都要各出场一次。
+    expect(proposal.participantTeamIds).toEqual(subset);
   });
 });
 

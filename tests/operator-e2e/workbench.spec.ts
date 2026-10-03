@@ -204,6 +204,96 @@ test('完整草稿导出再导入保留未完成输入，并进入基础版本�
   await expect(page.getByLabel('积分', { exact: true })).toHaveValue('12');
 });
 
+/**
+ * 组委会特殊情况：实际对阵需要在自动生成的配对表上人工微调。
+ *
+ * 这条用例走完整的操作台链路（定榜 → 生成候选 → 点击交换两支队伍 → 写明原因 → 公布），
+ * 并核对**落库结果**：调整后的参赛双方、每队恰好出场一次、修订说明、版本号。
+ * 最后验证"恢复自动配对"再公布会把说明清空（撤销路径同样要留得住痕迹）。
+ */
+test('瑞士轮对阵可以人工微调，调整结果与原因一起落库', async ({ page, request }, testInfo) => {
+  type DraftEvent = {
+    teams: Array<{ id: string; name: string }>;
+    swiss: {
+      rounds: Array<{ index: number; revisionNote: string | null; pairingVersion: number; publicationStatus: string }>;
+      matches: Array<{ id: string; roundIndex: number; orderInGroup: number; participantSnapshot: string[] | null }>;
+    };
+  };
+  const draftEvent = async (): Promise<DraftEvent> => {
+    const clientId = await page.evaluate(() => sessionStorage.getItem('rg26.operator.session'));
+    const response = await request.post('/api/operator/session', { headers: { Origin: 'http://127.0.0.1:5399' }, data: { clientId } });
+    return ((await response.json()) as { draft: { event: DraftEvent } }).draft.event;
+  };
+  const matchOf = (event: DraftEvent, roundIndex: number) =>
+    event.swiss.matches.filter((match) => match.roundIndex === roundIndex).sort((a, b) => a.orderInGroup - b.orderInGroup);
+
+  // ① 排位赛名次先成立，否则第一轮门禁不放行（人工覆盖路径，需填来源说明）。
+  await page.getByRole('button', { name: '对阵与排名', exact: true }).click();
+  await page.getByRole('button', { name: '以自动名次为起点，手动微调', exact: true }).click();
+  await page.getByLabel('来源说明', { exact: true }).fill('操作台验收：裁判组核分表');
+  await page.getByRole('button', { name: '确认人工名次并写入草稿', exact: true }).click();
+  await saved(page);
+
+  // ② 瑞士轮配对：生成第一轮候选（只产出候选，不写草稿）。
+  await page.getByRole('button', { name: '瑞士轮配对', exact: true }).click();
+  const roundOne = page.getByRole('row').filter({ has: page.getByText('R1', { exact: true }) });
+  await roundOne.getByRole('button', { name: '生成候选', exact: true }).click();
+  const slot = (matchIndex: number, side: 1 | 2) => page.getByTestId(`pair-slot-${matchIndex}-${side}`);
+  await expect(slot(0, 2)).toBeVisible();
+  // 现场按全局比赛编号叫场：面板里显示的就是「第 45 场」，不是组内序号。
+  await expect(page.getByRole('cell', { name: '第 45 场', exact: true })).toBeVisible();
+  // 席位按钮的无障碍名就是「第 N 场红方：队名」，用它把界面上的调整与落库结果对起来。
+  const labelOf = async (matchIndex: number) => (await slot(matchIndex, 2).getAttribute('aria-label')) ?? '';
+  const nameIn = (label: string) => label.split('：')[1] ?? '';
+  const before = [await labelOf(0), await labelOf(1)];
+  expect(nameIn(before[0]!)).not.toBe(nameIn(before[1]!));
+
+  // ③ 点击两个席位即交换对手；未写原因时不能公布。
+  await slot(0, 2).click();
+  await slot(1, 2).click();
+  await expect(page.getByText('与自动配对相比已调整 2 场')).toBeVisible();
+  // 差异列表也按全局比赛编号说事（现场对讲机里说的就是第 45 场）。
+  await expect(page.locator('.operator-ok')).toContainText('第 45 场：');
+  await expect(page.locator('.operator-ok')).toContainText('第 46 场：');
+  expect([nameIn(await labelOf(0)), nameIn(await labelOf(1))]).toEqual([nameIn(before[1]!), nameIn(before[0]!)]);
+  const publish = page.getByRole('button', { name: /公布这 8 场对阵并冻结/ });
+  await expect(publish).toBeDisabled();
+  await page.locator('#pairing-note-1').fill('两队设备故障，经裁判组同意交换对手');
+  await expect(publish).toBeEnabled();
+  await mkdir('.tmp-operator-screenshots', { recursive: true });
+  await page.screenshot({ path: `.tmp-operator-screenshots/${testInfo.project.name}-pairing-adjust.png`, fullPage: true });
+  await publish.click();
+  await saved(page);
+
+  // ④ 落库结果：调整后的对阵 + 说明 + 版本号，且每队仍然只出场一次。
+  const published = await draftEvent();
+  const round = published.swiss.rounds.find((item) => item.index === 1)!;
+  expect(round.publicationStatus).toBe('published');
+  expect(round.pairingVersion).toBe(1);
+  expect(round.revisionNote).toBe('两队设备故障，经裁判组同意交换对手');
+  const matches = matchOf(published, 1);
+  expect(matches).toHaveLength(8);
+  const teams = matches.flatMap((match) => match.participantSnapshot!);
+  expect(teams).toHaveLength(16);
+  expect(new Set(teams).size).toBe(16);
+  const nameInEvent = (event: DraftEvent, teamId: string) => event.teams.find((team) => team.id === teamId)!.name;
+  expect(nameInEvent(published, matches[0]!.participantSnapshot![1]!)).toBe(nameIn(before[1]!));
+  expect(nameInEvent(published, matches[1]!.participantSnapshot![1]!)).toBe(nameIn(before[0]!));
+
+  // ⑤ 撤销路径：恢复自动配对后重新公布，说明被清空（对阵回到自动结果）。
+  await expect(page.getByText(/已公布 · 第 1 版/)).toBeVisible();
+  await page.getByRole('button', { name: '恢复自动配对', exact: true }).click();
+  await expect(page.getByText('当前与自动配对完全一致（8 场）')).toBeVisible();
+  await page.getByRole('button', { name: /重新公布这 8 场对阵/ }).click();
+  await saved(page);
+  const reverted = await draftEvent();
+  const revertedRound = reverted.swiss.rounds.find((item) => item.index === 1)!;
+  expect(revertedRound.revisionNote).toBeNull();
+  expect(revertedRound.pairingVersion).toBe(2);
+  const revertedMatches = matchOf(reverted, 1);
+  expect(nameInEvent(reverted, revertedMatches[0]!.participantSnapshot![1]!)).toBe(nameIn(before[0]!));
+});
+
 test('发布任务完成提交、推送，并按公开版本确认观众可见', async ({ page, request }, testInfo) => {
   const before = await (await request.get('/__test/state')).json();
   await page.getByRole('button', { name: '公告与日程', exact: true }).click();

@@ -11,7 +11,14 @@ import type {
   SwissMatch,
 } from '../domain/schema';
 import { calculateSwissStandings } from '../domain/standings';
-import { generateSwissPairings, proposalToMatchSkeletons, ROUND_GROUP_ORDER } from '../domain/swiss';
+import {
+  checkPairingAdjustment,
+  generateSwissPairings,
+  proposalToMatchSkeletons,
+  ROUND_GROUP_ORDER,
+  type PairingAdjustment,
+  type PairingPair,
+} from '../domain/swiss';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
 import { assessQualificationCompleteness, officialQualificationRanking } from '../domain/qualification-completeness';
 import { validateEvent } from '../domain/validation';
@@ -735,6 +742,37 @@ export function applyQualificationRanking(
 
 export interface PairingOutcome extends ApplyResult {
   proposal: ReturnType<typeof generateSwissPairings> | null;
+  /**
+   * 本轮**已经公布**的对阵（若已公布且未开赛）。
+   *
+   * 用于"已公布的对阵需要微调"：编辑器从这里取起点，`publishRound` 会在
+   * 未开赛时重发同一轮并递增 `pairingVersion`。
+   */
+  published: { pairs: PairingPair[]; note: string | null; version: number } | null;
+}
+
+/** 读取一轮已经公布的正式对阵；未公布或缺少快照时返回 null。 */
+export function publishedRoundPairs(
+  event: EventFile,
+  roundIndex: number,
+): { pairs: PairingPair[]; note: string | null; version: number } | null {
+  const round = event.swiss.rounds.find((r) => r.index === roundIndex);
+  if (!round || round.publicationStatus !== 'published') return null;
+  const matches = round.matchIds
+    .map((id) => event.swiss.matches.find((m) => m.id === id))
+    .filter((m): m is SwissMatch => m !== undefined);
+  if (matches.length === 0) return null;
+  if (!matches.every((m) => m.participantSnapshot !== null)) return null;
+  return {
+    pairs: matches.map((m) => ({
+      groupRecord: m.groupRecord,
+      orderInGroup: m.orderInGroup,
+      homeTeamId: m.participantSnapshot![0],
+      awayTeamId: m.participantSnapshot![1],
+    })),
+    note: round.revisionNote,
+    version: round.pairingVersion,
+  };
 }
 
 /**
@@ -763,8 +801,9 @@ export function generateNextRound(event: EventFile, roundIndex: number): Pairing
   return {
     event,
     ok: proposal.blockers.length === 0,
-    messages: [...proposal.blockers, ...proposal.warnings],
+    messages: [...proposal.blockers, ...proposal.compositionIssues, ...proposal.warnings],
     proposal,
+    published: publishedRoundPairs(event, roundIndex),
   };
 }
 
@@ -772,18 +811,49 @@ export function generateNextRound(event: EventFile, roundIndex: number): Pairing
  * 公布候选对阵：写入比赛骨架、冻结评分快照、标记轮次已发布。
  *
  * 这是唯一会改变对外可见对阵的操作，必须由维护者显式触发。
+ *
+ * `adjustment` 为组委会人工微调后的完整对阵（含调整原因）。它只影响"谁对谁"，
+ * 不改变场次编号、战绩组、组内序号与已经排定的时间槽：
+ * 换对手不该把比赛挪到别的时间或场地。
  */
 export function publishRound(
   event: EventFile,
   roundIndex: number,
   proposal: ReturnType<typeof generateSwissPairings>,
+  adjustment: PairingAdjustment | null = null,
 ): ApplyResult {
   if (proposal.blockers.length > 0) {
-    return { event, ok: false, messages: ['候选存在阻断问题，不能公布', ...proposal.blockers] };
+    return { event, ok: false, messages: ['轮次门禁未通过，不能公布', ...proposal.blockers] };
   }
 
   const round = event.swiss.rounds.find((r) => r.index === roundIndex);
   if (!round) return { event, ok: false, messages: [`找不到第 ${roundIndex} 轮`] };
+
+  let pairs = proposal.pairs;
+  let revisionNote: string | null = null;
+  if (adjustment) {
+    const check = checkPairingAdjustment(proposal, adjustment.pairs, {
+      label: (teamId) => event.teams.find((t) => t.id === teamId)?.name ?? teamId,
+    });
+    if (check.errors.length > 0) {
+      return { event, ok: false, messages: ['人工微调后的对阵不完整，不能公布', ...check.errors] };
+    }
+    if (adjustment.note.trim() === '') {
+      return {
+        event,
+        ok: false,
+        messages: ['人工调整必须写明原因：比赛结束后无法追问的调整等于没有留痕'],
+      };
+    }
+    pairs = adjustment.pairs;
+    revisionNote = adjustment.note.trim();
+  } else if (proposal.compositionIssues.length > 0) {
+    return {
+      event,
+      ok: false,
+      messages: ['自动配对存在需要人工处理的问题，不能原样公布', ...proposal.compositionIssues],
+    };
+  }
 
   const alreadyStarted = event.swiss.matches.some((m) => m.roundIndex === roundIndex &&
     (m.executionStatus === 'running' || m.executionStatus === 'finished' || m.attempts.some((a) => a.resultStatus === 'confirmed')));
@@ -794,7 +864,7 @@ export function publishRound(
 
   // 为每场找到对应的时间槽
   const skeletons = proposalToMatchSkeletons(
-    proposal,
+    { roundIndex, pairs },
     round.id,
     (_r, i) => String(round.matchIds[i] ?? `${round.id}-m${i + 1}`),
     (r, groupRecord, orderInGroup) => {
@@ -808,7 +878,7 @@ export function publishRound(
   const now = new Date().toISOString();
 
   // 评分快照：把"已用于正式配对的排名"与"当前参考排名"分开保存。
-  const snapshot = proposal.pairs.map((p, index) => {
+  const snapshot = pairs.map((p, index) => {
     const entry = standings.byTeam.get(p.homeTeamId);
     const seed = (v: { n: bigint; d: bigint }) => ({ n: v.n.toString(), d: v.d.toString() });
     return {
@@ -834,6 +904,7 @@ export function publishRound(
   const byId = new Map(event.swiss.matches.map((m) => [m.id, m]));
   for (const m of newMatches) byId.set(m.id, m);
 
+  const adjusted = revisionNote !== null;
   return {
     event: {
       ...event,
@@ -848,6 +919,7 @@ export function publishRound(
                 publicationStatus: 'published' as const,
                 publishedAt: now,
                 rankingSnapshot: snapshot,
+                revisionNote,
               }
             : r,
         ),
@@ -859,7 +931,10 @@ export function publishRound(
       event: { ...event.event, contentUpdatedAt: now },
     },
     ok: true,
-    messages: [`已公布第 ${roundIndex} 轮共 ${newMatches.length} 场对阵，并冻结评分快照。`],
+    messages: [
+      `已公布第 ${roundIndex} 轮共 ${newMatches.length} 场对阵，并冻结评分快照。`,
+      ...(adjusted ? ['本轮对阵含组委会人工调整，调整原因已随轮次一起写入数据。'] : []),
+    ],
   };
 }
 

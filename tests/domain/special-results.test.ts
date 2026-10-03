@@ -195,7 +195,14 @@ describe('未开赛弃权与行政判负中止（手册附一六）', () => {
     const entry = standings.byTeam.get(team)!;
     expect(entry.wins).toBe(3);
     expect(entry.metrics.n).toBe(0);
-    expect(validateEvent(event).errors).toEqual([]);
+    /*
+     * 这个场景是**人为构造**的：同一支队伍在第 1 轮出场三次，现实不可能出现
+     * （一轮之内每队只能出场一次）。校验器因此会报出轮内重复出场 —— 那是正确行为，
+     * 不是本用例要检查的内容。这里只确认"除了这个故意的结构问题之外没有别的错误"。
+     */
+    const errors = validateEvent(event).errors;
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.every((issue) => issue.code === 'duplicate-participant-in-round')).toBe(true);
   });
 });
 

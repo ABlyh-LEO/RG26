@@ -739,6 +739,45 @@ export function validateSwiss(event: EventFile, teamIds: Set<string>, _offset: n
     if (round.publicationStatus === 'published' && round.publishedAt === null) {
       errors.push(err('swiss-round', round.id, 'publishedAt', 'published-without-time', '已发布的轮次必须记录公布时间'));
     }
+    /*
+     * 一轮之内每支队伍只能出场一次。
+     *
+     * 自动配对天然满足，但人工微调（换对手）可能把同一支队伍放进两场，
+     * 或者漏掉一支队伍。这里守住"写进数据之后也一定成立"，
+     * 因此即使绕过维护工具直接改数据，也会被校验拦住。
+     */
+    const seenTeams = new Map<string, string>();
+    for (const m of matches) {
+      if (!m.participantSnapshot) continue;
+      for (const teamId of m.participantSnapshot) {
+        const previous = seenTeams.get(teamId);
+        if (previous) {
+          errors.push(
+            err(
+              'swiss-round',
+              round.id,
+              'matchIds',
+              'duplicate-participant-in-round',
+              `第 ${round.index} 轮里 ${teamId} 出场两次（${previous} 与 ${m.id}）：每队每轮只能出场一次`,
+            ),
+          );
+        } else {
+          seenTeams.set(teamId, m.id);
+        }
+      }
+    }
+    // 重新公布过的轮次必须留下修订说明：否则"为什么这轮改了"事后无从追问。
+    if (round.publicationStatus === 'published' && round.pairingVersion > 1 && !round.revisionNote) {
+      errors.push(
+        warn(
+          'swiss-round',
+          round.id,
+          'revisionNote',
+          'republished-without-note',
+          `第 ${round.index} 轮已重新公布 ${round.pairingVersion - 1} 次，但没有填写修订说明`,
+        ),
+      );
+    }
     if (round.publicationStatus === 'published' && round.matchIds.length === 0) {
       errors.push(err('swiss-round', round.id, 'matchIds', 'published-empty', '已发布的轮次不能没有比赛'));
     }

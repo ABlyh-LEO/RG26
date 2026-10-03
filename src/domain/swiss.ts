@@ -11,6 +11,9 @@
  * - 配对组顺序：R2 [1-0, 0-1]；R3 [2-0, 1-1, 0-2]；R4 [2-1, 1-2]；R5 [2-2]。
  * - 原文没有“避免重复对阵”，因此不实现避重、跨组调队、随机或轮空。
  * - 分组人数为奇数 / 名单异常 / 名额变化时：停止自动配对并报因，交组委会处置。
+ * - 组委会因特殊情况决定调整时，可在自动对阵上**人工微调**（交换席位），
+ *   微调结果必须通过 `checkPairingAdjustment` 并写明原因后才会写入数据；
+ *   自动配对本身保持原样，数据里同时留下 `revisionNote` 便于事后追问。
  */
 import type { QualificationRanking, SwissMatch, SwissRound } from './schema';
 import { type Standings, type StandingsEntry, calculateSwissStandings } from './standings';
@@ -26,16 +29,60 @@ export const ROUND_GROUP_ORDER: Record<number, readonly string[]> = {
 /** 正常场次预期数量。用于校验，绝不为了凑数伪造比赛。 */
 export const EXPECTED_MATCH_COUNTS: Record<number, number> = { 1: 8, 2: 8, 3: 8, 4: 6, 5: 3 };
 
+/**
+ * 一场对阵：候选人、已公布对阵、人工微调后的对阵**共用同一形状**。
+ *
+ * 这样"把候选原样公布"与"把微调后的结果公布"走完全相同的写入路径，
+ * 不存在两套写入代码各自演化的问题。
+ */
+export interface PairingPair {
+  groupRecord: string;
+  orderInGroup: number;
+  homeTeamId: string;
+  awayTeamId: string;
+}
+
+/** 一场比赛里的两个席位。 */
+export type PairingSide = 'home' | 'away';
+
+/** 指向某一场的某一席位；人工微调以"交换两个席位"为最小操作。 */
+export interface PairingSlotRef {
+  matchIndex: number;
+  side: PairingSide;
+}
+
 export interface PairingProposal {
   roundIndex: number;
   /** 按组顺序、组内相邻顺序排列的候选对阵。 */
-  pairs: { groupRecord: string; orderInGroup: number; homeTeamId: string; awayTeamId: string }[];
+  pairs: PairingPair[];
   /** 本次配对依据的评分快照。 */
   standings: Standings;
-  /** 阻断自动配对的硬性问题（有值时不得公布）。 */
+  /**
+   * **轮次门禁**类阻断（上一轮未结束、排位赛名次未成立等）。
+   *
+   * 这一类问题不是"配对得不好"，而是"现在还不该配对"；
+   * 人工微调不能绕过，有值时一律不得公布。
+   */
   blockers: string[];
+  /**
+   * **自动配对自身**的构成问题（战绩组人数为奇数、场次数与手册不符、
+   * 出现自我对阵或重复对阵）。
+   *
+   * 这类问题允许由组委会人工微调后公布 —— 微调结果必须通过
+   * `checkPairingAdjustment`，并写明调整原因。原样公布（未微调）仍然被拒绝。
+   */
+  compositionIssues: string[];
   /** 非阻断的提示。 */
   warnings: string[];
+  /**
+   * 本轮应当参赛、且**每队只出场一次**的队伍。
+   *
+   * 人工微调的完整性基准：任何调整都必须让这批队伍各出现恰好一次。
+   * 门禁未通过时为空数组（此时参赛队尚未确定）。
+   */
+  participantTeamIds: string[];
+  /** 手册对本轮的预期场次；该轮未定义时为空。 */
+  expectedMatchCount: number | null;
 }
 
 export interface PairingContext {
@@ -126,6 +173,7 @@ export function checkRoundGate(ctx: PairingContext): { ok: boolean; reason: stri
  * 重要：本函数只产出候选，绝不修改事件；对外公布必须另行调用 publish。
  */
 export function generateSwissPairings(ctx: PairingContext): PairingProposal {
+  const expectedMatchCount = EXPECTED_MATCH_COUNTS[ctx.roundIndex] ?? null;
   const gate = checkRoundGate(ctx);
   if (!gate.ok) {
     return {
@@ -133,14 +181,18 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
       pairs: [],
       standings: calculateSwissStandings(ctx.teamIds, ctx.matches, ctx.qualification),
       blockers: [gate.reason ?? '轮次门禁未通过'],
+      compositionIssues: [],
       warnings: [],
+      participantTeamIds: [],
+      expectedMatchCount,
     };
   }
 
   const standings = calculateSwissStandings(ctx.teamIds, ctx.matches, ctx.qualification);
   const blockers: string[] = [];
+  const compositionIssues: string[] = [];
   const warnings: string[] = [];
-  const pairs: PairingProposal['pairs'] = [];
+  const pairs: PairingPair[] = [];
 
   if (ctx.roundIndex === 1) {
     /*
@@ -159,9 +211,18 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
       pairs.push({ groupRecord: '0-0', orderInGroup: i + 1, homeTeamId: home, awayTeamId: away });
     }
     if (pairs.length !== EXPECTED_MATCH_COUNTS[1]) {
-      blockers.push(`第一轮预期 ${EXPECTED_MATCH_COUNTS[1]} 场，实际生成 ${pairs.length} 场`);
+      compositionIssues.push(`第一轮预期 ${EXPECTED_MATCH_COUNTS[1]} 场，实际生成 ${pairs.length} 场`);
     }
-    return { roundIndex: ctx.roundIndex, pairs, standings, blockers, warnings };
+    return {
+      roundIndex: ctx.roundIndex,
+      pairs,
+      standings,
+      blockers,
+      compositionIssues,
+      warnings,
+      participantTeamIds: [...ordered],
+      expectedMatchCount,
+    };
   }
 
   const groupOrder = ROUND_GROUP_ORDER[ctx.roundIndex];
@@ -171,11 +232,16 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
       pairs: [],
       standings,
       blockers: [`第 ${ctx.roundIndex} 轮没有定义的配对组顺序`],
+      compositionIssues,
       warnings,
+      participantTeamIds: [],
+      expectedMatchCount,
     };
   }
 
   const activeTeams = determineActiveTeams(ctx, standings);
+  // 参赛队按 teamIds 的固定顺序列出，保证同一输入永远得到同一份基准名单。
+  const participantTeamIds = ctx.teamIds.filter((id) => activeTeams.has(id));
 
   for (const record of groupOrder) {
     const group = standings.groups.find((g) => g.record === record);
@@ -183,8 +249,8 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
     // 已晋级 / 已淘汰的队伍不再参赛；记录数应为偶数才可配对。
     if (inGroup.length === 0) continue;
     if (inGroup.length % 2 !== 0) {
-      blockers.push(
-        `${record} 组有 ${inGroup.length} 支仍在比赛中的队伍，人数为奇数，停止自动配对，请组委会处置（不擅自轮空）`,
+      compositionIssues.push(
+        `${record} 组有 ${inGroup.length} 支仍在比赛中的队伍，人数为奇数，自动配对无法给出完整对阵，请组委会处置（不擅自轮空）；如确需调整，可在对阵表上人工微调并写明原因`,
       );
       continue;
     }
@@ -209,21 +275,30 @@ export function generateSwissPairings(ctx: PairingContext): PairingProposal {
 
   const expected = EXPECTED_MATCH_COUNTS[ctx.roundIndex];
   if (expected !== undefined && pairs.length !== expected) {
-    // 正常赛程下必须精确匹配；否则报为阻断，避免为了凑数伪造比赛。
-    blockers.push(
-      `第 ${ctx.roundIndex} 轮预期 ${expected} 场，实际生成 ${pairs.length} 场；请核对退赛/名额变化后由组委会修订`,
+    // 正常赛程下必须精确匹配；否则报为构成问题，避免为了凑数伪造比赛。
+    compositionIssues.push(
+      `第 ${ctx.roundIndex} 轮预期 ${expected} 场，实际生成 ${pairs.length} 场；请核对退赛/名额变化后由组委会裁决（人工微调也不能凭空增减场次，除非组委会另有决定）`,
     );
   }
 
   const seen = new Set<string>();
   for (const p of pairs) {
-    if (p.homeTeamId === p.awayTeamId) blockers.push(`出现自我对阵：${p.homeTeamId}`);
+    if (p.homeTeamId === p.awayTeamId) compositionIssues.push(`出现自我对阵：${p.homeTeamId}`);
     const key = [p.homeTeamId, p.awayTeamId].sort().join('|');
-    if (seen.has(key)) blockers.push(`出现重复对阵：${p.homeTeamId} 对 ${p.awayTeamId}`);
+    if (seen.has(key)) compositionIssues.push(`出现重复对阵：${p.homeTeamId} 对 ${p.awayTeamId}`);
     seen.add(key);
   }
 
-  return { roundIndex: ctx.roundIndex, pairs, standings, blockers, warnings };
+  return {
+    roundIndex: ctx.roundIndex,
+    pairs,
+    standings,
+    blockers,
+    compositionIssues,
+    warnings,
+    participantTeamIds,
+    expectedMatchCount,
+  };
 }
 
 /**
@@ -241,17 +316,22 @@ export function determineActiveTeams(ctx: PairingContext, standings: Standings):
   return active;
 }
 
-/** 把候选配对转换为待写入的 SwissMatch 骨架（不含 attempts）。 */
+/**
+ * 把一组对阵转换为待写入的 SwissMatch 骨架（不含 attempts）。
+ *
+ * 参数刻意只要求 `{ roundIndex, pairs }`：候选、已公布对阵与人工微调后的
+ * 对阵都能直接传入，写入路径因此唯一。
+ */
 export function proposalToMatchSkeletons(
-  proposal: PairingProposal,
+  source: { roundIndex: number; pairs: readonly PairingPair[] },
   roundId: string,
   matchIdFactory: (roundIndex: number, index: number) => string,
   scheduleItemIdFactory: (roundIndex: number, groupRecord: string, orderInGroup: number) => string,
 ): Omit<SwissMatch, 'attempts' | 'effectiveAttemptId'>[] {
-  return proposal.pairs.map((pair, index) => ({
-    id: matchIdFactory(proposal.roundIndex, index),
+  return source.pairs.map((pair, index) => ({
+    id: matchIdFactory(source.roundIndex, index),
     roundId,
-    roundIndex: proposal.roundIndex,
+    roundIndex: source.roundIndex,
     groupRecord: pair.groupRecord,
     orderInGroup: pair.orderInGroup,
     slots: [
@@ -260,10 +340,208 @@ export function proposalToMatchSkeletons(
     ],
     participantSnapshot: [pair.homeTeamId, pair.awayTeamId] as [string, string],
     executionStatus: 'scheduled' as const,
-    scheduleItemId: scheduleItemIdFactory(proposal.roundIndex, pair.groupRecord, pair.orderInGroup),
+    scheduleItemId: scheduleItemIdFactory(source.roundIndex, pair.groupRecord, pair.orderInGroup),
     note: null,
   }));
 }
+
+/* ------------------------------------------------------------------ *
+ * 人工微调
+ * ------------------------------------------------------------------ */
+
+/**
+ * 交换两个席位的队伍（纯函数）。
+ *
+ * 这是人工微调的唯一原语：同场两个席位交换 = 换边（红蓝互换）；
+ * 不同场的两个席位交换 = 换对手。任何排列都能由若干次交换得到。
+ * 越界或引用不存在时原样返回，绝不抛错 —— UI 可能点到过期下标。
+ */
+export function swapPairingSlots(
+  pairs: readonly PairingPair[],
+  a: PairingSlotRef,
+  b: PairingSlotRef,
+): PairingPair[] {
+  const next = pairs.map((pair) => ({ ...pair }));
+  const first = next[a.matchIndex];
+  const second = next[b.matchIndex];
+  if (!first || !second) return next;
+  const firstTeam = a.side === 'home' ? first.homeTeamId : first.awayTeamId;
+  const secondTeam = b.side === 'home' ? second.homeTeamId : second.awayTeamId;
+  if (a.side === 'home') first.homeTeamId = secondTeam;
+  else first.awayTeamId = secondTeam;
+  if (b.side === 'home') second.homeTeamId = firstTeam;
+  else second.awayTeamId = firstTeam;
+  return next;
+}
+
+/** 人工微调结果：调整后的完整对阵 + 必须写明的调整原因。 */
+export interface PairingAdjustment {
+  pairs: PairingPair[];
+  note: string;
+}
+
+export interface PairingAdjustmentCheck {
+  /** 不可公布的问题。 */
+  errors: string[];
+  /** 可以公布但需要人眼确认的提示（例如跨组调整）。 */
+  warnings: string[];
+  /** 与自动配对逐场对比的可读差异。 */
+  changes: string[];
+  /** 与自动配对不同的场次数。 */
+  changedMatchCount: number;
+}
+
+export interface PairingAdjustmentOptions {
+  /** 把队伍 ID 换成可读名称；领域层不持有队名，由调用方注入。 */
+  label?: (teamId: string) => string;
+  /** 把场次序号换成可读标签，默认「第 N 场」；维护端注入全局比赛编号。 */
+  slotLabel?: (index: number) => string;
+}
+
+function sideText(pair: PairingPair | undefined, label: (teamId: string) => string): string {
+  if (!pair) return '（缺）';
+  return `${label(pair.homeTeamId)} vs ${label(pair.awayTeamId)}`;
+}
+
+/**
+ * 校验人工微调后的对阵。
+ *
+ * 通过的条件是"这是一轮**结构完整**的对阵"：
+ * 场次数与手册一致、每支本轮参赛队恰好出现一次、无自我对阵、无重复对阵，
+ * 且每场仍落在本轮允许的战绩组与连续的组内序号上。
+ *
+ * 刻意**不**检查"调整后的对手是否仍属同一战绩组"：特殊情况下的跨组调整
+ * 正是需要人工介入的场合，因此只给出提示，由组委会在说明里承担。
+ */
+export function checkPairingAdjustment(
+  proposal: PairingProposal,
+  pairs: readonly PairingPair[],
+  options: PairingAdjustmentOptions = {},
+): PairingAdjustmentCheck {
+  const label = options.label ?? ((teamId: string) => teamId);
+  /*
+   * 场次标签：默认「第 N 场」（组内顺序）。现场是按**全局比赛编号**叫场的，
+   * 因此维护端会注入「第 45 场」这样的标签，让提示与对讲机里说的是同一场比赛。
+   */
+  const slot = options.slotLabel ?? ((index: number) => `第 ${index + 1} 场`);
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const participants = proposal.participantTeamIds;
+  if (participants.length === 0) {
+    return {
+      errors: [
+        '本轮参赛队伍尚未确定（轮次门禁未通过），不能进行人工微调；请先处理上方阻断问题',
+      ],
+      warnings,
+      changes: [],
+      changedMatchCount: 0,
+    };
+  }
+
+  if (proposal.expectedMatchCount !== null && pairs.length !== proposal.expectedMatchCount) {
+    errors.push(
+      `第 ${proposal.roundIndex} 轮应有 ${proposal.expectedMatchCount} 场，当前为 ${pairs.length} 场；` +
+        '轮空、合并或增减场次属于组委会另行的赛程决定，不在对阵微调范围内',
+    );
+  }
+
+  const known = new Set(participants);
+  const occurrences = new Map<string, string[]>();
+  const pairKeys = new Map<string, number>();
+
+  pairs.forEach((pair, index) => {
+    const where = slot(index);
+    if (!pair.homeTeamId || !pair.awayTeamId) {
+      errors.push(`${where}还有席位没有队伍`);
+      return;
+    }
+    if (pair.homeTeamId === pair.awayTeamId) {
+      errors.push(`${where}出现自我对阵：${label(pair.homeTeamId)}`);
+    }
+    for (const teamId of [pair.homeTeamId, pair.awayTeamId]) {
+      if (!known.has(teamId)) {
+        errors.push(`${where}安排了不属于本轮参赛范围的队伍：${label(teamId)}`);
+        continue;
+      }
+      const list = occurrences.get(teamId);
+      if (list) list.push(where);
+      else occurrences.set(teamId, [where]);
+    }
+    const key = [pair.homeTeamId, pair.awayTeamId].sort().join('|');
+    const previous = pairKeys.get(key);
+    if (previous !== undefined) {
+      errors.push(
+        `同一对队伍被安排了两次：${label(pair.homeTeamId)} vs ${label(pair.awayTeamId)}（${slot(previous)} 与 ${where}）`,
+      );
+    } else {
+      pairKeys.set(key, index);
+    }
+  });
+
+  for (const [teamId, where] of occurrences) {
+    if (where.length > 1) {
+      errors.push(`${label(teamId)} 被安排了两场（${where.join('、')}）：每队本轮只能出场一次`);
+    }
+  }
+  const missing = participants.filter((teamId) => !occurrences.has(teamId));
+  if (missing.length > 0) {
+    errors.push(
+      `还有 ${missing.length} 支本轮参赛队没有对手：${missing.map((teamId) => label(teamId)).join('、')}`,
+    );
+  }
+
+  const allowedRecords = ROUND_GROUP_ORDER[proposal.roundIndex] ?? ['0-0'];
+  const byRecord = new Map<string, number[]>();
+  pairs.forEach((pair, index) => {
+    if (!allowedRecords.includes(pair.groupRecord)) {
+      errors.push(
+        `${slot(index)}的战绩组「${pair.groupRecord}」不属于第 ${proposal.roundIndex} 轮（允许：${allowedRecords.join('、')}）`,
+      );
+      return;
+    }
+    const list = byRecord.get(pair.groupRecord);
+    if (list) list.push(pair.orderInGroup);
+    else byRecord.set(pair.groupRecord, [pair.orderInGroup]);
+    for (const teamId of [pair.homeTeamId, pair.awayTeamId]) {
+      const entry = proposal.standings.byTeam.get(teamId);
+      if (entry && entry.record !== pair.groupRecord) {
+        warnings.push(
+          `${slot(index)}为跨组调整：${label(teamId)} 当前战绩 ${entry.record}，被安排在 ${pair.groupRecord} 组`,
+        );
+      }
+    }
+  });
+  for (const [record, orders] of byRecord) {
+    const sorted = [...orders].sort((a, b) => a - b);
+    sorted.forEach((order, index) => {
+      if (order !== index + 1) {
+        errors.push(`${record} 组的组内序号必须从 1 连续：组内第 ${index + 1} 位却是 ${order}`);
+      }
+    });
+  }
+
+  const changes: string[] = [];
+  const length = Math.max(pairs.length, proposal.pairs.length);
+  for (let index = 0; index < length; index += 1) {
+    const before = proposal.pairs[index];
+    const after = pairs[index];
+    if (!after) {
+      changes.push(`${slot(index)}：${sideText(before, label)} → 已移除`);
+      continue;
+    }
+    if (!before) {
+      changes.push(`${slot(index)}：新增 ${sideText(after, label)}`);
+      continue;
+    }
+    if (before.homeTeamId !== after.homeTeamId || before.awayTeamId !== after.awayTeamId) {
+      changes.push(`${slot(index)}：${sideText(before, label)} → ${sideText(after, label)}`);
+    }
+  }
+
+  return { errors, warnings, changes, changedMatchCount: changes.length };
+}
+
 
 /** 战绩组的可读说明，用于 UI 文案（例如“2 胜 0 负 · 本组获胜即晋级”）。 */
 export function describeGroup(record: string): string {

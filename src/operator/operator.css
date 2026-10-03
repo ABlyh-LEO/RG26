@@ -251,3 +251,35 @@
   min-width: 120px;
   margin-bottom: 0;
 }
+
+/* 对阵微调：席位按钮。两个席位按钮之间用「对」分隔，点击即交换。 */
+.pairing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 34px;
+  font-weight: 600;
+}
+
+.pairing-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px #92b9f055;
+}
+
+.pairing-chip__side {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.pairing-chip[aria-pressed='true'] .pairing-chip__side {
+  color: inherit;
+}
+
+.pairing-chip__record {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}

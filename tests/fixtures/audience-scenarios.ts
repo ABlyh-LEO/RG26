@@ -2,9 +2,10 @@
 import { buildSeedEvent } from '../../scripts/seed-data';
 import { FINALS_MATCH_ORDER, resolveFinals } from '../../src/domain/finals';
 import type { EventFile, PublicSnapshot } from '../../src/domain/schema';
+import { swapPairingSlots, type PairingAdjustment } from '../../src/domain/swiss';
 import { applyBo1Entry, applyBo3Game, applyFinalsBo1, applyQualificationRun, confirmQualificationRanking, confirmRound, generateNextRound, publishFinalsSeeding, publishRound } from '../../src/operator/draft';
 
-export type AudienceScenario = 'before' | 'qualification' | 'qualification-partial' | 'swiss' | 'bo3' | 'after' | 'rescheduled';
+export type AudienceScenario = 'before' | 'qualification' | 'qualification-partial' | 'swiss' | 'swiss-adjusted' | 'bo3' | 'after' | 'rescheduled';
 export function audienceEvent(scenario: AudienceScenario): EventFile {
   let event = buildSeedEvent('2026-10-02T12:00:00+08:00');
   if (scenario === 'before') return event;
@@ -55,7 +56,24 @@ export function audienceEvent(scenario: AudienceScenario): EventFile {
   for (let index = 1; index <= 5; index += 1) {
     const proposal = generateNextRound(event, index);
     if (!proposal.ok || !proposal.proposal) throw new Error(proposal.messages.join('；'));
-    event = publishRound(event, index, proposal.proposal).event;
+    /*
+     * `swiss-adjusted`：第一轮对阵由组委会人工微调 —— 交换前两场的对手。
+     * 其他场景一律使用自动配对。写入路径完全相同，只有 `pairs` 的来源不同。
+     */
+    const adjustment: PairingAdjustment | null =
+      scenario === 'swiss-adjusted' && index === 1
+        ? {
+            pairs: swapPairingSlots(
+              proposal.proposal.pairs,
+              { matchIndex: 0, side: 'away' },
+              { matchIndex: 1, side: 'away' },
+            ),
+            note: '两队设备故障经裁判组同意交换对手',
+          }
+        : null;
+    const published = publishRound(event, index, proposal.proposal, adjustment);
+    if (!published.ok) throw new Error(published.messages.join('；'));
+    event = published.event;
     const matches = event.swiss.matches.filter(m => m.roundIndex === index);
     if (scenario === 'swiss' && index === 2) {
       const current = matches[0]!; current.executionStatus = 'running';
@@ -66,6 +84,8 @@ export function audienceEvent(scenario: AudienceScenario): EventFile {
       event = applyBo1Entry(event, { matchId: match.id, homeScore: '16', awayScore: '6', homeSeconds: '90', awaySeconds: '160', winnerId: match.participantSnapshot![0], resultKind: 'normal', note: null }).event;
     }
     event = confirmRound(event, index).event;
+    // 微调场景：第一轮打完即可，用于验证"实际对阵 + 修订说明"在观众端同时可见。
+    if (scenario === 'swiss-adjusted' && index === 1) return event;
   }
   event = publishFinalsSeeding(event).event;
   for (const id of FINALS_MATCH_ORDER) {

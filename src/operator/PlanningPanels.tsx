@@ -4,8 +4,9 @@ import { formatTime } from '../data/view-model';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
 import { assessQualificationCompleteness } from '../domain/qualification-completeness';
 import { useFormField } from './FormDraftContext';
+import { RoundPairingPanel } from './PairingPanel';
 import { addNotice, adjustSchedule, applyQualificationRanking, confirmQualificationRanking,
-  applyShowcaseDraw, confirmRound, generateNextRound, publishFinalsSeeding, publishRound,
+  applyShowcaseDraw, confirmRound, generateNextRound, publishFinalsSeeding,
   type ApplyResult, type PairingOutcome } from './draft';
 
 type PanelResult = ApplyResult & { clearFormKeys?: string[] };
@@ -308,65 +309,16 @@ export function RoundsEntry({
         </div>
       </div>
 
-      {pending ? (
-        <div className="card operator-draft">
-          <div className="card__head">
-            <span className="card__title">第 {pending.roundIndex} 轮候选对阵（未公布）</span>
-            <span className="badge badge--pending">未发布</span>
-          </div>
-
-          {pending.result.proposal && pending.result.proposal.blockers.length > 0 ? (
-            <div className="operator-errors" style={{ marginBottom: 'var(--sp-2)' }}>
-              <strong>存在阻断问题，不能公布：</strong>
-              <ul style={{ margin: 'var(--sp-2) 0 0', paddingLeft: '1.2em' }}>
-                {pending.result.proposal.blockers.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {pending.result.proposal && pending.result.proposal.pairs.length > 0 ? (
-            <>
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>组</th>
-                      <th className="num">序号</th>
-                      <th>对阵</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pending.result.proposal.pairs.map((p) => (
-                      <tr key={`${p.groupRecord}-${p.orderInGroup}`}>
-                        <td className="tabular">{p.groupRecord}</td>
-                        <td className="num tabular">{p.orderInGroup}</td>
-                        <td>
-                          {draft.teams.find((t) => t.id === p.homeTeamId)?.name ?? p.homeTeamId} vs{' '}
-                          {draft.teams.find((t) => t.id === p.awayTeamId)?.name ?? p.awayTeamId}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
-                第 3 轮全部 8 场于 10 月 3 日晚间进行，对阵一次性公布；请确认后再公布。
-              </p>
-              <button
-                type="button"
-                className="btn btn--primary"
-                disabled={pending.result.proposal.blockers.length > 0}
-                onClick={() => onApply(publishRound(draft, pending.roundIndex, pending.result.proposal!))}
-              >
-                公布这 {pending.result.proposal.pairs.length} 场对阵并冻结
-              </button>
-            </>
-          ) : (
-            <div className="empty">没有生成任何候选对阵。</div>
-          )}
-        </div>
+      {pending?.result.proposal ? (
+        <RoundPairingPanel
+          key={`${pending.roundIndex}:${pending.result.proposal.pairs
+            .map((pair) => `${pair.homeTeamId}-${pair.awayTeamId}`)
+            .join(',')}`}
+          draft={draft}
+          roundIndex={pending.roundIndex}
+          proposal={pending.result.proposal}
+          onApply={onApply}
+        />
       ) : null}
     </div>
   );
