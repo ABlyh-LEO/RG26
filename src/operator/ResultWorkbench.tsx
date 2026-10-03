@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import type { CorrectionDisposition, EventFile, ResultKind } from '../domain/schema';
 import { formatTime, todayInEventTz } from '../data/view-model';
 import { matchNumbersFor } from '../domain/match-numbers';
+import { DURATION_INPUT_HINT } from './duration';
 import { sidesForSeriesGame, sidesForSwiss, sideLabel } from '../domain/sides';
 import { seriesWins, type ApplyResult } from './draft';
 import { useFormField, type FormInputs } from './FormDraftContext';
@@ -166,9 +167,9 @@ function ResultEditor({ target, draft, onApply, onNext }: { target: ResultTarget
     if (next) onNext(result.event);
   };
   const error = (name: string) => proposal?.fields[name] ? <span id={`error-${name}`} className="operator-field-error">{proposal.fields[name]}</span> : null;
-  const numeric = (id: string, label: string, value: string, setter: (v: string) => void) => <div className="operator-field">
-    <label htmlFor={`result-${id}`}>{label}</label><input id={`result-${id}`} name={id} className="input" inputMode="decimal"
-      value={value} onChange={(e) => setter(e.target.value)} aria-invalid={!!proposal?.fields[id]} aria-describedby={proposal?.fields[id] ? `error-${id}` : undefined} />{error(id)}
+  const numeric = (id: string, label: string, value: string, setter: (v: string) => void, hint?: string) => <div className="operator-field">
+    <label htmlFor={`result-${id}`}>{label}</label><input id={`result-${id}`} name={id} className="input" inputMode={hint ? 'text' : 'decimal'}
+      value={value} onChange={(e) => setter(e.target.value)} aria-invalid={!!proposal?.fields[id]} aria-describedby={proposal?.fields[id] ? `error-${id}` : undefined} />{hint ? <p className="xsmall muted" style={{ marginTop: 4 }}>{hint}</p> : null}{error(id)}
   </div>;
   if (!isQualification && !participants) return <div className="empty">对阵尚未公布。请在“对阵与排名”中先确认对阵。</div>;
   return <div ref={formRef} className="operator-result-form">
@@ -179,13 +180,13 @@ function ResultEditor({ target, draft, onApply, onNext }: { target: ResultTarget
     </div>}
     {isQualification ? <>
       <div className="operator-field"><label htmlFor="result-rawResult">成绩文字</label><input id="result-rawResult" className="input" value={rawResult} aria-invalid={!!proposal?.fields.rawResult} onChange={(e) => setRawResult(e.target.value)} placeholder="例如：完成 / 超时" />{error('rawResult')}</div>
-      <div className="operator-score-grid">{numeric('homeScore', '积分', homeScore, setHomeScore)}{numeric('homeSeconds', '到达最终分时间（秒）', homeSeconds, setHomeSeconds)}</div>
+      <div className="operator-score-grid">{numeric('homeScore', '积分', homeScore, setHomeScore)}{numeric('homeSeconds', '到达最终分时间', homeSeconds, setHomeSeconds, DURATION_INPUT_HINT)}</div>
       <p className="small muted">确认后按既有排名规则更新排名；未完成的输入也会自动保存。</p>
     </> : <>
       <div className="operator-score-sides">{participants!.map((id, index) => <div className={`operator-score-side operator-score-side--${index === 0 ? sides.first : sides.second}`} key={id}>
         <h3><span>{sideLabel(index === 0 ? sides.first : sides.second)}</span> {name(id)}</h3>
         {isPerformance && <>{numeric(index === 0 ? 'homeScore' : 'awayScore', '积分', index === 0 ? homeScore : awayScore, index === 0 ? setHomeScore : setAwayScore)}
-          {numeric(index === 0 ? 'homeSeconds' : 'awaySeconds', '到达最终分时间（秒）', index === 0 ? homeSeconds : awaySeconds, index === 0 ? setHomeSeconds : setAwaySeconds)}</>}
+          {numeric(index === 0 ? 'homeSeconds' : 'awaySeconds', '到达最终分时间', index === 0 ? homeSeconds : awaySeconds, index === 0 ? setHomeSeconds : setAwaySeconds, index === 0 ? DURATION_INPUT_HINT : undefined)}</>}
       </div>)}</div>
       <fieldset className="operator-winner"><legend>裁判确认胜者</legend>
         {participants!.map((id) => <button className="btn" type="button" key={id} aria-pressed={winnerId === id} aria-invalid={!!proposal?.fields.winnerId} onClick={() => setWinnerId(id)}>{name(id)}</button>)}

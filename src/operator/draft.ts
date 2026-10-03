@@ -17,6 +17,7 @@ import { assessQualificationCompleteness, officialQualificationRanking } from '.
 import { validateEvent } from '../domain/validation';
 import { qualifiedTeamIds } from '../data/view-model';
 import { ONE_HALF, mul, THREE_FIFTHS } from '../domain/rational';
+import { DURATION_INPUT_HINT, parseDurationInput } from './duration';
 
 /* ------------------------------------------------------------------ *
  * 单场录入（BO1 瑞士轮）
@@ -68,15 +69,26 @@ export function applyBo1Entry(event: EventFile, entry: Bo1Entry): ApplyResult {
     if (entry.homeScore.trim() === '' || entry.awayScore.trim() === '') {
       return { event, ok: false, messages: ['有效比赛必须填写双方积分（缺分不等于 0，不能用假 0 分填补）'] };
     }
-    const homeZero = Number(entry.homeScore) === 0;
-    const awayZero = Number(entry.awayScore) === 0;
-    if (!homeZero && entry.homeSeconds.trim() === '') {
-      return { event, ok: false, messages: ['本队积分不为 0 时必须填写到达最终积分的时间'] };
-    }
-    if (!awayZero && entry.awaySeconds.trim() === '') {
-      return { event, ok: false, messages: ['对手积分不为 0 时必须填写到达最终积分的时间'] };
-    }
   }
+  /*
+   * 时间统一走 `normalizeSeconds`：与决赛/BO3 同一口径，
+   * 因此这里也接受「4:48」这类录入写法，落库仍是秒。
+   * 零分局按 360 秒约定补上，不要求填写。
+   */
+  const homeTime = needsScores
+    ? normalizeSeconds(entry.homeSeconds, '本方到达最终积分的时间', {
+        required: true,
+        scoreIsZero: Number(entry.homeScore) === 0,
+      })
+    : ({ ok: true, value: null } as const);
+  if (!homeTime.ok) return { event, ok: false, messages: [homeTime.message] };
+  const awayTime = needsScores
+    ? normalizeSeconds(entry.awaySeconds, '对手到达最终积分的时间', {
+        required: true,
+        scoreIsZero: Number(entry.awayScore) === 0,
+      })
+    : ({ ok: true, value: null } as const);
+  if (!awayTime.ok) return { event, ok: false, messages: [awayTime.message] };
 
   const attemptId = `${entry.matchId}-a${match.attempts.length + 1}`;
   const previousEffective = match.effectiveAttemptId;
@@ -88,8 +100,8 @@ export function applyBo1Entry(event: EventFile, entry: Bo1Entry): ApplyResult {
     awayTeamId: awayId,
     homeScore: needsScores ? entry.homeScore.trim() : null,
     awayScore: needsScores ? entry.awayScore.trim() : null,
-    homeReachedSeconds: needsScores ? (Number(entry.homeScore) === 0 ? '360' : entry.homeSeconds.trim()) : null,
-    awayReachedSeconds: needsScores ? (Number(entry.awayScore) === 0 ? '360' : entry.awaySeconds.trim()) : null,
+    homeReachedSeconds: homeTime.value,
+    awayReachedSeconds: awayTime.value,
     winnerId: entry.winnerId,
     resultKind: entry.resultKind,
     resultStatus: 'confirmed' as const,
@@ -177,10 +189,12 @@ function normalizeSeconds(
     }
     return { ok: true, value: null };
   }
-  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) {
-    return { ok: false, message: `${label}必须是非负十进制数值（秒）` };
+  // 录入允许「分:秒」等写法，这里统一换算成秒；落库与评分始终只用秒。
+  const parsed = parseDurationInput(text);
+  if (!parsed.ok) {
+    return { ok: false, message: `${label}${parsed.reason}：${DURATION_INPUT_HINT}` };
   }
-  return { ok: true, value: text };
+  return { ok: true, value: parsed.seconds };
 }
 
 /** 录入一局 BO3。已决出胜者后的局不允许再录入（应为“不需要进行”）。 */
@@ -431,8 +445,16 @@ export function applyQualificationRun(event: EventFile, entry: QualificationRunE
   if (scoreText !== '' && !NON_NEGATIVE_DECIMAL.test(scoreText)) {
     return { event, ok: false, messages: ['积分必须是非负十进制数值（可留空）'] };
   }
-  if (elapsedText !== '' && !NON_NEGATIVE_DECIMAL.test(elapsedText)) {
-    return { event, ok: false, messages: ['用时必须是非负十进制数值（秒）'] };
+  /*
+   * 用时同样接受「4:48」这类录入写法，落库仍是秒（与单场录入同一口径）。
+   */
+  let elapsedValue: string | null = null;
+  if (elapsedText !== '') {
+    const parsedElapsed = parseDurationInput(elapsedText);
+    if (!parsedElapsed.ok) {
+      return { event, ok: false, messages: [`用时${parsedElapsed.reason}：${DURATION_INPUT_HINT}`] };
+    }
+    elapsedValue = parsedElapsed.seconds;
   }
   if (entry.confirm && rawText === '' && scoreText === '') {
     return { event, ok: false, messages: ['标记为已确认时，至少要填写成绩文字或积分'] };
@@ -452,7 +474,7 @@ export function applyQualificationRun(event: EventFile, entry: QualificationRunE
                 ...r,
                 rawResult: rawText === '' ? null : rawText,
                 score: scoreText === '' ? null : scoreText,
-                elapsedSeconds: elapsedText === '' ? null : elapsedText,
+                elapsedSeconds: elapsedValue,
                 judgeNote: entry.judgeNote,
                 resultStatus: nextStatus,
                 executionStatus: entry.confirm ? ('finished' as const) : r.executionStatus,

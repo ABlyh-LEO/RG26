@@ -211,7 +211,9 @@ describe('缺分与缺时间的拒绝（不得用假 0 填补）', () => {
   it('积分不为 0 却缺时间会被拒绝', () => {
     const denied = play(match, 'normal', { home: '16', away: '10', homeSeconds: '', awaySeconds: '', winner: pairOf(match)[0] });
     expect(denied.ok).toBe(false);
-    expect(denied.messages.join(' ')).toContain('必须填写到达最终积分的时间');
+    // 断言意图（不锁措辞）：必须要求填写"到达最终积分的时间"
+    expect(denied.messages.join(' ')).toContain('必须填写');
+    expect(denied.messages.join(' ')).toContain('到达最终积分的时间');
   });
 
   it('一方 0 分可省时间并自动记 360，另一方保留实际时间', () => {

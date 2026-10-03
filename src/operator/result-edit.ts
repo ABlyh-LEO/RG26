@@ -6,6 +6,7 @@ import { applyBo1Entry, applyBo3Game, applyFinalsBo1,
   applyQualificationRun, seriesWins, type ApplyResult } from './draft';
 import { liveQualificationRanking } from '../domain/qualification-ranking';
 import { officialQualificationRanking } from '../domain/qualification-completeness';
+import { DURATION_INPUT_HINT, parseDurationInput } from './duration';
 
 export type ResultTarget = { kind: 'qualification' | 'swiss' | 'finals'; id: string; gameIndex: number };
 export interface ResultInput {
@@ -127,10 +128,20 @@ export function proposeResult(event: EventFile, target: ResultTarget, input: Res
   if (correcting && !input.reason.trim()) fields.reason = '请填写原因，旧值和新值将进入公开更正记录。';
   const performance = input.resultKind === 'normal' || input.resultKind === 'early-end';
   const decimal = /^(?:\d+(?:\.\d*)?|\.\d+)$/;
+  /*
+   * 时间的录入格式（秒或「分:秒」等）由 `parseDurationInput` 统一判定：
+   * 这里只判断"能不能换算成秒"，实际换算在 draft 层完成，落库一律是秒。
+   */
+  const durationError = (raw: string): string | null => {
+    if (raw.trim() === '') return null;
+    const parsed = parseDurationInput(raw);
+    return parsed.ok ? null : `${parsed.reason}：${DURATION_INPUT_HINT}`;
+  };
   if (target.kind === 'qualification') {
     if (confirm && !input.rawResult.trim() && !input.homeScore.trim()) fields.rawResult = '请填写成绩文字或积分。';
     if (input.homeScore.trim() && !decimal.test(input.homeScore.trim())) fields.homeScore = '积分必须为非负数。';
-    if (input.homeSeconds.trim() && !decimal.test(input.homeSeconds.trim())) fields.homeSeconds = '用时必须为非负数。';
+    const elapsed = durationError(input.homeSeconds);
+    if (elapsed) fields.homeSeconds = elapsed;
   } else {
     const participants = resultParticipants(event, target);
     if (!participants) return fail(['参赛双方尚未确定，请先公布对阵。']);
@@ -140,7 +151,9 @@ export function proposeResult(event: EventFile, target: ResultTarget, input: Res
         if (!decimal.test(input[key].trim())) fields[key] = '积分必须为非负数，空值不代表 0 分。';
       }
       for (const [key, score] of [['homeSeconds', 'homeScore'], ['awaySeconds', 'awayScore']] as const) {
-        if (Number(input[score]) !== 0 && !decimal.test(input[key].trim())) fields[key] = '请填写到达最终分时间（秒）。';
+        if (Number(input[score]) === 0) continue;
+        const message = durationError(input[key]);
+        if (message) fields[key] = message;
       }
     }
   }

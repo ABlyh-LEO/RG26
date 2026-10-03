@@ -64,8 +64,11 @@ test('校验定位缺失字段，预览不改变正式文件、暂存区和提�
   await page.getByRole('button', { name: '保存并确认结果', exact: true }).click();
   await expect(page.getByLabel('成绩文字')).toHaveAttribute('aria-invalid', 'true');
   await page.getByLabel('成绩文字').fill('完成'); await page.getByLabel('积分', { exact: true }).fill('16');
-  await page.getByLabel('到达最终分时间（秒）', { exact: true }).fill('88');
+  // 时间录入接受「分:秒」：填 1:28 应存成 88 秒（下面用草稿状态核对）。
+  await page.getByLabel('到达最终分时间', { exact: true }).fill('1:28');
   await page.getByRole('button', { name: '保存并确认结果', exact: true }).click(); await saved(page);
+  // 时间录入接受「分:秒」：1:28 应被接受（无字段报错），落库为 88 秒。
+  await expect(page.locator('.operator-field-error')).toHaveCount(0);
   await page.getByRole('button', { name: '预览与发布', exact: true }).click();
   await page.getByRole('button', { name: '核对累计变更', exact: true }).click();
   await expect(page.locator('.operator-changes').first()).toContainText('16');
@@ -73,6 +76,8 @@ test('校验定位缺失字段，预览不改变正式文件、暂存区和提�
   const frame = page.frameLocator('iframe[title="本地草稿观众预览"]');
   await expect(frame.getByText('本地草稿预览 · 尚未发布')).toBeVisible();
   await expect(frame.getByRole('heading', { level: 1 })).toBeVisible();
+  // 观众预览里该次跑图的用时显示为 88 秒 —— 证明「1:28」已换算成秒落库。
+  await expect(frame.getByText('88 秒', { exact: true }).first()).toBeVisible();
   /*
    * 用户报告的核心问题：确认一组成绩后，预览里就出现了"晋级十六强/优秀奖"。
    * 这里守住"预览也不得断言晋级"——只显示「当前排行」。
