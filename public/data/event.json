@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "a906deb0ae45ae2f5adb4cc9a809ec02",
-  "builtAt": "2026-10-03T10:34:49.147Z",
-  "sourceCommit": "50995aa1f805d93d942e17a70929cf775e7497e5",
+  "revision": "64f31a425c0d98dec139baee679a6616",
+  "builtAt": "2026-10-03T10:46:19.041Z",
+  "sourceCommit": "e42469d551d687dd5de3cfe0f7debbae19189029",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T10:34:28.954Z",
+      "contentUpdatedAt": "2026-10-03T10:45:53.346Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1202,7 +1202,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-4",
         "title": "瑞士轮 R2 · 1-0 组第 4 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -3438,9 +3438,25 @@
             "competitive-35",
             "competitive-21"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r2-10-4-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-35",
+              "awayTeamId": "competitive-21",
+              "homeScore": "6",
+              "awayScore": "6",
+              "homeReachedSeconds": "67",
+              "awayReachedSeconds": "232",
+              "winnerId": "competitive-35",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T10:45:53.346Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r2-10-4-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r2-10-4",
           "note": null
         },
