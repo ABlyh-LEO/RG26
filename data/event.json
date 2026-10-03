@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T07:12:14.484Z",
+    "contentUpdatedAt": "2026-10-03T07:21:38.009Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -747,7 +747,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r2-rank05",
       "title": "排位赛第 2 轮 · 三审第 5 名 沫日堡垒队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -942,7 +942,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r2-rank18",
       "title": "排位赛第 2 轮 · 三审第 18 名 超时空辉月机队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1002,7 +1002,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r2-rank22",
       "title": "排位赛第 2 轮 · 三审第 22 名 AAA平地起高楼施工队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2249,13 +2249,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank05",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
-        "judgeNote": null,
-        "confirmedAt": null
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
+        "judgeNote": "主动放弃",
+        "confirmedAt": "2026-10-03T07:18:22.061Z"
       },
       {
         "id": "qual-r2-rank06",
@@ -2431,13 +2431,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank18",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "1",
+        "elapsedSeconds": "44",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T07:20:25.957Z"
       },
       {
         "id": "qual-r2-rank19",
@@ -2487,13 +2487,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank22",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "5",
+        "elapsedSeconds": "76",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T07:21:38.009Z"
       }
     ],
     "ranking": {
