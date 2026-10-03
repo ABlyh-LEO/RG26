@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "d3a8ecdc44f8fec9a8b8811364af621c",
-  "builtAt": "2026-10-03T07:35:25.834Z",
-  "sourceCommit": "b8065340a4d09b9c3ff870f737e4f613d9ecc041",
+  "revision": "bb9d5a217be5789a68b2fab9194cb359",
+  "builtAt": "2026-10-03T07:52:53.487Z",
+  "sourceCommit": "bbd2c122178512fa623310e69720a2ba9ff5b17b",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T07:35:14.417Z",
+      "contentUpdatedAt": "2026-10-03T07:52:31.582Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -2502,17 +2502,44 @@
         }
       ],
       "ranking": {
-        "orderedTeamIds": [],
+        "orderedTeamIds": [
+          "competitive-1",
+          "competitive-4",
+          "competitive-18",
+          "competitive-14",
+          "competitive-5",
+          "competitive-35",
+          "competitive-3",
+          "competitive-21",
+          "competitive-8",
+          "competitive-23",
+          "competitive-27",
+          "competitive-2",
+          "competitive-28",
+          "competitive-9",
+          "competitive-13",
+          "competitive-10",
+          "competitive-29",
+          "competitive-25",
+          "competitive-17",
+          "competitive-31",
+          "competitive-6",
+          "competitive-12"
+        ],
         "bestResultLabels": null,
-        "status": "none",
-        "confirmedAt": null,
-        "sourceNote": null,
-        "publicationStatus": "draft",
-        "publishedAt": null,
-        "missingTeamIds": null,
-        "partialTeamIds": null,
-        "tiedTeamIds": null,
-        "reviewNote": null,
+        "status": "confirmed",
+        "confirmedAt": "2026-10-03T07:52:31.582Z",
+        "sourceNote": "已确定",
+        "publicationStatus": "published",
+        "publishedAt": "2026-10-03T07:52:31.582Z",
+        "missingTeamIds": [],
+        "partialTeamIds": [],
+        "tiedTeamIds": [
+          "competitive-17",
+          "competitive-31",
+          "competitive-12"
+        ],
+        "reviewNote": "已确定",
         "overrideReason": null
       }
     },
