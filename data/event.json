@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T03:10:35.121Z",
+    "contentUpdatedAt": "2026-10-03T05:20:24.254Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -4015,7 +4015,7 @@
         ],
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-showcase-final-1",
-        "showcaseTeamId": null,
+        "showcaseTeamId": "showcase-2",
         "note": null
       },
       {
@@ -4059,7 +4059,7 @@
         ],
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-showcase-final-2",
-        "showcaseTeamId": null,
+        "showcaseTeamId": "showcase-1",
         "note": null
       },
       {
@@ -4103,7 +4103,7 @@
         ],
         "executionStatus": "scheduled",
         "scheduleItemId": "sched-showcase-final-3",
-        "showcaseTeamId": null,
+        "showcaseTeamId": "showcase-3",
         "note": null
       },
       {
@@ -4153,8 +4153,12 @@
     ]
   },
   "showcase": {
-    "drawOrder": null,
-    "confirmedAt": null,
+    "drawOrder": [
+      "showcase-2",
+      "showcase-1",
+      "showcase-3"
+    ],
+    "confirmedAt": "2026-10-03T05:20:24.254Z",
     "note": null
   },
   "notices": [
