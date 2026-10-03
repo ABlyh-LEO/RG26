@@ -27,6 +27,7 @@
 - [特殊赛果验证：0:0、弃权、判负](acceptance/2026-10-03-special-results.md)：三类特殊情形的处理结论、录入口径提示与已知限制。
 - [开赛前最终全量检查](acceptance/2026-10-03-final-preflight.md)：赛前两小时的全量审查结论（GO）、修复项与开赛操作清单。
 - [全局比赛编号](acceptance/2026-10-03-match-numbers.md)：排位赛 1–44、瑞士轮 45–77、决赛 78–91 的编号方案、显示位置与回归测试。
+- [部署门禁假红修复](acceptance/2026-10-03-deploy-gate-data-states.md)：读正式数据的 e2e 必须与数据状态无关，附"赛季末快照"压力测试方法。
 - [维护工作台验收](acceptance/operator-upgrade.md)：草稿、预览隔离、发布故障恢复与交接。
 - [BO3 固定红蓝方](acceptance/2026-10-02-bo3-fixed-sides.md)：当前规则、实现范围及最新回归与截图。
 - [晋级图汇入连线与红蓝方](acceptance/2026-10-02-bracket-junctions.md)：此前连线修复；其中旧 BO3 颜色说明和截图已被最新约定取代。

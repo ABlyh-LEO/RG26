@@ -74,17 +74,31 @@ test.describe('13.2 用户流程', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('名字够长');
   });
 
-  test('2. 排位赛同时两场可展示；展示组不出现在竞技排名中', async ({ page }) => {
+  test('2. 排位赛同时两场可展示；三审排名与正式排名分开', async ({ page }) => {
     await goto(page, '/progress?view=qualification');
     await waitForData(page);
 
-    // 出场安排表：每批两支队，标注两个副场地
+    // 出场安排表：每批两支队，标注两个副场地（与成绩无关，任何数据状态下都存在）
     await expect(page.getByText('出场安排（三审顺序）')).toBeVisible();
     await expect(page.getByRole('table', { name: '排位赛出场批次与场地' })).toBeVisible();
 
-    // 三审排名与正式排名是分开的两块
+    // 三审表始终标注"不是正式排名"
     await expect(page.getByText('不是正式排名')).toBeVisible();
-    await expect(page.getByText('正式排名', { exact: true })).toBeVisible();
+
+    /*
+     * 排名卡的标题会随数据状态变化，断言必须跟着变——**这条用例读的是正式数据**，
+     * 写成"必须有「正式排名」"就会在录入第一条成绩后把部署门禁打红
+     * （2026-10-03 正是如此挡住了一次部署）。三种状态：
+     * - 尚无已确认成绩 → 「正式排名」（占位，待裁判确认）
+     * - 有已确认成绩但未定榜 → 「当前排行」，必须明确标注未确认、不作为晋级依据
+     * - 已定榜 → 「正式排名」+ 晋级状态
+     */
+    const rankingTitle = page.locator('.card__title').filter({ hasText: /^(正式排名|当前排行)$/ }).first();
+    await expect(rankingTitle).toBeVisible();
+    if ((await rankingTitle.innerText()).trim() === '当前排行') {
+      await expect(page.getByText('未确认，不作为晋级依据')).toBeVisible();
+      await expect(page.getByText('实时 · 未确认')).toBeVisible();
+    }
   });
 
   test('2b. 总览与赛程都要能看到排位赛', async ({ page }) => {
@@ -193,9 +207,14 @@ test.describe('13.2 用户流程', () => {
     await waitForData(page);
 
     const body = await page.locator('body').innerText();
-    // 固定颜色规则与时间口径必须写在页面上（不依赖是否有成绩）
+    // 固定颜色规则必须写在页面上（不依赖是否有成绩）
     expect(body, 'BO3 页应说明全系列赛不换边').toContain('全系列赛不换边');
-    expect(body, 'BO3 页应说明时间用途').toContain('到达最终分');
+    /*
+     * 时间口径：有成绩时逐局显示「N 秒」，尚无成绩时才出现占位文案
+     * 「到达最终分时间待确认」。断言必须两种状态都成立——这条用例读的是正式数据，
+     * 只认占位文案会在成绩录入后变成假红并挡住部署。
+     */
+    expect(body, 'BO3 页应给出到达最终分时间，或明确该口径待确认').toMatch(/到达最终分|\d+(?:\.\d+)?\s*秒/);
 
     const games = page.locator('section').filter({ has: page.getByRole('heading', { name: '小局记录', exact: true }) }).locator('article');
     await expect(games).toHaveCount(3);
@@ -647,12 +666,25 @@ test.describe('13.4 分区晋级图', () => {
     await goto(page, '/progress?view=journey'); await waitForData(page);
     const layouts = await page.locator('.bracket__board').evaluateAll(boards => boards.map(board => ({
       height: board.clientHeight,
+      bodyMax: Math.max(0, ...[...board.querySelectorAll<HTMLElement>('.bracket__column-body')].map(body => parseFloat(body.style.height) || 0)),
       columns: [...board.querySelectorAll<HTMLElement>('.bracket__column')].map(column => ({ left: parseFloat(column.style.left), top: parseFloat(column.style.top) })),
     })));
     expect(layouts).toHaveLength(4);
     for (const layout of layouts) {
       expect(layout.height).toBeGreaterThan(0);
-      expect(layout.height).toBeLessThan(1600);
+      /*
+       * 「紧凑」的正确表述是"画布高度跟自己的内容走"，不是固定上限。
+       *
+       * 这里曾写成 `height < 1600`：赛前瑞士轮画布 1203px 能过，但成绩录入后
+       * 卡片变高、瑞士轮画布长到 2267px（33 场比赛，5 轮），断言就会在比赛进行中
+       * 变成假红并挡住部署（2026-10-03 真实发生过一次）。
+       * 真正的回归是"短分区继承了最长列的高度"——那会让画布远高于自身内容，
+       * 所以改为与最高列内容比较；绝对上限只留一个防失控的宽松界。
+       */
+      if (layout.bodyMax > 0) {
+        expect(layout.height - layout.bodyMax, `画布高度 ${layout.height} 与最高列 ${layout.bodyMax} 的差`).toBeLessThan(80);
+      }
+      expect(layout.height).toBeLessThan(4000);
       expect(new Set(layout.columns.map(c => c.top)).size).toBe(1);
       for (let i = 1; i < layout.columns.length; i += 1) expect(layout.columns[i]!.left).toBeGreaterThan(layout.columns[i - 1]!.left);
     }
