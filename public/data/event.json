@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "5f460316542a9c046f6bca104c3e967f",
-  "builtAt": "2026-10-03T12:21:15.622Z",
-  "sourceCommit": "45a0765edf127c720cfad44ab34442bf2b1fe3df",
+  "revision": "f82a696eaa0ba92095fc2ff28a68ad40",
+  "builtAt": "2026-10-03T12:28:57.256Z",
+  "sourceCommit": "2f5cb9915ae21d276841240b6f77647f14107add",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T12:20:58.838Z",
+      "contentUpdatedAt": "2026-10-03T12:28:24.116Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1277,7 +1277,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r3-20-1",
         "title": "瑞士轮 R3 · 2-0 组第 1 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1292,7 +1292,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r3-20-2",
         "title": "瑞士轮 R3 · 2-0 组第 2 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -3801,9 +3801,25 @@
             "competitive-18",
             "competitive-35"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r3-20-1-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-18",
+              "awayTeamId": "competitive-35",
+              "homeScore": "7",
+              "awayScore": "8",
+              "homeReachedSeconds": "326",
+              "awayReachedSeconds": "109",
+              "winnerId": "competitive-35",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T12:26:25.498Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r3-20-1-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r3-20-1",
           "note": null
         },
@@ -3827,9 +3843,25 @@
             "competitive-5",
             "competitive-1"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r3-20-2-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-5",
+              "awayTeamId": "competitive-1",
+              "homeScore": "12",
+              "awayScore": "1",
+              "homeReachedSeconds": "327",
+              "awayReachedSeconds": "8",
+              "winnerId": "competitive-5",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T12:28:24.116Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r3-20-2-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r3-20-2",
           "note": null
         },
