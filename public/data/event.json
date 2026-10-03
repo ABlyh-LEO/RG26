@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "64f31a425c0d98dec139baee679a6616",
-  "builtAt": "2026-10-03T10:46:19.041Z",
-  "sourceCommit": "e42469d551d687dd5de3cfe0f7debbae19189029",
+  "revision": "545b913c71f40d04c1010a079fa2a83d",
+  "builtAt": "2026-10-03T10:59:38.624Z",
+  "sourceCommit": "b77967b983d99ca05ec7ac7e1b3ca4f3cf5771ed",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T10:45:53.346Z",
+      "contentUpdatedAt": "2026-10-03T10:58:41.169Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1217,7 +1217,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-01-1",
         "title": "瑞士轮 R2 · 0-1 组第 1 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -3480,9 +3480,25 @@
             "competitive-23",
             "competitive-8"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r2-01-1-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-23",
+              "awayTeamId": "competitive-8",
+              "homeScore": "4",
+              "awayScore": "0",
+              "homeReachedSeconds": "70",
+              "awayReachedSeconds": "360",
+              "winnerId": "competitive-23",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T10:58:41.169Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r2-01-1-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r2-01-1",
           "note": null
         },
