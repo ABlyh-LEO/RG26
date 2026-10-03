@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "5cdfb61d6eb1c3cd779fd8ff1b456aa1",
-  "builtAt": "2026-10-03T05:20:35.570Z",
-  "sourceCommit": "4fc5249af0b34dfe1009a713caf353587a99cf20",
+  "revision": "33b89c60cdd7995603a21c088e18e232",
+  "builtAt": "2026-10-03T05:52:58.010Z",
+  "sourceCommit": "ea61d4c72814e7f0c426b712ff37e842f5e4a284",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T05:20:24.254Z",
+      "contentUpdatedAt": "2026-10-03T05:52:18.987Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -692,7 +692,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank01",
         "title": "排位赛第 2 轮 · 三审第 1 名 Uniforest队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -707,7 +707,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r2-rank02",
         "title": "排位赛第 2 轮 · 三审第 2 名 机器曼妙队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -722,7 +722,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank03",
         "title": "排位赛第 2 轮 · 三审第 3 名 保卫萝卜队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -737,7 +737,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r2-rank04",
         "title": "排位赛第 2 轮 · 三审第 4 名 All Last队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2198,13 +2198,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank01",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "4",
+          "elapsedSeconds": "40",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T05:45:31.078Z"
         },
         {
           "id": "qual-r2-rank02",
@@ -2212,13 +2212,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank02",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "1",
+          "elapsedSeconds": "11",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T05:46:22.842Z"
         },
         {
           "id": "qual-r2-rank03",
@@ -2226,13 +2226,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank03",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "4",
+          "elapsedSeconds": "224",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T05:52:18.987Z"
         },
         {
           "id": "qual-r2-rank04",
@@ -2240,13 +2240,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank04",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "19",
+          "elapsedSeconds": "308",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T05:51:39.871Z"
         },
         {
           "id": "qual-r2-rank05",
