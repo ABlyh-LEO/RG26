@@ -17,7 +17,11 @@ test.beforeEach(async ({ request, page }) => {
 
 test('按场次保存未完成输入，切换、刷新与服务重启都恢复', async ({ page, request }, testInfo) => {
   const rows = page.locator('.operator-item');
-  await rows.nth(0).click(); await page.getByLabel('积分', { exact: true }).fill('7'); await saved(page);
+  // 场次列表按全局编号排列：第一项就是第 1 场（排位赛第一轮第 1 位），编辑区同样显示编号。
+  await expect(rows.nth(0)).toContainText('第 1 场');
+  await rows.nth(0).click();
+  await expect(page.locator('.operator-editor__heading')).toContainText('第 1 场');
+  await page.getByLabel('积分', { exact: true }).fill('7'); await saved(page);
   await rows.nth(1).click(); await expect(page.getByLabel('积分', { exact: true })).toHaveValue('');
   await page.getByLabel('积分', { exact: true }).fill('11'); await saved(page);
   await rows.nth(0).click(); await expect(page.getByLabel('积分', { exact: true })).toHaveValue('7');

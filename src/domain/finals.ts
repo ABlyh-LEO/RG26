@@ -25,11 +25,16 @@ export interface FinalsNodeSpec {
   /** UI 使用的中文简明名称。 */
   label: string;
   /**
-   * 决赛场次序号（1 起，按**实际比赛顺序**）。
+   * **全局比赛编号**（1 起、跨阶段连续）；null 表示不编号。
    *
-   * 这是给观众看的编号，用来替代 `F-W1B 败者` 这类内部 ID 写法：
-   * 「第 5 场败者」比「F-W1B 败者」好读得多，而且在赛程表上能对得上。
-   * 展示演出与表演赛不属于竞技赛程，为 null。
+   * 排位赛 44 场 + 瑞士轮 33 场（手册固定场数：22×2 与 8+8+8+6+3）之后接续，
+   * 因此八强双败首轮从**第 78 场**开始，总决赛是**第 91 场**。
+   *
+   * 为什么直接写常量：现场与观众看到的是整届赛事的连续编号
+   * （排位赛 1–44、瑞士轮 45–77、决赛 78–91）。它与 `domain/match-numbers.ts`
+   * 的派生结果必须逐场一致，由 `tests/domain/match-numbers.test.ts` 守住。
+   *
+   * 展示组演出与表演赛为 null：前者是"单独演出"不是比赛，后者不计排名且时间由现场决定。
    */
   matchNo: number | null;
   /** 展示组演出对应的编号（竞技组为 null）。 */
@@ -39,16 +44,16 @@ export interface FinalsNodeSpec {
 export const FINALS_NODES: readonly FinalsNodeSpec[] = [
   { id: 'F-M1', format: 'BO1', stage: 'finals', countsForStandings: true,
     slots: [{ kind: 'finals-seed', seed: 'W1' }, { kind: 'finals-seed', seed: 'L1' }],
-    label: '八强双败首轮 · 第 1 名对第 5 名', matchNo: 1, showcaseOrder: null },
+    label: '八强双败首轮 · 第 1 名对第 5 名', matchNo: 78, showcaseOrder: null },
   { id: 'F-M2', format: 'BO1', stage: 'finals', countsForStandings: true,
     slots: [{ kind: 'finals-seed', seed: 'W2' }, { kind: 'finals-seed', seed: 'L2' }],
-    label: '八强双败首轮 · 第 2 名对第 6 名', matchNo: 2, showcaseOrder: null },
+    label: '八强双败首轮 · 第 2 名对第 6 名', matchNo: 79, showcaseOrder: null },
   { id: 'F-M3', format: 'BO1', stage: 'finals', countsForStandings: true,
     slots: [{ kind: 'finals-seed', seed: 'W3' }, { kind: 'finals-seed', seed: 'L3' }],
-    label: '八强双败首轮 · 第 3 名对第 7 名', matchNo: 3, showcaseOrder: null },
+    label: '八强双败首轮 · 第 3 名对第 7 名', matchNo: 80, showcaseOrder: null },
   { id: 'F-M4', format: 'BO1', stage: 'finals', countsForStandings: true,
     slots: [{ kind: 'finals-seed', seed: 'W4' }, { kind: 'finals-seed', seed: 'L4' }],
-    label: '八强双败首轮 · 第 4 名对第 8 名', matchNo: 4, showcaseOrder: null },
+    label: '八强双败首轮 · 第 4 名对第 8 名', matchNo: 81, showcaseOrder: null },
   {
     id: 'F-L1A',
     format: 'BO1',
@@ -59,7 +64,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'loser', seriesId: 'F-M4' },
     ],
     label: '八强败者组首轮 A',
-    matchNo: 5,
+    matchNo: 82,
     showcaseOrder: null,
   },
   {
@@ -72,7 +77,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'loser', seriesId: 'F-M3' },
     ],
     label: '八强败者组首轮 B',
-    matchNo: 6,
+    matchNo: 83,
     showcaseOrder: null,
   },
   {
@@ -85,7 +90,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-M4' },
     ],
     label: '八强胜者组 A',
-    matchNo: 7,
+    matchNo: 84,
     showcaseOrder: null,
   },
   {
@@ -98,7 +103,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-M3' },
     ],
     label: '八强胜者组 B',
-    matchNo: 8,
+    matchNo: 85,
     showcaseOrder: null,
   },
   {
@@ -111,7 +116,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1B' },
     ],
     label: '败者组第二轮 A',
-    matchNo: 9,
+    matchNo: 86,
     showcaseOrder: null,
   },
   {
@@ -124,7 +129,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L1A' },
     ],
     label: '败者组第二轮 B',
-    matchNo: 10,
+    matchNo: 87,
     showcaseOrder: null,
   },
   {
@@ -137,7 +142,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-W1B' },
     ],
     label: '半决赛胜者组',
-    matchNo: 11,
+    matchNo: 88,
     showcaseOrder: null,
   },
   {
@@ -150,7 +155,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-L2B' },
     ],
     label: '半决赛败者组',
-    matchNo: 12,
+    matchNo: 89,
     showcaseOrder: null,
   },
   {
@@ -163,7 +168,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'loser', seriesId: 'F-WSF' },
     ],
     label: '总决赛名额争夺战',
-    matchNo: 13,
+    matchNo: 90,
     showcaseOrder: null,
   },
   {
@@ -176,7 +181,7 @@ export const FINALS_NODES: readonly FinalsNodeSpec[] = [
       { kind: 'winner', seriesId: 'F-QUAL' },
     ],
     label: '总决赛',
-    matchNo: 14,
+    matchNo: 91,
     showcaseOrder: null,
   },
   {
@@ -364,10 +369,10 @@ const EMPTY_AWARDS: Awards = {
 };
 
 /**
- * 决赛场次序号 → 「第 N 场」的显示文本。
+ * 比赛（全局编号）→ 「第 N 场」的显示文本。
  *
- * 对观众只说"第 5 场败者"，不说 `F-L2A 败者`：后者是内部 ID，
- * 在赛程表上也找不到对应。
+ * 对观众只说"第 82 场败者"，不说 `F-L2A 败者`：后者是内部 ID，
+ * 在赛程表上也找不到对应。编号是整届赛事连续的（见 `matchNo` 字段说明）。
  */
 export function finalsMatchNoLabel(seriesId: string): string | null {
   const node = FINALS_NODES.find((n) => n.id === seriesId);

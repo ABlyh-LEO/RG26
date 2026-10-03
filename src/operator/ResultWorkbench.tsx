@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { CorrectionDisposition, EventFile, ResultKind } from '../domain/schema';
 import { formatTime, todayInEventTz } from '../data/view-model';
+import { matchNumbersFor } from '../domain/match-numbers';
 import { sidesForSeriesGame, sidesForSwiss, sideLabel } from '../domain/sides';
 import { seriesWins, type ApplyResult } from './draft';
 import { useFormField, type FormInputs } from './FormDraftContext';
@@ -31,11 +32,13 @@ const RESULT_KIND_HINTS: Record<ResultKind, string> = {
     '该场不计入 A/B/P/T，但胜负、已登记对阵与对手强度 O 照常计入。',
 };
 
-interface QueueItem { target: ResultTarget; title: string; names: string; date: string; time: string; status: string; venue: string }
+interface QueueItem { target: ResultTarget; title: string; names: string; date: string; time: string; status: string; venue: string; matchNo: number | null }
 type WorkbenchResult = ApplyResult & { clearFormKey?: string };
 
 function buildQueue(event: EventFile, forms: FormInputs): QueueItem[] {
   const names = (ids: readonly string[]) => ids.map((id) => event.teams.find((t) => t.id === id)?.name ?? id).join(' / ');
+  // 全局比赛编号（排位赛 1–44、瑞士轮 45–77、决赛 78–91）：现场播报与核对时按它叫场。
+  const numbers = matchNumbersFor(event).byId;
   return event.scheduleItems.flatMap((item): QueueItem[] => {
     const run = event.qualification.runs.find((r) => r.scheduleItemId === item.id);
     const match = event.swiss.matches.find((m) => m.scheduleItemId === item.id);
@@ -47,6 +50,7 @@ function buildQueue(event: EventFile, forms: FormInputs): QueueItem[] {
     const hasInput = Object.keys(forms).some((key) => key.startsWith(`result:${target.kind}:${target.id}:`));
     const provisional = run?.resultStatus === 'provisional' || (series?.games.some((g) => g.resultStatus === 'confirmed') ?? false);
     return [{ target, title: item.title, names: participants.length ? names(participants) : '对阵待公布',
+      matchNo: numbers.get(target.id) ?? null,
       date: (item.revisedStart ?? item.plannedStart).slice(0, 10), time: item.revisedStart ?? item.plannedStart,
       venue: event.venues.find((v) => v.id === item.venueId)?.label ?? '场地待定',
       status: confirmed ? '已确认' : provisional || hasInput ? '待确认' : '待录入' }];
@@ -66,7 +70,7 @@ export function ResultWorkbench({ draft, formInputs, onApply }: {
   const queue = useMemo(() => buildQueue(draft, formInputs), [draft, formInputs]);
   const dates = [...new Set(queue.map((item) => item.date))];
   const shown = queue.filter((item) => (!date || item.date === date) && (!status || item.status === status) &&
-    `${item.title} ${item.names} ${item.target.id}`.toLowerCase().includes(search.toLowerCase()));
+    `${item.title} ${item.names} ${item.target.id} 第${item.matchNo ?? ''}场`.toLowerCase().includes(search.toLowerCase()));
   const selected = queue.find((item) => item.target.id === selection) ??
     shown.find((item) => item.date === todayInEventTz(new Date()) && item.status !== '已确认') ?? shown[0];
   const next = () => {
@@ -92,7 +96,7 @@ export function ResultWorkbench({ draft, formInputs, onApply }: {
       <div className="operator-list">
         {shown.map((item) => <button key={item.target.id} type="button" className="operator-item"
           aria-current={selected?.target.id === item.target.id} onClick={() => setSelection(item.target.id)}>
-          <span className="operator-item__time">{item.date.slice(5)} · {formatTime(item.time)} <span>{item.status}</span></span>
+          <span className="operator-item__time">{item.date.slice(5)} · {formatTime(item.time)}{item.matchNo !== null ? ` · 第 ${item.matchNo} 场` : ''} <span>{item.status}</span></span>
           <strong>{item.title}</strong><span>{item.names}</span><small>{item.venue}</small>
         </button>)}
         {!shown.length && <p className="empty">没有符合条件的比赛。</p>}
@@ -110,7 +114,7 @@ function ContestEditor({ item, draft, onApply, onNext }: { item: QueueItem; draf
   const [gameIndex, setGameIndex] = useState(() => series?.games.find((g) => g.resultStatus !== 'confirmed')?.index ?? 1);
   const wins = series ? seriesWins(series) : null;
   return <section className="card operator-editor">
-    <div className="operator-editor__heading"><div><p className="operator-eyebrow">{item.date} · {formatTime(item.time)} · {item.venue}</p>
+    <div className="operator-editor__heading"><div><p className="operator-eyebrow">{item.date} · {formatTime(item.time)} · {item.venue}{item.matchNo !== null ? ` · 第 ${item.matchNo} 场` : ''}</p>
       <h2>{item.title}</h2><p className="muted">{item.names}</p></div><span className="badge badge--neutral">{item.status}</span></div>
     {series && series.format !== 'BO1' && <div className="operator-games">
       <strong>系列赛比分 {wins?.home} : {wins?.away}</strong>

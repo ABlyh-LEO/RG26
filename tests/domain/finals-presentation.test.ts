@@ -96,7 +96,7 @@ describe('分区晋级线与跨区来源', () => {
     ]);
   });
 
-  it('每条依赖可从来源与去向双向查到，对外场次号使用真实比赛顺序', () => {
+  it('每条依赖可从来源与去向双向查到，对外编号使用全局比赛编号', () => {
     const event = fixture();
     for (const edge of allTransfers(event)) {
       expect(finalsIncoming(event, edge.toId)).toContainEqual(edge);
@@ -108,8 +108,9 @@ describe('分区晋级线与跨区来源', () => {
       expect(edge.fromLabel).toBe(from.label);
       expect(edge.toLabel).toBe(to.label);
     }
+    // 总决赛（第 91 场）的两个来源：胜者组半决赛（第 88 场）与名额争夺战（第 90 场）
     expect(finalsIncoming(event, 'F-GF').map((edge) => [edge.fromMatchNo, edge.via, edge.toMatchNo])).toEqual([
-      [11, 'winner', 14], [13, 'winner', 14],
+      [88, 'winner', 91], [90, 'winner', 91],
     ]);
   });
 

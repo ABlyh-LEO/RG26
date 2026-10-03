@@ -73,7 +73,10 @@ export function MatchCard({ match, showStage = false, showDate = false }: { matc
         <div className="match-card__time"><time className="tabular" dateTime={time ?? undefined}>{time ? formatTime(time) : '待定'}</time>{showDate && time ? <span className="xsmall muted">{formatDate(time)}</span> : null}{schedule?.revisedStart ? <span className="rescheduled">已改期 <OriginalStart schedule={schedule} /></span> : null}</div>
         <StatusBadge status={match.executionStatus} />
       </div>
-      <div className="match-card__context">{match.venueLabel ? <span><Icon name="pin" size={13} />{match.venueLabel}</span> : null}{showStage ? <span>{stage}</span> : null}<span>{isShowcase ? '单队展示' : isRun ? '单队跑图' : match.format}</span></div>
+      <div className="match-card__context">
+        {/* 全局比赛编号：排位赛 1–44、瑞士轮 45–77、决赛 78–91。展示演出/表演赛没有编号。 */}
+        {match.matchNo !== null ? <span className="match-card__no tabular">第 {match.matchNo} 场</span> : null}
+        {match.venueLabel ? <span><Icon name="pin" size={13} />{match.venueLabel}</span> : null}{showStage ? <span>{stage}</span> : null}<span>{isShowcase ? '单队展示' : isRun ? '单队跑图' : match.format}</span></div>
       <div className="match-card__sides">
         {isShowcase ? <div className="match-side"><div className="match-side__name"><TeamName team={home?.team ?? null} fallback={home?.sourceLabel ?? '演出队伍待抽签'} /></div></div> : <SideRow side={home} sideColor={match.sidesInfo?.first ?? null} />}
         {!isRun && !isShowcase && !duplicatePending ? <SideRow side={away} sideColor={match.sidesInfo?.second ?? null} /> : null}

@@ -126,6 +126,8 @@ details.disclosure[open] > summary::before { transform: rotate(90deg); }
 .match-card__context { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; color: var(--text-muted); font-size: 11px; margin-bottom: 15px; }
 .match-card__context > span { display: inline-flex; align-items: center; gap: 3px; }
 .match-card__context > span:empty { display: none; }
+/* 全局比赛编号：排位赛 1–44、瑞士轮 45–77、决赛 78–91（展示演出/表演赛无编号）。 */
+.match-card__no { font-weight: 650; color: var(--accent); background: var(--accent-weak); border-radius: 5px; padding: 1px 6px; }
 .match-card__sides { display: flex; flex-direction: column; gap: 9px; }
 .match-side { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 29px; }
 .match-side__name { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }

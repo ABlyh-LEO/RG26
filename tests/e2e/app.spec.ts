@@ -603,9 +603,30 @@ test.describe('13.4 分区晋级图', () => {
     await usePreEventSnapshot(page);
     await goto(page, '/progress?view=finals&mode=bracket'); await waitForData(page);
     const text = await page.locator('main').innerText();
-    for (const no of [1, 5, 10, 13, 14]) expect(text).toContain(`第 ${no} 场`);
+    // 决赛接在排位赛（1–44）与瑞士轮（45–77）之后：八强首轮 78–81、总决赛 91。
+    for (const no of [78, 82, 87, 90, 91]) expect(text).toContain(`第 ${no} 场`);
     expect(text).toMatch(/第 \d+ 场(胜者|败者)/);
     expect(text).not.toMatch(/F-[A-Z0-9]+/);
+  });
+
+  test('排位赛、瑞士轮与决赛都显示全局比赛编号', async ({ page }) => {
+    await usePreEventSnapshot(page);
+    await goto(page, '/schedule'); await waitForData(page);
+    const schedule = await page.locator('main').innerText();
+    // 排位赛从第 1 场开始；瑞士轮从第 45 场开始。
+    expect(schedule).toContain('第 1 场');
+    expect(schedule).toContain('第 45 场');
+
+    // 跑图没有独立详情页（卡片按设计链到队伍页），编号在赛程与总览卡片上展示。
+    await goto(page, '/matches/swiss-r1-00-1'); await waitForData(page);
+    expect(await page.locator('main').innerText()).toContain('第 45 场');
+
+    await goto(page, '/matches/F-GF'); await waitForData(page);
+    expect(await page.locator('main').innerText()).toContain('第 91 场');
+
+    // 展示演出与表演赛不编号：不出现"第 N 场"。
+    await goto(page, '/matches/showcase-final-1'); await waitForData(page);
+    expect(await page.locator('main').innerText()).not.toMatch(/第 \d+ 场/);
   });
 
   test('完整晋级图将瑞士轮与分区决赛顺序展示，所有比赛完整且无重复', async ({ page }) => {

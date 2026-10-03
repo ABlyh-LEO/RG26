@@ -23,6 +23,7 @@ import { describeGroup, groupStakes, ROUND_GROUP_ORDER } from '../domain/swiss';
 import { computeQualificationRanking, liveQualificationRanking, type LiveQualificationRanking } from '../domain/qualification-ranking';
 import { type QualificationCompleteness, type QualificationReviewRecord, officialQualificationRanking } from '../domain/qualification-completeness';
 import { type Sides, sidesForFinals, sidesForSwiss } from '../domain/sides';
+import { type MatchNumberIndex, matchNumbersFor } from '../domain/match-numbers';
 import {
   type Awards,
   type FinalsResolution,
@@ -176,6 +177,11 @@ export interface MatchView {
   id: string;
   kind: 'swiss' | 'series' | 'run';
   title: string;
+  /**
+   * 全局比赛编号（排位赛 1–44、瑞士轮 45–77、决赛 78–91）。
+   * 展示组演出与表演赛没有编号，为 null。见 `domain/match-numbers.ts`。
+   */
+  matchNo: number | null;
   stage: 'qualification' | 'swiss' | 'finals' | 'showcase';
   groupRecord: string | null;
   groupDescription: string | null;
@@ -276,6 +282,7 @@ export function toQualificationRunView(
   return {
     id: run.id,
     kind: 'run',
+    matchNo: matchNumbersFor(event).byId.get(run.id) ?? null,
     // 单队跑图没有对手，因此没有红蓝方
     sidesInfo: null,
     title: `排位赛第 ${run.round} 轮 · ${view?.displayName ?? run.teamId}`,
@@ -328,6 +335,7 @@ export function toSwissMatchView(
   return {
     id: match.id,
     kind: 'swiss',
+    matchNo: matchNumbersFor(event).byId.get(match.id) ?? null,
     title: `瑞士轮 R${match.roundIndex} · ${match.groupRecord} 组第 ${match.orderInGroup} 场`,
     stage: 'swiss',
     groupRecord: match.groupRecord,
@@ -427,13 +435,18 @@ export function toSeriesView(
       ]
     : null;
 
-  const matchNo = finalsMatchNoLabel(series.id);
+  /*
+   * 决赛用全局编号（第 78 场起）：与排位赛、瑞士轮连成同一串编号，
+   * 这样"第 82 场败者"这类来源说明能在赛程表上直接对上。
+   */
+  const matchNo = matchNumbersFor(event).byId.get(series.id) ?? null;
 
   return {
     id: series.id,
     kind: 'series',
-    // 标题带场次序号，让"第 5 场败者"这类来源说明能对上号
-    title: matchNo ? `${matchNo}·${res?.label ?? series.id}` : (res?.label ?? series.id),
+    matchNo,
+    // 标题带编号，让"第 82 场败者"这类来源说明能对上号
+    title: matchNo ? `第 ${matchNo} 场·${res?.label ?? series.id}` : (res?.label ?? series.id),
     stage: series.stage,
     groupRecord: null,
     groupDescription: null,
@@ -518,6 +531,11 @@ export interface DerivedEvent {
   swissConfirmedCount: number;
   /** 瑞士轮总槽位数。 */
   swissTotalCount: number;
+  /**
+   * 全局比赛编号索引：排位赛 1–44、瑞士轮 45–77、决赛 78–91。
+   * 派生结果、不落库，见 `domain/match-numbers.ts`。
+   */
+  matchNumbers: MatchNumberIndex;
 }
 
 /**
@@ -603,6 +621,7 @@ export function deriveEvent(event: EventFile): DerivedEvent {
     dates: event.event.dates,
     swissConfirmedCount,
     swissTotalCount: event.swiss.matches.length,
+    matchNumbers: matchNumbersFor(event),
   };
 }
 

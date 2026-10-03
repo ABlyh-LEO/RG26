@@ -42,7 +42,7 @@ export function MatchDetailPage() {
 
   return <div className="stack">
     <BackButton fallback="/schedule" label="返回赛程" />
-    <div className="detail-heading"><div><div className="eyebrow">{view.stage === 'swiss' ? 'SWISS ROUND' : 'FINALS'}</div><h1>{view.title}</h1><div className="row" style={{ marginTop: 12 }}><StatusBadge status={view.executionStatus} /><ResultBadge status={view.resultStatus} />{view.format ? <span className="badge badge--neutral">{view.format}</span> : null}{!view.countsForStandings ? <span className="badge badge--neutral">不计正式排名</span> : null}</div></div><CopyLinkButton path={`/matches/${matchId}`} label="分享比赛" /></div>
+    <div className="detail-heading"><div><div className="eyebrow">{view.stage === 'swiss' ? 'SWISS ROUND' : view.stage === 'qualification' ? 'QUALIFICATION' : 'FINALS'}</div><h1>{view.title}</h1><div className="row" style={{ marginTop: 12 }}>{view.matchNo !== null ? <span className="badge badge--info tabular">第 {view.matchNo} 场</span> : null}<StatusBadge status={view.executionStatus} /><ResultBadge status={view.resultStatus} />{view.format ? <span className="badge badge--neutral">{view.format}</span> : null}{!view.countsForStandings ? <span className="badge badge--neutral">不计正式排名</span> : null}</div></div><CopyLinkButton path={`/matches/${matchId}`} label="分享比赛" /></div>
     <div className="detail-grid">
       <div className="stack" style={{ gap: 26 }}>
         <section className="detail-scoreboard" aria-label="对阵与比分">

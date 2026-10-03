@@ -188,12 +188,12 @@ describe('D12 决赛按映射推进', () => {
       return slot.state === 'pending' ? slot.label : '';
     };
     // 下游尚未决定时保持 pending，并给出可读的来源说明。
-    // **用场次序号，不用内部 ID** —— 观众在赛程表上找不到 "F-L2A"。
-    expect(pendingLabel('F-LSF', 0)).toBe('第 9 场胜者');
-    // F-QUAL 的第一个席位是「半决赛败者组胜者」= 第 12 场（新版顺序）
-    expect(pendingLabel('F-QUAL', 0)).toBe('第 12 场胜者');
-    // F-GF 的第一个席位是「半决赛胜者组胜者」= 第 11 场（新版顺序）
-    expect(pendingLabel('F-GF', 0)).toBe('第 11 场胜者');
+    // **用比赛编号，不用内部 ID** —— 观众在赛程表上找不到 "F-L2A"。
+    expect(pendingLabel('F-LSF', 0)).toBe('第 86 场胜者');
+    // F-QUAL 的第一个席位是「半决赛败者组胜者」= 第 89 场（新版顺序）
+    expect(pendingLabel('F-QUAL', 0)).toBe('第 89 场胜者');
+    // F-GF 的第一个席位是「半决赛胜者组胜者」= 第 88 场（新版顺序）
+    expect(pendingLabel('F-GF', 0)).toBe('第 88 场胜者');
 
     // 任何未确定席位的文案都不应出现 F-XXXX 内部 ID
     for (const [id, res] of r1.series) {
@@ -494,7 +494,7 @@ describe('D15 更正前置胜者且下游已开赛', () => {
     // 依赖现在解析为 w1，但快照记录的是 w4 → 冲突，且保持快照
     expect(resolved.slots[0]).toEqual({
       state: 'conflict',
-      label: '第 7 场败者',
+      label: '第 84 场败者',
       reason: expect.stringContaining('保持已发生的比赛记录'),
     });
     // 已开赛比赛的记录没有被抹掉
@@ -542,36 +542,39 @@ describe('决赛比赛顺序', () => {
 void makeAttempt;
 void makeMatch;
 
-describe('决赛场次序号（替代内部 ID 的对外文案）', () => {
-  it('14 场竞技组决赛按比赛顺序编号 1–14，无重复无缺号', () => {
+describe('比赛编号（全局连续，替代内部 ID 的对外文案）', () => {
+  it('14 场竞技组决赛接在排位赛与瑞士轮之后：78–91，无重复无缺号', () => {
     const nos = FINALS_NODES.filter((n) => n.countsForStandings).map((n) => n.matchNo);
-    expect(nos).toEqual(Array.from({ length: 14 }, (_, i) => i + 1));
+    // 排位赛 44 场 + 瑞士轮 33 场 = 77，因此八强双败首轮是第 78 场、总决赛是第 91 场。
+    expect(nos).toEqual(Array.from({ length: 14 }, (_, i) => i + 78));
     expect(new Set(nos).size).toBe(nos.length);
   });
 
   it('展示演出与表演赛不参与编号', () => {
     for (const n of FINALS_NODES) {
       if (n.countsForStandings) continue;
-      expect(n.matchNo, `${n.id} 不应有场次序号`).toBeNull();
+      expect(n.matchNo, `${n.id} 不应有比赛编号`).toBeNull();
     }
   });
 
   it('编号顺序与实际比赛顺序一致（半决赛胜者组先行，总决赛最后）', () => {
-    expect(finalsMatchNoLabel('F-L1A')).toBe('第 5 场');
-    expect(finalsMatchNoLabel('F-L1B')).toBe('第 6 场');
-    expect(finalsMatchNoLabel('F-W1A')).toBe('第 7 场');
-    expect(finalsMatchNoLabel('F-W1B')).toBe('第 8 场');
-    expect(finalsMatchNoLabel('F-L2A')).toBe('第 9 场');
-    expect(finalsMatchNoLabel('F-L2B')).toBe('第 10 场');
+    expect(finalsMatchNoLabel('F-M1')).toBe('第 78 场');
+    expect(finalsMatchNoLabel('F-M4')).toBe('第 81 场');
+    expect(finalsMatchNoLabel('F-L1A')).toBe('第 82 场');
+    expect(finalsMatchNoLabel('F-L1B')).toBe('第 83 场');
+    expect(finalsMatchNoLabel('F-W1A')).toBe('第 84 场');
+    expect(finalsMatchNoLabel('F-W1B')).toBe('第 85 场');
+    expect(finalsMatchNoLabel('F-L2A')).toBe('第 86 场');
+    expect(finalsMatchNoLabel('F-L2B')).toBe('第 87 场');
     /*
      * 新版赛程手册（16:15~16:35）：「半决赛胜者组**先行**进行 BO1，
      * 而后半决赛败者组」。因此次序号与旧版相反 ——
      * 但这只影响**发生顺序**，依赖关系没变。
      */
-    expect(finalsMatchNoLabel('F-WSF')).toBe('第 11 场');
-    expect(finalsMatchNoLabel('F-LSF')).toBe('第 12 场');
-    expect(finalsMatchNoLabel('F-QUAL')).toBe('第 13 场');
-    expect(finalsMatchNoLabel('F-GF')).toBe('第 14 场');
+    expect(finalsMatchNoLabel('F-WSF')).toBe('第 88 场');
+    expect(finalsMatchNoLabel('F-LSF')).toBe('第 89 场');
+    expect(finalsMatchNoLabel('F-QUAL')).toBe('第 90 场');
+    expect(finalsMatchNoLabel('F-GF')).toBe('第 91 场');
   });
 
   it('未知 ID 返回 null，而不是把 ID 当标签', () => {

@@ -446,8 +446,10 @@ function RunCell({ runs }: { runs: EventFile['qualification']['runs'] }) {
           const venueLabel = derived.venueLabels.get(run.venueId) ?? run.venueId;
           // 修订后的时间优先显示
           const startIso = item?.revisedStart ?? item?.plannedStart;
+          const runNo = derived.matchNumbers.byId.get(run.id);
           return (
             <div key={run.id}>
+              {runNo !== undefined ? <span className="xsmall muted tabular">第 {runNo} 场 </span> : null}
               {startIso ? <span className="xsmall muted tabular">{formatTime(startIso)} </span> : null}
               <TeamName team={team} fallback={run.teamId} />
               <span className="xsmall muted">（{venueLabel}）</span>
@@ -1005,12 +1007,16 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
           return '待定';
         };
 
+        const swissNo = derived.matchNumbers.byId.get(match.id);
+        // 全局比赛编号（瑞士轮 45–77）：图上直接能看到"第 45 场 ·"。
+        const matchNoPrefix = swissNo === undefined ? '' : `第 ${swissNo} 场 · `;
+
         if (pending) {
           return {
             title: `R${match.roundIndex}`,
             rows: [{ label: '', team: refReason() ?? '对阵待公布', dim: true }],
             slotSides: sidesForSwiss(match.roundIndex),
-            meta: `${match.groupRecord} 战绩组`,
+            meta: matchNoPrefix === '' ? `${match.groupRecord} 战绩组` : `${matchNoPrefix}${match.groupRecord} 战绩组`,
             status: 'upcoming',
             to: `/matches/${nodeId}`,
           };
@@ -1054,7 +1060,7 @@ export function FullJourneyBracket({ legend = true }: { legend?: boolean }) {
           };
         };
 
-        const metaParts: string[] = [`${match.groupRecord} 战绩组`];
+        const metaParts: string[] = [`${matchNoPrefix}${match.groupRecord} 战绩组`];
         if (decided) {
           metaParts.push('已结算');
           if (effective && !isPerformance) {
