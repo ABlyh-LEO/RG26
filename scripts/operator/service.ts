@@ -410,7 +410,12 @@ export class OperatorService {
     return structuredClone(job);
   }
   async checkPending(): Promise<void> {
-    for (const job of this.jobs.filter((candidate) => candidate.status === 'deploying' || (candidate.status === 'failed' && candidate.phase === 'deploying'))) await this.checkLive(job.id);
+    /*
+     * `unverified` 也要继续核验：宽限（2 分钟）通常短于一次 Pages 部署，
+     * 正常成功的发布也会先落到这个状态。若不继续核验，部署其实成功却永远
+     * 显示"未核验"，观众可见的确认就丢了。
+     */
+    for (const job of this.jobs.filter((candidate) => candidate.status === 'deploying' || candidate.status === 'unverified' || (candidate.status === 'failed' && candidate.phase === 'deploying'))) await this.checkLive(job.id);
     await this.retireStaleVerifications();
   }
 }

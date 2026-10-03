@@ -49,14 +49,18 @@ export interface FrozenPreview {
 }
 export type PublishStatus = 'checking' | 'saving' | 'committing' | 'committed' | 'pushing' | 'deploying' | 'live' | 'unverified' | 'failed';
 /**
- * 已推送后等待"观众可见"确认的最长时间。
+ * 已推送后等待"观众可见"确认的最长时间（2 分钟）。
  *
  * 超过它就不再阻塞下一批发布：部署失败时公开站点永远不会出现该版本，而
  * GitHub API 又可能限流查不到结论（"部署状态暂不可查询"），两者叠加会让任务
  * 永久停在 deploying，把整个发布流程锁死。这类任务会被落成 `unverified`
  * （已推送、未核验），既不假装成功，也不假装失败。
+ *
+ * 注意：2 分钟通常**短于**一次 Pages 部署（约 3–4 分钟），因此正常成功的发布
+ * 也会先经过"未核验"这一状态；后台仍会继续核验这类任务，公开站点一旦返回
+ * 本次版本就会自动变成"观众已可见"（见 `checkPending`）。
  */
-export const VERIFY_GRACE_MS = 10 * 60_000;
+export const VERIFY_GRACE_MS = 2 * 60_000;
 export interface PublishJob {
   id: string;
   status: PublishStatus;

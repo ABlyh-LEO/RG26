@@ -350,6 +350,36 @@ describe('等核验的发布任务不得锁死后续发布', { timeout: 20_000 }
     expect(retired.status).toBe('unverified');
   });
 
+  it('"未核验"的任务仍在后台核验：公开站点一匹配就自动变成"观众已可见"', async () => {
+    const { root, remote } = await repository();
+    let visibleCommit = 'wrong-commit';
+    // 第一次发布只需要走到"已推送"；核验由后面的 checkPending 触发。
+    const service = await serviceFor(root, { pagesUrl: 'https://example.invalid/RG26/' });
+    const { draft, preview } = await prepared(service);
+    const job = await service.publish({ expectedVersion: draft.version, previewId: preview.id });
+    const pushed = await service.waitForJob(job.id);
+    expect(pushed.status).toBe('deploying');
+
+    // 2 分钟宽限通常短于一次 Pages 部署：先落成"未核验"，但不阻塞后续发布。
+    await writeFile(join(service.storage, 'jobs', `${job.id}.json`), JSON.stringify({
+      ...pushed, pushedAt: new Date(Date.now() - VERIFY_GRACE_MS - 1_000).toISOString(),
+    }));
+    await service.close();
+    const restarted = await serviceFor(root, {
+      readJson: async (url) => (url.startsWith('https://api.github.com/')
+        ? { status: 429, data: null }
+        : { status: 200, data: { ...preview.snapshot, sourceCommit: visibleCommit } }),
+    });
+    await restarted.checkPending();
+    expect((await restarted.state()).jobs.find((candidate) => candidate.id === job.id)!.status).toBe('unverified');
+
+    // 部署随后完成：后台核验把它翻成"观众已可见"（生产环境每 15 秒轮询一次，
+    // 与 checkLive 的节流间隔一致；测试里直接强制核验以免等待）。
+    visibleCommit = pushed.commit!;
+    expect((await restarted.checkLive(job.id, true)).status).toBe('live');
+    expect(await git(remote, ['rev-parse', 'main'])).toBe(pushed.commit);
+  });
+
   it('已提交但未推送的任务仍然必须优先处理（不允许夹带发布）', async () => {
     const { root } = await repository(); const service = await serviceFor(root);
     const { draft, preview } = await prepared(service);
