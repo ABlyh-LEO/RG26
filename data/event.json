@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T07:57:00.280Z",
+    "contentUpdatedAt": "2026-10-03T08:28:18.537Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1032,7 +1032,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r1-00-1",
       "title": "瑞士轮 R1 · 0-0 组第 1 场",
-      "executionStatus": "ready",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2818,9 +2818,25 @@
           "competitive-1",
           "competitive-8"
         ],
-        "attempts": [],
-        "effectiveAttemptId": null,
-        "executionStatus": "ready",
+        "attempts": [
+          {
+            "id": "swiss-r1-00-1-a1",
+            "supersedesId": null,
+            "homeTeamId": "competitive-1",
+            "awayTeamId": "competitive-8",
+            "homeScore": "10",
+            "awayScore": "0",
+            "homeReachedSeconds": "281",
+            "awayReachedSeconds": "360",
+            "winnerId": "competitive-1",
+            "resultKind": "normal",
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-03T08:28:18.537Z",
+            "note": null
+          }
+        ],
+        "effectiveAttemptId": "swiss-r1-00-1-a1",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-swiss-r1-00-1",
         "note": null
       },
