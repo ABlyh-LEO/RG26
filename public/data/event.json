@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "c3b42cdccaedab1389606174c64f9f85",
-  "builtAt": "2026-10-03T10:31:58.481Z",
-  "sourceCommit": "1f4bda30ed9571459ce2883a3ba1bf7efcec269d",
+  "revision": "a906deb0ae45ae2f5adb4cc9a809ec02",
+  "builtAt": "2026-10-03T10:34:49.147Z",
+  "sourceCommit": "50995aa1f805d93d942e17a70929cf775e7497e5",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T10:31:43.285Z",
+      "contentUpdatedAt": "2026-10-03T10:34:28.954Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1187,7 +1187,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-3",
         "title": "瑞士轮 R2 · 1-0 组第 3 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -3396,9 +3396,25 @@
             "competitive-1",
             "competitive-4"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r2-10-3-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-1",
+              "awayTeamId": "competitive-4",
+              "homeScore": "11",
+              "awayScore": "10",
+              "homeReachedSeconds": "227",
+              "awayReachedSeconds": "345",
+              "winnerId": "competitive-1",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T10:34:28.954Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r2-10-3-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r2-10-3",
           "note": null
         },
