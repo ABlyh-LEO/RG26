@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T02:49:00.669Z",
+    "contentUpdatedAt": "2026-10-03T03:02:40.099Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -642,7 +642,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank20",
       "title": "排位赛第 1 轮 · 三审第 20 名 萝卜给猫队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -672,7 +672,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank22",
       "title": "排位赛第 1 轮 · 三审第 22 名 AAA平地起高楼施工队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2151,13 +2151,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank20",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
-        "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
-        "judgeNote": null,
-        "confirmedAt": null
+        "executionStatus": "finished",
+        "rawResult": "未参加检录",
+        "score": "0",
+        "elapsedSeconds": "360",
+        "resultStatus": "confirmed",
+        "judgeNote": "未参加检录",
+        "confirmedAt": "2026-10-03T03:02:08.297Z"
       },
       {
         "id": "qual-r1-rank21",
@@ -2179,13 +2179,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank22",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "1",
+        "elapsedSeconds": "20",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T03:02:40.099Z"
       },
       {
         "id": "qual-r2-rank01",
