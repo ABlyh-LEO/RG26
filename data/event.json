@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T11:40:16.155Z",
+    "contentUpdatedAt": "2026-10-03T12:20:58.838Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1272,7 +1272,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-20-1",
       "title": "瑞士轮 R3 · 2-0 组第 1 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1287,7 +1287,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-20-2",
       "title": "瑞士轮 R3 · 2-0 组第 2 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1302,7 +1302,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-1",
       "title": "瑞士轮 R3 · 1-1 组第 1 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1317,7 +1317,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-2",
       "title": "瑞士轮 R3 · 1-1 组第 2 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1332,7 +1332,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-3",
       "title": "瑞士轮 R3 · 1-1 组第 3 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1347,7 +1347,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-11-4",
       "title": "瑞士轮 R3 · 1-1 组第 4 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1362,7 +1362,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-02-1",
       "title": "瑞士轮 R3 · 0-2 组第 1 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1377,7 +1377,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-02-2",
       "title": "瑞士轮 R3 · 0-2 组第 2 场",
-      "executionStatus": "scheduled",
+      "executionStatus": "ready",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2733,7 +2733,7 @@
         "basedOnRevision": null,
         "publicationStatus": "published",
         "publishedAt": "2026-10-03T09:45:08.942Z",
-        "closedAt": null,
+        "closedAt": "2026-10-03T11:42:13.325Z",
         "rankingSnapshot": [
           {
             "teamId": "competitive-18",
@@ -2903,14 +2903,167 @@
           "swiss-r3-02-1",
           "swiss-r3-02-2"
         ],
-        "pairingVersion": 0,
+        "pairingVersion": 1,
         "basedOnRound": 2,
         "basedOnRevision": null,
-        "publicationStatus": "draft",
-        "publishedAt": null,
+        "publicationStatus": "published",
+        "publishedAt": "2026-10-03T12:20:58.838Z",
         "closedAt": null,
-        "rankingSnapshot": null,
-        "revisionNote": null
+        "rankingSnapshot": [
+          {
+            "teamId": "competitive-18",
+            "record": "2-0",
+            "wins": 2,
+            "losses": 0,
+            "r": {
+              "n": "2377",
+              "d": "32"
+            },
+            "p": {
+              "n": "100",
+              "d": "1"
+            },
+            "t": {
+              "n": "409",
+              "d": "2"
+            },
+            "rankWithinGroup": 1
+          },
+          {
+            "teamId": "competitive-5",
+            "record": "2-0",
+            "wins": 2,
+            "losses": 0,
+            "r": {
+              "n": "981",
+              "d": "16"
+            },
+            "p": {
+              "n": "175",
+              "d": "2"
+            },
+            "t": {
+              "n": "539",
+              "d": "2"
+            },
+            "rankWithinGroup": 2
+          },
+          {
+            "teamId": "competitive-4",
+            "record": "1-1",
+            "wins": 1,
+            "losses": 1,
+            "r": {
+              "n": "1821",
+              "d": "32"
+            },
+            "p": {
+              "n": "205",
+              "d": "4"
+            },
+            "t": {
+              "n": "267",
+              "d": "1"
+            },
+            "rankWithinGroup": 1
+          },
+          {
+            "teamId": "competitive-21",
+            "record": "1-1",
+            "wins": 1,
+            "losses": 1,
+            "r": {
+              "n": "191",
+              "d": "4"
+            },
+            "p": {
+              "n": "50",
+              "d": "1"
+            },
+            "t": {
+              "n": "184",
+              "d": "1"
+            },
+            "rankWithinGroup": 2
+          },
+          {
+            "teamId": "competitive-3",
+            "record": "1-1",
+            "wins": 1,
+            "losses": 1,
+            "r": {
+              "n": "677",
+              "d": "16"
+            },
+            "p": {
+              "n": "215",
+              "d": "8"
+            },
+            "t": {
+              "n": "297",
+              "d": "1"
+            },
+            "rankWithinGroup": 3
+          },
+          {
+            "teamId": "competitive-14",
+            "record": "1-1",
+            "wins": 1,
+            "losses": 1,
+            "r": {
+              "n": "163",
+              "d": "4"
+            },
+            "p": {
+              "n": "345",
+              "d": "16"
+            },
+            "t": {
+              "n": "47",
+              "d": "2"
+            },
+            "rankWithinGroup": 4
+          },
+          {
+            "teamId": "competitive-9",
+            "record": "0-2",
+            "wins": 0,
+            "losses": 2,
+            "r": {
+              "n": "125",
+              "d": "4"
+            },
+            "p": {
+              "n": "225",
+              "d": "16"
+            },
+            "t": {
+              "n": "409",
+              "d": "2"
+            },
+            "rankWithinGroup": 2
+          },
+          {
+            "teamId": "competitive-8",
+            "record": "0-2",
+            "wins": 0,
+            "losses": 2,
+            "r": {
+              "n": "981",
+              "d": "32"
+            },
+            "p": {
+              "n": "15",
+              "d": "2"
+            },
+            "t": {
+              "n": "360",
+              "d": "1"
+            },
+            "rankWithinGroup": 3
+          }
+        ],
+        "revisionNote": "拼好队弃赛. 进行调整."
       },
       {
         "id": "swiss-round-4",
@@ -3631,20 +3784,23 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布2-0 组"
+            "kind": "team",
+            "teamId": "competitive-18"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布2-0 组"
+            "kind": "team",
+            "teamId": "competitive-35"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-18",
+          "competitive-35"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-20-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-20-2",
@@ -3654,20 +3810,23 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布2-0 组"
+            "kind": "team",
+            "teamId": "competitive-5"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布2-0 组"
+            "kind": "team",
+            "teamId": "competitive-1"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-5",
+          "competitive-1"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-20-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-11-1",
@@ -3677,20 +3836,23 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-4"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-13"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-4",
+          "competitive-13"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-11-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-11-2",
@@ -3700,20 +3862,23 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-21"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-2"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-21",
+          "competitive-2"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-11-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-11-3",
@@ -3723,20 +3888,23 @@
         "orderInGroup": 3,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-3"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-27"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-3",
+          "competitive-27"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-11-3",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-11-4",
@@ -3746,20 +3914,23 @@
         "orderInGroup": 4,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-14"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布1-1 组"
+            "kind": "team",
+            "teamId": "competitive-23"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-14",
+          "competitive-23"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-11-4",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-02-1",
@@ -3769,20 +3940,23 @@
         "orderInGroup": 1,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布0-2 组"
+            "kind": "team",
+            "teamId": "competitive-9"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布0-2 组"
+            "kind": "team",
+            "teamId": "competitive-28"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-9",
+          "competitive-28"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-02-1",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r3-02-2",
@@ -3792,20 +3966,23 @@
         "orderInGroup": 2,
         "slots": [
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布0-2 组"
+            "kind": "team",
+            "teamId": "competitive-8"
           },
           {
-            "kind": "pending",
-            "reason": "等待第 2 轮结果确认后公布0-2 组"
+            "kind": "team",
+            "teamId": "competitive-10"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-8",
+          "competitive-10"
+        ],
         "attempts": [],
         "effectiveAttemptId": null,
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "scheduleItemId": "sched-swiss-r3-02-2",
-        "note": "第三轮全部 8 场在第二轮结束后一次性公布，于首日晚间完成"
+        "note": null
       },
       {
         "id": "swiss-r4-21-1",
