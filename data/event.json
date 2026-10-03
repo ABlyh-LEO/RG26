@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T07:21:38.009Z",
+    "contentUpdatedAt": "2026-10-03T07:35:14.417Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -792,7 +792,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r2-rank08",
       "title": "排位赛第 2 轮 · 三审第 8 名 组一辈子战队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -2291,13 +2291,13 @@
         "round": 2,
         "scheduleItemId": "sched-qual-r2-rank08",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "4",
+        "elapsedSeconds": "74",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T07:35:14.417Z"
       },
       {
         "id": "qual-r2-rank09",
