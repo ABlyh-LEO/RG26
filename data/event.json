@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-02T08:17:58.499Z",
+    "contentUpdatedAt": "2026-10-03T01:17:13.955Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -357,7 +357,7 @@
       "venueId": "venue-a",
       "referenceId": "qual-r1-rank01",
       "title": "排位赛第 1 轮 · 三审第 1 名 Uniforest队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -372,7 +372,7 @@
       "venueId": "venue-b",
       "referenceId": "qual-r1-rank02",
       "title": "排位赛第 1 轮 · 三审第 2 名 机器曼妙队",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -1885,13 +1885,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank01",
         "venueId": "venue-a",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "24.5",
+        "elapsedSeconds": "288.6",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:17:02.002Z"
       },
       {
         "id": "qual-r1-rank02",
@@ -1899,13 +1899,13 @@
         "round": 1,
         "scheduleItemId": "sched-qual-r1-rank02",
         "venueId": "venue-b",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "rawResult": null,
-        "score": null,
-        "elapsedSeconds": null,
-        "resultStatus": "none",
+        "score": "26",
+        "elapsedSeconds": "341",
+        "resultStatus": "confirmed",
         "judgeNote": null,
-        "confirmedAt": null
+        "confirmedAt": "2026-10-03T01:17:13.955Z"
       },
       {
         "id": "qual-r1-rank03",
