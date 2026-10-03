@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "02eea8917ab83859747c6e98e3c6142a",
-  "builtAt": "2026-10-03T09:10:18.915Z",
-  "sourceCommit": "6859437e0edbdc0ec457ab6e3a0e6501362da966",
+  "revision": "f653c3cec213a6861e756c803b2153de",
+  "builtAt": "2026-10-03T09:19:33.280Z",
+  "sourceCommit": "f4f79b6c590e3f7f6382a5abfecea09216e0a237",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T09:10:04.212Z",
+      "contentUpdatedAt": "2026-10-03T09:19:08.420Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1097,7 +1097,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r1-00-5",
         "title": "瑞士轮 R1 · 0-0 组第 5 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2991,9 +2991,25 @@
             "competitive-5",
             "competitive-28"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r1-00-5-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-5",
+              "awayTeamId": "competitive-28",
+              "homeScore": "12",
+              "awayScore": "0",
+              "homeReachedSeconds": "209",
+              "awayReachedSeconds": "360",
+              "winnerId": "competitive-5",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-03T09:19:08.420Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r1-00-5-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r1-00-5",
           "note": null
         },
