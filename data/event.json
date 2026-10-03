@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-03T13:17:13.870Z",
+    "contentUpdatedAt": "2026-10-03T13:19:26.336Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1377,7 +1377,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r3-02-2",
       "title": "瑞士轮 R3 · 0-2 组第 2 场",
-      "executionStatus": "ready",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -4090,9 +4090,25 @@
           "competitive-8",
           "competitive-10"
         ],
-        "attempts": [],
-        "effectiveAttemptId": null,
-        "executionStatus": "ready",
+        "attempts": [
+          {
+            "id": "swiss-r3-02-2-a1",
+            "supersedesId": null,
+            "homeTeamId": "competitive-8",
+            "awayTeamId": "competitive-10",
+            "homeScore": "0",
+            "awayScore": "1",
+            "homeReachedSeconds": "360",
+            "awayReachedSeconds": "31",
+            "winnerId": "competitive-10",
+            "resultKind": "normal",
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-03T13:19:26.336Z",
+            "note": null
+          }
+        ],
+        "effectiveAttemptId": "swiss-r3-02-2-a1",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-swiss-r3-02-2",
         "note": null
       },
