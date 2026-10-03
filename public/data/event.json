@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "88cc8a9e33e03ad10c15b4060b86cf1d",
-  "builtAt": "2026-10-03T09:41:29.479Z",
-  "sourceCommit": "747e03edd5884f4c9e6aed9f058d3ce72aa9db32",
+  "revision": "ec4f66f50ff34a12c46f31a687a5750b",
+  "builtAt": "2026-10-03T09:45:29.002Z",
+  "sourceCommit": "aa8e88146eb6045e0e08c6551872f8a416abea94",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T09:40:19.737Z",
+      "contentUpdatedAt": "2026-10-03T09:45:08.942Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1157,7 +1157,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-1",
         "title": "瑞士轮 R2 · 1-0 组第 1 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1172,7 +1172,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-2",
         "title": "瑞士轮 R2 · 1-0 组第 2 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1187,7 +1187,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-3",
         "title": "瑞士轮 R2 · 1-0 组第 3 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1202,7 +1202,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-10-4",
         "title": "瑞士轮 R2 · 1-0 组第 4 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1217,7 +1217,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-01-1",
         "title": "瑞士轮 R2 · 0-1 组第 1 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1232,7 +1232,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-01-2",
         "title": "瑞士轮 R2 · 0-1 组第 2 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1247,7 +1247,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-01-3",
         "title": "瑞士轮 R2 · 0-1 组第 3 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1262,7 +1262,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r2-01-4",
         "title": "瑞士轮 R2 · 0-1 组第 4 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2563,7 +2563,7 @@
           "basedOnRevision": null,
           "publicationStatus": "published",
           "publishedAt": "2026-10-03T07:57:00.280Z",
-          "closedAt": null,
+          "closedAt": "2026-10-03T09:44:34.195Z",
           "rankingSnapshot": [
             {
               "teamId": "competitive-1",
@@ -2733,13 +2733,166 @@
             "swiss-r2-01-3",
             "swiss-r2-01-4"
           ],
-          "pairingVersion": 0,
+          "pairingVersion": 1,
           "basedOnRound": 1,
           "basedOnRevision": null,
-          "publicationStatus": "draft",
-          "publishedAt": null,
+          "publicationStatus": "published",
+          "publishedAt": "2026-10-03T09:45:08.942Z",
           "closedAt": null,
-          "rankingSnapshot": null,
+          "rankingSnapshot": [
+            {
+              "teamId": "competitive-18",
+              "record": "1-0",
+              "wins": 1,
+              "losses": 0,
+              "r": {
+                "n": "485",
+                "d": "8"
+              },
+              "p": {
+                "n": "100",
+                "d": "1"
+              },
+              "t": {
+                "n": "205",
+                "d": "1"
+              },
+              "rankWithinGroup": 1
+            },
+            {
+              "teamId": "competitive-5",
+              "record": "1-0",
+              "wins": 1,
+              "losses": 0,
+              "r": {
+                "n": "105",
+                "d": "2"
+              },
+              "p": {
+                "n": "175",
+                "d": "2"
+              },
+              "t": {
+                "n": "209",
+                "d": "1"
+              },
+              "rankWithinGroup": 2
+            },
+            {
+              "teamId": "competitive-1",
+              "record": "1-0",
+              "wins": 1,
+              "losses": 0,
+              "r": {
+                "n": "195",
+                "d": "4"
+              },
+              "p": {
+                "n": "325",
+                "d": "4"
+              },
+              "t": {
+                "n": "281",
+                "d": "1"
+              },
+              "rankWithinGroup": 3
+            },
+            {
+              "teamId": "competitive-35",
+              "record": "1-0",
+              "wins": 1,
+              "losses": 0,
+              "r": {
+                "n": "43",
+                "d": "1"
+              },
+              "p": {
+                "n": "70",
+                "d": "1"
+              },
+              "t": {
+                "n": "98",
+                "d": "1"
+              },
+              "rankWithinGroup": 4
+            },
+            {
+              "teamId": "competitive-23",
+              "record": "0-1",
+              "wins": 0,
+              "losses": 1,
+              "r": {
+                "n": "197",
+                "d": "4"
+              },
+              "p": {
+                "n": "65",
+                "d": "2"
+              },
+              "t": {
+                "n": "76",
+                "d": "1"
+              },
+              "rankWithinGroup": 1
+            },
+            {
+              "teamId": "competitive-27",
+              "record": "0-1",
+              "wins": 0,
+              "losses": 1,
+              "r": {
+                "n": "335",
+                "d": "8"
+              },
+              "p": {
+                "n": "25",
+                "d": "8"
+              },
+              "t": {
+                "n": "28",
+                "d": "1"
+              },
+              "rankWithinGroup": 2
+            },
+            {
+              "teamId": "competitive-13",
+              "record": "0-1",
+              "wins": 0,
+              "losses": 1,
+              "r": {
+                "n": "41",
+                "d": "1"
+              },
+              "p": {
+                "n": "145",
+                "d": "8"
+              },
+              "t": {
+                "n": "41",
+                "d": "1"
+              },
+              "rankWithinGroup": 3
+            },
+            {
+              "teamId": "competitive-10",
+              "record": "0-1",
+              "wins": 0,
+              "losses": 1,
+              "r": {
+                "n": "325",
+                "d": "8"
+              },
+              "p": {
+                "n": "125",
+                "d": "8"
+              },
+              "t": {
+                "n": "49",
+                "d": "1"
+              },
+              "rankWithinGroup": 4
+            }
+          ],
           "revisionNote": null
         },
         {
@@ -3147,18 +3300,21 @@
           "orderInGroup": 1,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-18"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-14"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-18",
+            "competitive-14"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-10-1",
           "note": null
         },
@@ -3170,18 +3326,21 @@
           "orderInGroup": 2,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-5"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-3"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-5",
+            "competitive-3"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-10-2",
           "note": null
         },
@@ -3193,18 +3352,21 @@
           "orderInGroup": 3,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-1"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-4"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-1",
+            "competitive-4"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-10-3",
           "note": null
         },
@@ -3216,18 +3378,21 @@
           "orderInGroup": 4,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-35"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布1-0 组"
+              "kind": "team",
+              "teamId": "competitive-21"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-35",
+            "competitive-21"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-10-4",
           "note": null
         },
@@ -3239,18 +3404,21 @@
           "orderInGroup": 1,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-23"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-8"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-23",
+            "competitive-8"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-01-1",
           "note": null
         },
@@ -3262,18 +3430,21 @@
           "orderInGroup": 2,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-27"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-9"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-27",
+            "competitive-9"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-01-2",
           "note": null
         },
@@ -3285,18 +3456,21 @@
           "orderInGroup": 3,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-13"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-28"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-13",
+            "competitive-28"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-01-3",
           "note": null
         },
@@ -3308,18 +3482,21 @@
           "orderInGroup": 4,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-10"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 1 轮结果确认后公布0-1 组"
+              "kind": "team",
+              "teamId": "competitive-2"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-10",
+            "competitive-2"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r2-01-4",
           "note": null
         },
