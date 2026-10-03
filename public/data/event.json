@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "9fab5a0020b95eafaca17c3ee3a945ee",
-  "builtAt": "2026-10-03T06:07:43.281Z",
-  "sourceCommit": "b8cb6ca126e8a8d3b92331bd800187828c053b9a",
+  "revision": "05d755ef305e4628ba733367fc9e8b1d",
+  "builtAt": "2026-10-03T06:30:03.629Z",
+  "sourceCommit": "43832bb4e22741fea36bec3becf49efc1e028f35",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T06:07:25.107Z",
+      "contentUpdatedAt": "2026-10-03T06:29:03.551Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -782,7 +782,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank07",
         "title": "排位赛第 2 轮 · 三审第 7 名 吃饭要排队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -872,7 +872,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank13",
         "title": "排位赛第 2 轮 · 三审第 13 名 黄瓜同好会",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2215,10 +2215,10 @@
           "executionStatus": "finished",
           "rawResult": null,
           "score": "1",
-          "elapsedSeconds": "11",
+          "elapsedSeconds": "63",
           "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": "2026-10-03T05:46:22.842Z"
+          "confirmedAt": "2026-10-03T06:13:20.027Z"
         },
         {
           "id": "qual-r2-rank03",
@@ -2282,13 +2282,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank07",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "1",
+          "elapsedSeconds": "112",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:15:04.220Z"
         },
         {
           "id": "qual-r2-rank08",
@@ -2366,13 +2366,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank13",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "1",
+          "elapsedSeconds": "228",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:29:03.551Z"
         },
         {
           "id": "qual-r2-rank14",
@@ -4175,6 +4175,20 @@
         "severity": "info"
       }
     ],
-    "corrections": []
+    "corrections": [
+      {
+        "id": "correction-1791008000030-1",
+        "reason": "重赛：场地异常",
+        "at": "2026-10-03T06:13:20.030Z",
+        "previousValue": "{\"id\":\"qual-r2-rank02\",\"teamId\":\"competitive-4\",\"round\":2,\"scheduleItemId\":\"sched-qual-r2-rank02\",\"venueId\":\"venue-a\",\"executionStatus\":\"finished\",\"rawResult\":null,\"score\":\"1\",\"elapsedSeconds\":\"11\",\"resultStatus\":\"confirmed\",\"judgeNote\":null,\"confirmedAt\":\"2026-10-03T05:46:22.842Z\"}",
+        "newValue": "{\"id\":\"qual-r2-rank02\",\"teamId\":\"competitive-4\",\"round\":2,\"scheduleItemId\":\"sched-qual-r2-rank02\",\"venueId\":\"venue-a\",\"executionStatus\":\"finished\",\"rawResult\":null,\"score\":\"1\",\"elapsedSeconds\":\"63\",\"resultStatus\":\"confirmed\",\"judgeNote\":null,\"confirmedAt\":\"2026-10-03T06:13:20.027Z\"}",
+        "affectedIds": [
+          "qual-r2-rank02"
+        ],
+        "disposition": "downstream-not-published",
+        "allowsProgress": true,
+        "note": "场地异常, 重赛处理"
+      }
+    ]
   }
 }
