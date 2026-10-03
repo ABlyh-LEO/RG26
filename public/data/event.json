@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "bced376a851ac6d46bfe39aee3ff0db3",
-  "builtAt": "2026-10-03T02:33:54.476Z",
-  "sourceCommit": "5b37daabd42940219e9ac7391f94c327a42d6bcf",
+  "revision": "f0d9eb36e767deffc0c51bfce8d64428",
+  "builtAt": "2026-10-03T02:50:54.619Z",
+  "sourceCommit": "f07372531fdc8aa417fb258455091861337f1b56",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T02:33:02.479Z",
+      "contentUpdatedAt": "2026-10-03T02:49:00.669Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -632,7 +632,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank19",
         "title": "排位赛第 1 轮 · 三审第 19 名 啊对对队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -662,7 +662,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank21",
         "title": "排位赛第 1 轮 · 三审第 21 名 iRunTV队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2142,13 +2142,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank19",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T02:49:00.669Z"
         },
         {
           "id": "qual-r1-rank20",
@@ -2170,13 +2170,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank21",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "1",
+          "elapsedSeconds": "190",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T02:45:41.213Z"
         },
         {
           "id": "qual-r1-rank22",
