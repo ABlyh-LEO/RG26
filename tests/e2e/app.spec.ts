@@ -7,6 +7,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { buildSeedEvent } from '../../scripts/seed-data';
 import { publicSnapshotSchema } from '../../src/domain/schema';
+import { displayPoolTeamIds } from '../../src/data/view-model';
+import { audienceSnapshot } from '../fixtures/audience-scenarios';
 import { waitForData } from './helpers';
 
 /** 仅给赛前状态用例使用，不替换生产数据文件，也不冻结计时器或布局动画。 */
@@ -225,8 +227,47 @@ test.describe('13.2 用户流程', () => {
     }
   });
 
-  test('2h. 决赛 BO1 标注「八强双败不换边」', async ({ page }) => {
-    await goto(page, '/matches/F-L1A');
+  test('2g2. 局均分差为负时页面显示负号（两场 10:9 与 8:10 → -0.50）', async ({ page }) => {
+    /*
+     * 线上问题：局均分差 -0.50 显示成 0.50（内部评分与排序正确，只有显示错）。
+     * 用"未定榜、瑞士轮无成绩"的场景精确构造两场，使局均分差恰好为 -0.5，
+     * 从而覆盖 |v| < 1 时最容易丢负号的情形（整数负值本来就显示正常）。
+     */
+    const snapshot = audienceSnapshot('qualification');
+    const event = snapshot.data;
+    const teamId = displayPoolTeamIds(event)[0]!;
+    const opponents = event.teams.filter((team) => team.division === 'competitive' && team.id !== teamId).slice(0, 2);
+    const pairs = [
+      { match: event.swiss.matches[0]!, home: '10', away: '9' },  // 本队净胜 1
+      { match: event.swiss.matches[1]!, home: '8', away: '10' },  // 本队净负 2
+    ];
+    pairs.forEach(({ match, home, away }, index) => {
+      const opponent = opponents[index]!.id;
+      const attemptId = `${match.id}-e2e-negative`;
+      match.participantSnapshot = [teamId, opponent];
+      match.attempts = [{
+        id: attemptId, supersedesId: null, homeTeamId: teamId, awayTeamId: opponent,
+        homeScore: home, awayScore: away, homeReachedSeconds: '120', awayReachedSeconds: '150',
+        winnerId: Number(home) > Number(away) ? teamId : opponent,
+        resultKind: 'normal', resultStatus: 'confirmed', confirmedAt: '2026-10-03T16:10:00+08:00', note: null,
+      }];
+      match.effectiveAttemptId = attemptId;
+      match.executionStatus = 'finished';
+    });
+
+    await page.route('**/data/event.json', (route) => route.fulfill({ json: snapshot }));
+    await goto(page, `/teams/${teamId}`);
+    await waitForData(page);
+    await page.getByText('评分指标', { exact: true }).click();
+    const grid = page.locator('dl.metrics-grid');
+    await expect(grid).toContainText('局均分差');
+    // (1 + (-2)) / 2 = -0.50：必须带负号
+    await expect(grid).toContainText('-0.50');
+    // 局均得分仍为正：(10 + 8) / 2 = 9.00
+    await expect(grid).toContainText('9.00');
+  });
+
+  test('2h. 决赛 BO1 标注「八强双败不换边」', async ({ page }) => {    await goto(page, '/matches/F-L1A');
     await waitForData(page);
     const body = await page.locator('body').innerText();
     // 格式标记必须出现，与"不换边"的口径一致

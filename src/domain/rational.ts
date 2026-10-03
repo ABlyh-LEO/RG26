@@ -182,14 +182,21 @@ export function toDecimalString(value: Rational, maxDecimals = 2): string {
 
 /**
  * 固定两位小数的展示形式；n=0 等无意义场景由调用方决定显示“—”，不在这里发明。
- * -0 归一为 0。
+ *
+ * 符号规则：
+ * - 舍入到 0 的值**不显示负号**（`-0.001` → `0.00`，避免出现“-0.00”）；
+ * - 但 `|v| < 1` 且小数位非零时**必须保留负号**（`-1/2` → `-0.50`）。
+ *   这里曾把 `-0` 无条件归一成 `0`，于是局均分差 `-0.50` 显示成了 `0.50`
+ *   （2026-10-03 线上发现：内部评分与排序正确，只有显示错）。
  */
 export function toFixed2(value: Rational): string {
   const text = toDecimalString(value, 2);
-  const [intPart, fracPart = ''] = text.split('.');
+  const [intPart = '0', fracPart = ''] = text.split('.');
   const padded = (fracPart + '00').slice(0, 2);
-  const normalizedInt = intPart === '-0' ? '0' : intPart;
-  return `${normalizedInt}.${padded}`;
+  const roundedToZero = (intPart === '0' || intPart === '-0') && padded === '00';
+  if (roundedToZero) return '0.00';
+  const sign = intPart.startsWith('-') ? '-' : '';
+  return `${sign}${intPart.replace(/^-/, '')}.${padded}`;
 }
 
 /** 粗略的数值近似。仅用于排序以外的展示/诊断，不参与任何比较决策。 */

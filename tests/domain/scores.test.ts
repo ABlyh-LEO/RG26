@@ -97,6 +97,26 @@ describe('rational', () => {
     expect(toDecimalString(rational(1n, 8n), 3)).toBe('0.125');
   });
 
+  it('负数显示保留符号：|v| < 1 时不能把负号丢掉', () => {
+    /*
+     * 线上问题（2026-10-03）：局均分差 -0.50 显示成 0.50。
+     * 原因是 toFixed2 把整数部分的 "-0" 无条件归一成 "0"，符号随之丢失。
+     * 内部评分与排序一直是对的（比较走有理数），只有显示错。
+     */
+    expect(toFixed2(rational(-1n, 2n))).toBe('-0.50');
+    expect(toFixed2(rational(-1n, 3n))).toBe('-0.33');
+    expect(toFixed2(rational(-2n, 3n))).toBe('-0.67');
+    expect(toFixed2(rational(-1n, 100n))).toBe('-0.01');
+    expect(toFixed2(fromInt(-2))).toBe('-2.00');
+    expect(toFixed2(rational(-30n, 1n))).toBe('-30.00');
+    // 舍入到 0 时不显示负号（避免出现 "-0.00"）
+    expect(toFixed2(rational(-1n, 1000n))).toBe('0.00');
+    expect(toFixed2(fromInt(0))).toBe('0.00');
+    // 四舍五入边界：-0.005 → -0.01，-0.004 → 0.00
+    expect(toFixed2(rational(-1n, 200n))).toBe('-0.01');
+    expect(toFixed2(rational(-1n, 250n))).toBe('0.00');
+  });
+
   it('序列化为字符串，避免 BigInt 直接 JSON 化', () => {
     expect(serialize(rational(3n, 5n))).toEqual({ n: '3', d: '5' });
     expect(() => JSON.stringify({ v: rational(3n, 5n) })).toThrow();
@@ -297,6 +317,31 @@ describe('D03 边界值', () => {
     expect(t1.r).toEqual(ZERO);
     // 局均得分/分差在 n=0 时由 UI 显示“—”，此处值为 0
     expect(t1.n).toBe(0);
+  });
+
+  it('局均分差为负时显示与取值都正确（两场 10:9 与 8:10 → -0.50）', () => {
+    // 真实上报场景：本队两场 10:9、8:10，分差 +1 与 -2 → 局均分差 -0.50。
+    const matches = [
+      makeMatch(1, '0-0', 1, 'competitive-1', 'competitive-2', [
+        makeAttempt('n1', 'competitive-1', 'competitive-2', 'competitive-1', {
+          homeScore: '10', awayScore: '9', homeSeconds: '120', awaySeconds: '150',
+        }),
+      ], 'n1'),
+      makeMatch(1, '0-0', 2, 'competitive-1', 'competitive-3', [
+        makeAttempt('n2', 'competitive-1', 'competitive-3', 'competitive-3', {
+          homeScore: '8', awayScore: '10', homeSeconds: '200', awaySeconds: '180',
+        }),
+      ], 'n2'),
+    ];
+    const scores = computeTeamScores(['competitive-1', 'competitive-2', 'competitive-3'], collectSettledMatches(matches).matches);
+    const t1 = scores.get('competitive-1')!;
+    expect(t1.n).toBe(2);
+    // 取值：(1 + (-2)) / 2 = -1/2
+    expect(t1.meanDiff).toEqual(rational(-1n, 2n));
+    // 显示：必须带负号（曾错误显示为 0.50）
+    expect(toFixed2(t1.meanDiff)).toBe('-0.50');
+    // 局均得分仍为正：(10 + 8) / 2 = 9
+    expect(toFixed2(t1.meanScore)).toBe('9.00');
   });
 
   it('A、B、P、O、R 均落在 0–100', () => {
