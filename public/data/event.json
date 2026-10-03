@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "0a7c9bac7cdb9f919770ed0e42acdfa1",
-  "builtAt": "2026-10-03T03:03:18.355Z",
-  "sourceCommit": "ca9a40d29282dada5b5af42440e5d2248ec0eb8b",
+  "revision": "3c91913c54c2e7505b8b86495409b4b8",
+  "builtAt": "2026-10-03T03:10:48.052Z",
+  "sourceCommit": "3863038228d17237260a1e9c91608400abc9f055",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T03:02:40.099Z",
+      "contentUpdatedAt": "2026-10-03T03:10:35.121Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -527,7 +527,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r1-rank12",
         "title": "排位赛第 1 轮 · 三审第 12 名 西餐不好吃队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2044,13 +2044,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank12",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "4",
+          "elapsedSeconds": "80",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T03:10:35.121Z"
         },
         {
           "id": "qual-r1-rank13",
