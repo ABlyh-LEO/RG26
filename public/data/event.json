@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "265d829b286b4a0b82055ac4a0706223",
-  "builtAt": "2026-10-03T02:14:06.080Z",
-  "sourceCommit": "2716aaf26e28d08b90e2a48286393b63fa9fda3c",
+  "revision": "9b8bb1877dc21a32017e00a4d7096601",
+  "builtAt": "2026-10-03T02:28:11.585Z",
+  "sourceCommit": "49d4ae87ef6ccabfb290c31de1208d8d77d34703",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T02:12:30.964Z",
+      "contentUpdatedAt": "2026-10-03T02:27:18.037Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -482,7 +482,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank09",
         "title": "排位赛第 1 轮 · 三审第 9 名 肥西路奶龙拆迁大队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -542,7 +542,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank13",
         "title": "排位赛第 1 轮 · 三审第 13 名 黄瓜同好会",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -572,7 +572,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank15",
         "title": "排位赛第 1 轮 · 三审第 15 名 名字够长就一定会有人看队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -587,7 +587,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r1-rank16",
         "title": "排位赛第 1 轮 · 三审第 16 名 Rg小队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2002,13 +2002,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank09",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
-          "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
-          "judgeNote": null,
-          "confirmedAt": null
+          "executionStatus": "finished",
+          "rawResult": "未参与检录",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
+          "judgeNote": "未参与检录",
+          "confirmedAt": "2026-10-03T02:23:30.791Z"
         },
         {
           "id": "qual-r1-rank10",
@@ -2058,13 +2058,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank13",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
-          "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
-          "judgeNote": null,
-          "confirmedAt": null
+          "executionStatus": "finished",
+          "rawResult": "检录不通过",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
+          "judgeNote": "检录不通过",
+          "confirmedAt": "2026-10-03T02:24:44.714Z"
         },
         {
           "id": "qual-r1-rank14",
@@ -2086,13 +2086,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank15",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
-          "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
-          "judgeNote": null,
-          "confirmedAt": null
+          "executionStatus": "finished",
+          "rawResult": "选手主动放弃",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
+          "judgeNote": "选手主动放弃",
+          "confirmedAt": "2026-10-03T02:27:18.037Z"
         },
         {
           "id": "qual-r1-rank16",
@@ -2100,13 +2100,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank16",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "2",
+          "elapsedSeconds": "260",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T02:25:07.643Z"
         },
         {
           "id": "qual-r1-rank17",
