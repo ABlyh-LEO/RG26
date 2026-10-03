@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "05d755ef305e4628ba733367fc9e8b1d",
-  "builtAt": "2026-10-03T06:30:03.629Z",
-  "sourceCommit": "43832bb4e22741fea36bec3becf49efc1e028f35",
+  "revision": "9521ce93c2a067bea0f2fd8d9fda39ad",
+  "builtAt": "2026-10-03T06:37:26.912Z",
+  "sourceCommit": "af9436e0bcce6035fee6669f9846473c28b6822d",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T06:29:03.551Z",
+      "contentUpdatedAt": "2026-10-03T06:37:10.468Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -827,7 +827,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r2-rank10",
         "title": "排位赛第 2 轮 · 三审第 10 名 拼好队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -902,7 +902,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank15",
         "title": "排位赛第 2 轮 · 三审第 15 名 名字够长就一定会有人看队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2324,13 +2324,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank10",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:37:10.468Z"
         },
         {
           "id": "qual-r2-rank11",
@@ -2394,13 +2394,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank15",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "1",
+          "elapsedSeconds": "96",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:36:41.430Z"
         },
         {
           "id": "qual-r2-rank16",
