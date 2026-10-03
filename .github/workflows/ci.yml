@@ -1,11 +1,19 @@
 name: CI
 
-# 在 PR 与主分支 push 上执行必需检查。
-# 数据校验或规则测试失败必须阻止合并。
+# **全量质量门禁**：在 PR、手动触发，以及**代码变更**的 main push 上执行。
+#
+# 纯数据更新（现场发布成绩只改 data/event.json 与 public/data/event.json）不触发这里：
+# 那条路径由 deploy.yml 的轻量门禁覆盖（构建含数据校验与类型检查 + 桌面 Chromium
+# 渲染回归）。一天几十次成绩更新，没必要每次重跑全量四项目渲染与全部领域测试。
 on:
   pull_request:
   push:
     branches: ['main']
+    paths-ignore:
+      - 'data/**'
+      - 'public/data/**'
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:
