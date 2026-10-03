@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "9521ce93c2a067bea0f2fd8d9fda39ad",
-  "builtAt": "2026-10-03T06:37:26.912Z",
-  "sourceCommit": "af9436e0bcce6035fee6669f9846473c28b6822d",
+  "revision": "5d1afb0b6cd4873c989d94083fec234b",
+  "builtAt": "2026-10-03T06:50:02.455Z",
+  "sourceCommit": "230085efbf3f77f7e735303e96ab94c5a48182b6",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T06:37:10.468Z",
+      "contentUpdatedAt": "2026-10-03T06:49:28.662Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -812,7 +812,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank09",
         "title": "排位赛第 2 轮 · 三审第 9 名 肥西路奶龙拆迁大队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -857,7 +857,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r2-rank12",
         "title": "排位赛第 2 轮 · 三审第 12 名 西餐不好吃队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -932,7 +932,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r2-rank17",
         "title": "排位赛第 2 轮 · 三审第 17 名 少微摸个鱼队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -977,7 +977,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r2-rank20",
         "title": "排位赛第 2 轮 · 三审第 20 名 萝卜给猫队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2310,13 +2310,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank09",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
-          "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
-          "judgeNote": null,
-          "confirmedAt": null
+          "executionStatus": "finished",
+          "rawResult": "未参与检录",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
+          "judgeNote": "未参与检录",
+          "confirmedAt": "2026-10-03T06:49:04.069Z"
         },
         {
           "id": "qual-r2-rank10",
@@ -2352,13 +2352,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank12",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "6",
+          "elapsedSeconds": "291",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:47:34.329Z"
         },
         {
           "id": "qual-r2-rank13",
@@ -2422,13 +2422,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank17",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "6",
+          "elapsedSeconds": "231",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T06:48:08.804Z"
         },
         {
           "id": "qual-r2-rank18",
@@ -2464,13 +2464,13 @@
           "round": 2,
           "scheduleItemId": "sched-qual-r2-rank20",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
-          "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
-          "judgeNote": null,
-          "confirmedAt": null
+          "executionStatus": "finished",
+          "rawResult": "未参加检录",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
+          "judgeNote": "未参加检录",
+          "confirmedAt": "2026-10-03T06:49:28.662Z"
         },
         {
           "id": "qual-r2-rank21",
