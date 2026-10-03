@@ -11,6 +11,7 @@ import { git, inspectGit } from '../../scripts/operator/git';
 import { optionalText, revision } from '../../scripts/operator/storage';
 import { runPublish } from '../../scripts/operator/cli';
 import type { SessionResponse } from '../../src/operator/contracts';
+import { VERIFY_GRACE_MS } from '../../src/operator/contracts';
 
 const roots: string[] = [];
 const services: OperatorService[] = [];
@@ -260,6 +261,104 @@ describe('维护草稿与发布事务', { timeout: 20_000 }, () => {
     expect(state.draft.version).toBe(2); expect((await inspectGit(root)).dirtyPaths).toEqual([]);
     await git(root, ['switch', '-c', 'feature']);
     await expect(service.sync(2)).rejects.toMatchObject({ code: 'GIT_DIRTY' });
+  });
+});
+
+describe('等核验的发布任务不得锁死后续发布', { timeout: 20_000 }, () => {
+  /** 发布并推送成功，任务停在 deploying（等观众可见）。 */
+  async function pushedJob(root: string, service: OperatorService) {
+    const { draft, preview } = await prepared(service);
+    const job = await service.publish({ expectedVersion: draft.version, previewId: preview.id });
+    const pushed = await service.waitForJob(job.id);
+    expect(pushed.status).toBe('deploying');
+    expect(pushed.commit).toBeTruthy();
+    return { job: pushed, draft, preview };
+  }
+
+  it('等核验期间可以继续录入草稿，不被发布状态阻塞', async () => {
+    const { root } = await repository(); const service = await serviceFor(root);
+    await pushedJob(root, service);
+    // 核心诉求：发布状态（哪怕是"等部署"）不能挡住继续录入成绩。
+    const state = await service.state();
+    const saved = await service.save({
+      expectedVersion: state.draft.version,
+      event: updateEvent(state.draft.event),
+      formInputs: { 'result:swiss:swiss-r1-00-1:1': { homeScore: '16' } },
+    });
+    expect(saved.version).toBe(state.draft.version + 1);
+    expect(saved.formInputs).toEqual({ 'result:swiss:swiss-r1-00-1:1': { homeScore: '16' } });
+  });
+
+  it('刚推送、仍在等核验的任务依然阻塞下一批发布（避免两个部署抢跑）', async () => {
+    const { root } = await repository(); const service = await serviceFor(root);
+    const { preview } = await pushedJob(root, service);
+    // 发布完成后草稿版本会前进，用当前版本调用才会走到"任务进行中"的判定。
+    const current = await service.state();
+    await expect(service.publish({ expectedVersion: current.draft.version, previewId: preview.id }))
+      .rejects.toMatchObject({ code: 'JOB_ACTIVE' });
+  });
+
+  it('等核验超时的任务落成"已推送·未核验"，并放行下一批发布', async () => {
+    const { root } = await repository(); const service = await serviceFor(root);
+    const { job } = await pushedJob(root, service);
+
+    /*
+     * 真实场景：部署失败 → 公开站点永远不会返回该版本；GitHub API 又限流
+     * （日志里的"部署状态暂不可查询"）→ 任务永远停在 deploying。
+     * 这里把推送时间改到超时之前来复现，并重启服务（重启不会恢复 deploying，
+     * 这正是它此前会永久锁死的原因）。
+     */
+    const path = join(service.storage, 'jobs', `${job.id}.json`);
+    await writeFile(path, JSON.stringify({
+      ...job, pushedAt: new Date(Date.now() - VERIFY_GRACE_MS - 60_000).toISOString(),
+    }));
+    await service.close();
+    const restarted = await serviceFor(root);
+
+    await restarted.checkPending();
+    const retired = (await restarted.state()).jobs.find((candidate) => candidate.id === job.id)!;
+    expect(retired.status).toBe('unverified');
+    expect(retired.retryable).toBe(false);
+    expect(retired.error).toContain('未在');
+    expect(retired.logs.at(-1)?.message).toContain('不再阻塞下一批发布');
+
+    // 超时任务不再挡路：可以继续录入并发布下一批。
+    const next = await prepared(restarted);
+    const second = await restarted.publish({ expectedVersion: next.draft.version, previewId: next.preview.id });
+    expect((await restarted.waitForJob(second.id)).status).toBe('deploying');
+  });
+
+  it('旧任务没有 pushedAt 时按"已推送"日志时间判断超时，不被轮询刷新的 updatedAt 掩盖', async () => {
+    const { root } = await repository(); const service = await serviceFor(root);
+    const { job } = await pushedJob(root, service);
+
+    /*
+     * 这正是线上卡住的形态：任务产生于引入 pushedAt 之前，而 updatedAt 每次
+     * "检查上线状态"都会被刷新。若用 updatedAt 判断，它永远不会超时。
+     */
+    const old = new Date(Date.now() - VERIFY_GRACE_MS - 60_000).toISOString();
+    await writeFile(join(service.storage, 'jobs', `${job.id}.json`), JSON.stringify({
+      ...job,
+      pushedAt: null,
+      updatedAt: new Date().toISOString(),
+      logs: job.logs.map((log) => (log.message.includes('已推送，等待 Pages 部署') ? { ...log, at: old } : log)),
+    }));
+    await service.close();
+    const restarted = await serviceFor(root);
+    await restarted.checkPending();
+    const retired = (await restarted.state()).jobs.find((candidate) => candidate.id === job.id)!;
+    expect(retired.status).toBe('unverified');
+  });
+
+  it('已提交但未推送的任务仍然必须优先处理（不允许夹带发布）', async () => {
+    const { root } = await repository(); const service = await serviceFor(root);
+    const { draft, preview } = await prepared(service);
+    const job = await service.publish({ expectedVersion: draft.version, previewId: preview.id }, false);
+    const committed = await service.waitForJob(job.id);
+    expect(committed.status).toBe('committed');
+    const current = await service.state();
+    await expect(service.publish({ expectedVersion: current.draft.version, previewId: preview.id }))
+      .rejects.toMatchObject({ code: 'JOB_ACTIVE' });
   });
 });
 

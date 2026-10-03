@@ -2,14 +2,33 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { eventFileSchema } from '../domain/schema';
 import type { ChangeSummary, DraftEnvelope, FrozenPreview, OperatorState, PreflightResult, PublishJob, PublishStatus } from './contracts';
+import { VERIFY_GRACE_MS } from './contracts';
+import { pushedAtMs } from './contracts';
 import type { useOperator } from './useOperator';
 import { PreviewFrame } from './PreviewFrame';
 
 type Workbench = ReturnType<typeof useOperator>;
 const STATUS: Record<PublishStatus, string> = {
   checking: '检查中', saving: '准备数据', committing: '正在提交', committed: '已提交，未推送',
-  pushing: '正在推送', deploying: '已推送，等待部署', live: '观众已可见', failed: '发布未完成',
+  pushing: '正在推送', deploying: '已推送，等待部署', live: '观众已可见',
+  unverified: '已推送 · 未核验', failed: '发布未完成',
 };
+
+/**
+ * "已推送但等核验超时"的任务不再阻塞下一批发布。
+ *
+ * 与后端 `isStaleVerification` 同一口径（都用 `pushedAtMs` 与 `VERIFY_GRACE_MS`）：
+ * 部署失败时公开站点永远不会出现该版本，GitHub API 又可能限流查不到结论，
+ * 任务会永久停在"等待部署"。这种事不该挡住录入成绩的发布。
+ */
+function pendingVerification(jobs: PublishJob[]): PublishJob | null {
+  const now = Date.now();
+  return jobs.find((job) => {
+    if (job.status !== 'deploying') return false;
+    const since = pushedAtMs(job);
+    return since !== null && now - since >= VERIFY_GRACE_MS;
+  }) ?? null;
+}
 
 export function downloadDraft(draft: DraftEnvelope) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' }));
@@ -62,7 +81,12 @@ export function PublishPanel({ workbench }: { workbench: Workbench }) {
     setConfirmation(false); setPreview(null); setCheck(null); setMessage(''); await refresh();
   });
   const currentPreview = !!preview && preview.draftVersion === draft.version && !pending;
-  const activeJob = state.jobs.some((job) => !['live', 'failed'].includes(job.status));
+  /*
+   * 只有"真正还在进行"的任务才挡住发布：终态（live/failed/unverified）与
+   * "已推送、等核验超时"的都不挡。等核验超时的那一个改为显示说明。
+   */
+  const activeJob = state.jobs.some((job) => !['live', 'failed', 'unverified'].includes(job.status) && job !== pendingVerification(state.jobs));
+  const stalledJob = pendingVerification(state.jobs);
   const changes = currentPreview ? preview.changes : check?.changes ?? [];
   return <div className="operator-publish stack">
     <section className="card"><div className="card__head"><h2>核对与发布</h2><span className="badge badge--neutral">草稿版本 {draft.version}</span></div>
@@ -93,6 +117,11 @@ export function PublishPanel({ workbench }: { workbench: Workbench }) {
       <label className="operator-check"><input type="checkbox" checked={confirmation && currentPreview} disabled={!currentPreview || readOnly} onChange={(e) => setConfirmation(e.target.checked)} />已核对 {preview.changes.length} 项变更和观众预览，确认发布此版本</label>
       <button className="btn btn--primary" type="button" disabled={!confirmation || !currentPreview || readOnly || !!busy || activeJob || !changes.length} onClick={() => void publish()}>确认发布 {preview.changes.length} 项变更</button>
       {activeJob && <p className="small muted">上一项发布仍在进行。可以继续录入草稿，完成后再发布下一批。</p>}
+      {!activeJob && stalledJob && <p className="operator-warnings">
+        上一项发布已推送，但超过 {Math.round(VERIFY_GRACE_MS / 60_000)} 分钟仍未确认观众可见
+        {stalledJob.targetRevision === preview.targetRevision ? '' : '（常见原因是部署失败，或 GitHub 部署状态无法查询）'}。
+        <strong>这不影响继续发布下一批</strong>；如需确认那一次，可在下方发布记录里点"检查上线状态"，或打开其部署记录查看日志。
+      </p>}
     </section>}
     <PublishHistory jobs={state.jobs} readOnly={readOnly} run={(job, action) => operation(action === 'check' ? '检查上线状态' : '重试发布', async () => {
       await client.current?.request(`/jobs/${encodeURIComponent(job.id)}/${action}`, 'POST', {}); await refresh();
@@ -141,7 +170,7 @@ function PublishHistory({ jobs, readOnly, busy, run }: { jobs: PublishJob[]; rea
       <div className="row"><strong>{STATUS[job.status]}</strong><time className="small muted">{new Date(job.createdAt).toLocaleString('zh-CN')}</time></div>
       <p>{job.message}</p><p className="small muted">草稿版本 {job.draftVersion}{job.commit ? ` · 提交 ${job.commit.slice(0, 8)}` : ''}</p>
       {job.error && <p className="operator-field-error">{job.error}</p>}
-      {job.status === 'deploying' && job.logs.some((log) => log.message.includes('部署状态暂不可查询')) &&
+      {(job.status === 'deploying' || job.status === 'unverified') && job.logs.some((log) => log.message.includes('部署状态暂不可查询')) &&
         <p className="operator-warnings">{[...job.logs].reverse().find((log) => log.message.includes('部署状态暂不可查询'))?.message}</p>}
       <div className="row">{job.status !== 'live' && <button type="button" className="btn btn--small" disabled={busy || readOnly} onClick={() => void run(job, 'check')}>检查上线状态</button>}
         {job.retryable && <button type="button" className="btn btn--small" disabled={busy || readOnly} onClick={() => void run(job, 'retry')}>从失败阶段重试</button>}

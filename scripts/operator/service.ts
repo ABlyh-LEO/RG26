@@ -8,6 +8,8 @@ import type {
   DraftEnvelope, FrozenPreview, OperatorState, PreflightResult, PublishJob,
   PublishRequest, SaveDraftRequest, SourceState,
 } from '../../src/operator/contracts';
+import { VERIFY_GRACE_MS } from '../../src/operator/contracts';
+import { pushedAtMs } from '../../src/operator/contracts';
 import { OperatorError, safeMessage } from './errors';
 import { DATA_FILES, fetchRemote, git, githubCoordinates, inspectGit, networkEnvironment } from './git';
 import { atomicJson, atomicText, optionalText, revision, summarizeChanges } from './storage';
@@ -141,8 +143,31 @@ export class OperatorService {
   private expectVersion(expected: number): void {
     if (expected !== this.stored.draft.version) throw new OperatorError('VERSION_CONFLICT', '草稿已被另一操作更新，请重新载入后重试。', 409, { currentVersion: this.stored.draft.version });
   }
+  /**
+   * 任务是否"已推送但等核验超时"。
+   *
+   * 这类任务**不再阻塞下一批发布**：部署失败时公开站点永远不会返回该版本，
+   * GitHub API 限流时又查不到结论（日志里的"部署状态暂不可查询"），
+   * 两者叠加会让任务永久停在 deploying，把发布锁死——录入的成绩就再也发不出去。
+   * 推送成功后 Git 工作区是干净的，因此在其之上继续提交/推送是安全的。
+   */
+  private isStaleVerification(job: PublishJob, now = Date.now()): boolean {
+    if (job.status !== 'deploying') return false;
+    const since = pushedAtMs(job);
+    return since !== null && now - since >= VERIFY_GRACE_MS;
+  }
+  /** 把等核验超时的任务落成终态 `unverified`（已推送、未核验），不再占用"进行中"。 */
+  private async retireStaleVerifications(): Promise<void> {
+    for (const job of this.jobs.filter((candidate) => this.isStaleVerification(candidate))) {
+      job.status = 'unverified';
+      job.retryable = false;
+      job.error = `已推送但未在 ${Math.round(VERIFY_GRACE_MS / 60_000)} 分钟内确认观众可见（常见原因是部署失败，或部署状态无法查询）。这不影响继续发布下一批；如需确认这一次，可点"检查上线状态"，或到 GitHub Actions 查看该提交的运行日志。`;
+      await this.log(job, '等核验超时：本任务不再阻塞下一批发布。');
+    }
+  }
   private assertIdle(): void {
-    if (this.jobs.some((job) => !['live', 'failed', 'committed'].includes(job.status))) throw new OperatorError('JOB_ACTIVE', '已有发布任务正在进行，请等待它完成或处理失败。', 409);
+    const active = this.jobs.find((job) => !['live', 'failed', 'unverified'].includes(job.status) && !this.isStaleVerification(job));
+    if (active) throw new OperatorError('JOB_ACTIVE', '已有发布任务正在进行，请等待它完成或处理失败。', 409);
     if (this.jobs.some((job) => job.status === 'committed' || (job.status === 'failed' && job.commit && job.retryable))) throw new OperatorError('PUSH_PENDING', '上次发布已提交但尚未推送，请先重试该任务。', 409);
   }
   async state(readOnly = false): Promise<OperatorState> {
@@ -213,6 +238,8 @@ export class OperatorService {
   }
   async publish(request: PublishRequest, push = true): Promise<PublishJob> {
     return this.serial(async () => {
+      // 先把"等核验超时"的历史任务落成终态，避免它继续挡住新发布。
+      await this.retireStaleVerifications();
       this.expectVersion(request.expectedVersion); this.assertIdle();
       const preview = this.stored.preview;
       if (!preview || preview.id !== request.previewId || preview.draftVersion !== request.expectedVersion) throw new OperatorError('PREVIEW_STALE', '预览已失效，请重新检查变更再发布。', 409);
@@ -314,6 +341,7 @@ export class OperatorService {
     await this.log(job, `网络方式：${network.source}。`);
     await git(this.root, ['push', 'origin', `${job.commit}:refs/heads/main`], { env: network.env, timeout: 60_000 });
     job.retryable = false;
+    job.pushedAt = this.now();
     await this.stage(job, 'deploying', '已推送，等待 Pages 部署；尚未确认观众可见。');
   }
   async retry(id: string): Promise<PublishJob> {
@@ -377,10 +405,13 @@ export class OperatorService {
       }
     }
     await this.persistJob(job);
+    // 等核验超过期限就落成终态，避免历史任务永远停在"已推送，等待部署"。
+    if (this.isStaleVerification(job)) await this.retireStaleVerifications();
     return structuredClone(job);
   }
   async checkPending(): Promise<void> {
     for (const job of this.jobs.filter((candidate) => candidate.status === 'deploying' || (candidate.status === 'failed' && candidate.phase === 'deploying'))) await this.checkLive(job.id);
+    await this.retireStaleVerifications();
   }
 }
 
