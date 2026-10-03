@@ -519,6 +519,13 @@ export interface DerivedEvent {
      * 原始成绩和名次表里的数字对上。无可用成绩的队伍不在表里。
      */
     bestByTeam: Map<string, 1 | 2>;
+    /**
+     * **按队伍 id** 索引的「最优成绩」标签（优先取该次的成绩文字）。
+     *
+     * 名次表必须用它取标签，**不要**用与名次同序的 `bestResultLabels[下标]`：
+     * 人工调整名次时那个数组可能与名次错位，会把别人的成绩文字挂到这一队上。
+     */
+    bestLabelByTeam: Map<string, string>;
   };
   /** 瑞士轮排名（全部比赛，等价于“截至最后已确认轮次”）。 */
   standings: Standings;
@@ -581,6 +588,8 @@ export function deriveEvent(event: EventFile): DerivedEvent {
   const venueLabels = new Map(event.venues.map((v) => [v.id, v.label]));
   // 战绩展示用队伍池：定榜前为"参考战绩"，不等于参赛名单。
   const teamIds = displayPoolTeamIds(event);
+  // 按队伍索引的最优一轮与标签；名次表与跑图记录表共用同一份派生结果。
+  const bestByTeam = computeQualificationByTeam(event);
 
   const standings = calculateSwissStandings(teamIds, event.swiss.matches, event.qualification.ranking);
 
@@ -610,7 +619,8 @@ export function deriveEvent(event: EventFile): DerivedEvent {
       overrideReason: official.overrideReason,
       review: official.review,
       live: liveQualificationRanking(event),
-      bestByTeam: computeBestRounds(event),
+      bestByTeam: bestByTeam.bestRound,
+      bestLabelByTeam: bestByTeam.bestLabel,
     },
     standings,
     finals,
@@ -626,18 +636,28 @@ export function deriveEvent(event: EventFile): DerivedEvent {
 }
 
 /**
- * 每队计入名次的那一轮。
+ * 每队的「最优一轮」与本轮标签。
  *
  * 复用 domain 层的纯函数，口径与维护工具、名次表**完全一致**
  * （积分高者优；同分时用时短者优），避免页面自己重算出现分歧。
+ *
+ * 返回的是**按队伍 id 索引**的映射，而不是与名次同序的数组：
+ * 名次可以人工调整，而"某队的最优成绩"永远只属于那一队。观众端据此展示
+ * 「最优成绩」，因此人工调名次不可能把别人的成绩文字挂到它头上。
  */
-function computeBestRounds(event: EventFile): Map<string, 1 | 2> {
-  const result = new Map<string, 1 | 2>();
+function computeQualificationByTeam(event: EventFile): {
+  bestRound: Map<string, 1 | 2>;
+  bestLabel: Map<string, string>;
+} {
+  const bestRound = new Map<string, 1 | 2>();
+  const bestLabel = new Map<string, string>();
   for (const standing of computeQualificationRanking(event).standings) {
     const best = standing.best;
-    if (best && !best.incomplete) result.set(standing.teamId, best.round);
+    if (!best) continue;
+    bestLabel.set(standing.teamId, best.label);
+    if (!best.incomplete) bestRound.set(standing.teamId, best.round);
   }
-  return result;
+  return { bestRound, bestLabel };
 }
 
 /* ------------------------------------------------------------------ *

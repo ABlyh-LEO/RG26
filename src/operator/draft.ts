@@ -690,6 +690,15 @@ export function applyQualificationRanking(
   }
 
   const now = new Date().toISOString();
+  /*
+   * 「最优成绩」标签必须与**这一份名次**逐位对应。
+   *
+   * 历史缺陷：这里只改 orderedTeamIds、沿用上一份 bestResultLabels，
+   * 于是先自动定榜再人工调名次时，标签（优先显示成绩文字）会挂到别的队伍上。
+   * 现在按"队伍 → 标签"重新取值，名次怎么排都不会错位。
+   */
+  const derived = computeQualificationRanking(event);
+  const labelByTeam = new Map(derived.standings.map((s) => [s.teamId, s.best?.label ?? '—']));
   return {
     event: {
       ...event,
@@ -698,6 +707,7 @@ export function applyQualificationRanking(
         ranking: {
           ...event.qualification.ranking,
           orderedTeamIds,
+          bestResultLabels: orderedTeamIds.map((id) => labelByTeam.get(id) ?? '—'),
           status: 'confirmed',
           confirmedAt: now,
           sourceNote,

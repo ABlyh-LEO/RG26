@@ -7,6 +7,7 @@
 import type { EventFile, SwissMatch } from './schema';
 import { EXPECTED_MATCH_COUNTS, ROUND_GROUP_ORDER } from './swiss';
 import { assessQualificationCompleteness } from './qualification-completeness';
+import { computeQualificationRanking } from './qualification-ranking';
 import { FINALS_NODES, validateFinalsGraph } from './finals';
 import { toApproxNumber } from './rational';
 
@@ -321,6 +322,30 @@ export function validateEvent(event: EventFile): ValidationResult {
           `最优成绩标签数量 ${ranking.bestResultLabels.length} 与排名队数 ${ordered.length} 不一致`,
         ),
       );
+    }
+    /*
+     * 标签与名次必须**逐位对应**。
+     *
+     * 只查长度是不够的：人工调整名次时若沿用上一份标签，长度不变但内容错位，
+     * 观众会看到"别人的成绩文字"。这里按队伍重新算一遍最优成绩标签做比对。
+     * 观众端已改为按队伍 id 取标签（不会再错位），因此这里只是**提示**，
+     * 用于发现历史数据或人工编辑留下的残留。
+     */
+    if (ranking.bestResultLabels && ranking.bestResultLabels.length === ordered.length) {
+      const expected = new Map(computeQualificationRanking(event).standings.map((s) => [s.teamId, s.best?.label ?? '—']));
+      const mismatched = ordered.filter((teamId, index) => (expected.get(teamId) ?? '—') !== ranking.bestResultLabels![index]);
+      if (mismatched.length > 0) {
+        warnings.push(
+          warn(
+            'qualification-ranking',
+            null,
+            'bestResultLabels',
+            'stale-best-result-labels',
+            `最优成绩标签与当前成绩不一致（${mismatched.length} 条）：多为人工作废名次后留下的旧标签。` +
+              '观众端按队伍重新取标签，不受影响；如需一致，请重新定榜。',
+          ),
+        );
+      }
     }
     // 名次只有在成绩完整时才谈得上"确定"。不完整却已确认的排名，
     // 必须有人为来源说明（裁判组核分表 / 组委会决定）才能发布——

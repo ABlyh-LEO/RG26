@@ -99,3 +99,50 @@ test('定榜后回到「正式排名 + 晋级状态」', async ({ page }) => {
   await expect(ranking).toContainText('优秀奖');
   await expect(ranking).not.toContainText('实时 · 成绩不完整');
 });
+
+test('人工调名次后，「最优成绩」列仍是各队自己的成绩（不会串到别的队伍）', async ({ page }) => {
+  /*
+   * 标签优先显示成绩文字（`labelOf` 先取 rawResult），与名次同序存储时一旦错位，
+   * 观众看到的就是别人的成绩文字。这里把名次整体反转、并把存量标签数组也故意错位，
+   * 断言页面逐行显示的是**该行队伍自己**的成绩。
+   */
+  const snapshot = audienceSnapshot('swiss');
+  const event = snapshot.data;
+  /*
+   * 夹具里 22 条标签原本都是同一个「测试成绩」，无法区分错位，
+   * 因此先让每队的最优成绩标签互不相同（标签优先取成绩文字 rawResult）。
+   */
+  for (const run of event.qualification.runs) {
+    if (run.resultStatus === 'confirmed') run.rawResult = `成绩-${run.teamId}-终`;
+  }
+  // 末尾的终止符避免 id 前缀冲突（competitive-1 是 competitive-18 的前缀）
+  const ownLabel = (teamId: string) => `成绩-${teamId}-终`;
+  const originalOrder = [...event.qualification.ranking.orderedTeamIds];
+  /*
+   * 真实场景的形态：**只改名次，标签留在上一份名次的顺序**。
+   * 这里必须"只动一半"——若把名次与标签同时反转，错位的数组会歪打正着，
+   * 测试就抓不到"按下标取标签"的写法了。
+   */
+  event.qualification.ranking.bestResultLabels = originalOrder.map(ownLabel);
+  event.qualification.ranking.orderedTeamIds = [...originalOrder].reverse();
+
+  await page.clock.setFixedTime(EVENT_START);
+  await page.route('**/data/event.json', (route) => route.fulfill({ json: snapshot }));
+  await page.goto('./#/progress');
+  await waitForData(page);
+  await page.getByRole('button', { name: '排位赛', exact: true }).click();
+
+  const ranking = page.locator('.card').filter({ has: page.locator('.card__title', { hasText: '正式排名' }) });
+  const rows = ranking.locator('tbody tr');
+  await expect(rows).toHaveCount(originalOrder.length);
+  for (const [index, teamId] of event.qualification.ranking.orderedTeamIds.entries()) {
+    const teamName = event.teams.find((team) => team.id === teamId)!.name;
+    const row = rows.nth(index);
+    await expect(row, `第 ${index + 1} 行（${teamName}）应显示自己的成绩`).toContainText(ownLabel(teamId));
+    // 该位置原来的队伍成绩绝不能出现在这一行
+    const staleId = originalOrder[index]!;
+    if (staleId !== teamId) {
+      await expect(row, `第 ${index + 1} 行不应显示 ${ownLabel(staleId)}`).not.toContainText(ownLabel(staleId));
+    }
+  }
+});

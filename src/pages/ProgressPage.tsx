@@ -236,7 +236,12 @@ function QualificationView() {
                     const marks = [tiedBothIds.has(teamId) ? '并列' : null, partialIds.has(teamId) ? '仅一轮' : null]
                       .filter(Boolean)
                       .join(' · ');
-                    const label = `${qualification.bestResultLabels?.[index] ?? '—'}${marks ? `（${marks}）` : ''}`;
+                    /*
+                     * 标签按**队伍 id** 取，不用 `bestResultLabels[下标]`：
+                     * 人工调整名次后那个数组可能与名次错位，会把别人的成绩文字挂上来。
+                     */
+                    const bestLabel = qualification.bestLabelByTeam.get(teamId) ?? '—';
+                    const label = `${bestLabel}${marks ? `（${marks}）` : ''}`;
                     const advanced = index < 16;
                     return (
                       <tr key={teamId}>

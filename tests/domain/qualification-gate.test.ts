@@ -16,6 +16,8 @@ import { buildSeedEvent } from '../../scripts/seed-data';
 import { eventFileSchema, type EventFile } from '../../src/domain/schema';
 import { validateEvent } from '../../src/domain/validation';
 import { liveQualificationRanking } from '../../src/domain/qualification-ranking';
+import { computeQualificationRanking } from '../../src/domain/qualification-ranking';
+import { deriveEvent } from '../../src/data/view-model';
 import {
   assessQualificationCompleteness,
   officialQualificationRanking,
@@ -278,5 +280,64 @@ describe('定榜留下可审计的复核记录', () => {
     expect(parsed.qualification.ranking.overrideReason).toBeNull();
     expect(parsed.qualification.ranking.missingTeamIds).toBeNull();
     expect(parsed.qualification.ranking.reviewNote).toBeNull();
+  });
+});
+
+/**
+ * 「最优成绩」标签的对齐（用户提问：人工调整名次后，成绩文字会不会挂到别的队伍上）。
+ *
+ * 标签优先显示**成绩文字**（`labelOf` 先取 `rawResult`），所以一旦与名次错位，
+ * 观众看到的就是"别人的成绩文字"。历史缺陷：人工覆盖只改 orderedTeamIds、
+ * 沿用上一份 bestResultLabels，长度不变因此连校验也发现不了。
+ */
+describe('人工调整名次后的标签对齐', () => {
+  it('人工调名次会按新名次重算标签：每一行都是该队自己的成绩', () => {
+    const auto = confirmQualificationRanking(playEveryone(BASE));
+    expect(auto.ok, auto.messages.join('；')).toBe(true);
+    const autoOrder = auto.event.qualification.ranking.orderedTeamIds;
+    const autoLabels = auto.event.qualification.ranking.bestResultLabels!;
+    expect(autoLabels).toHaveLength(COMPETITIVE.length);
+
+    // 整体反转名次：若沿用旧标签数组，错位会非常明显
+    const reversed = [...autoOrder].reverse();
+    const manual = applyQualificationRanking(auto.event, reversed, '裁判组核分表');
+    expect(manual.ok, manual.messages.join('；')).toBe(true);
+    expect(manual.event.qualification.ranking.orderedTeamIds).toEqual(reversed);
+
+    const labels = manual.event.qualification.ranking.bestResultLabels!;
+    const expected = new Map(
+      computeQualificationRanking(manual.event).standings.map((s) => [s.teamId, s.best?.label ?? '—']),
+    );
+    reversed.forEach((teamId, index) => {
+      expect(labels[index], `${teamId} 第 ${index + 1} 名的标签`).toBe(expected.get(teamId));
+    });
+    // 标签确实随名次重排（否则这条断言毫无意义）
+    expect(labels).not.toEqual(autoLabels);
+    expect(validateEvent(manual.event).errors).toEqual([]);
+  });
+
+  it('观众端按队伍 id 取标签：存量数组已错位也不会显示别人的成绩文字', () => {
+    const ranked = confirmQualificationRanking(playEveryone(BASE)).event;
+    const order = ranked.qualification.ranking.orderedTeamIds;
+    const labels = ranked.qualification.ranking.bestResultLabels!;
+
+    // 人为制造"长度不变但整体错位"的存量数据（旧校验只看长度，抓不到）
+    const broken: EventFile = {
+      ...ranked,
+      qualification: {
+        ...ranked.qualification,
+        ranking: { ...ranked.qualification.ranking, bestResultLabels: [...labels].reverse() },
+      },
+    };
+
+    const derived = deriveEvent(broken);
+    order.forEach((teamId, index) => {
+      expect(derived.qualification.bestLabelByTeam.get(teamId), `${teamId} 的标签`).toBe(labels[index]);
+    });
+
+    // 校验把它作为**提示**报出来（不阻断发布），便于发现历史残留
+    const report = validateEvent(broken);
+    expect(report.errors).toEqual([]);
+    expect(report.warnings.map((warning) => warning.code)).toContain('stale-best-result-labels');
   });
 });
