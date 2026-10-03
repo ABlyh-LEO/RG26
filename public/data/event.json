@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "9b8bb1877dc21a32017e00a4d7096601",
-  "builtAt": "2026-10-03T02:28:11.585Z",
-  "sourceCommit": "49d4ae87ef6ccabfb290c31de1208d8d77d34703",
+  "revision": "bced376a851ac6d46bfe39aee3ff0db3",
+  "builtAt": "2026-10-03T02:33:54.476Z",
+  "sourceCommit": "5b37daabd42940219e9ac7391f94c327a42d6bcf",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T02:27:18.037Z",
+      "contentUpdatedAt": "2026-10-03T02:33:02.479Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -602,7 +602,7 @@
         "venueId": "venue-a",
         "referenceId": "qual-r1-rank17",
         "title": "排位赛第 1 轮 · 三审第 17 名 少微摸个鱼队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -617,7 +617,7 @@
         "venueId": "venue-b",
         "referenceId": "qual-r1-rank18",
         "title": "排位赛第 1 轮 · 三审第 18 名 超时空辉月机队",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -2114,13 +2114,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank17",
           "venueId": "venue-a",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T02:32:39.264Z"
         },
         {
           "id": "qual-r1-rank18",
@@ -2128,13 +2128,13 @@
           "round": 1,
           "scheduleItemId": "sched-qual-r1-rank18",
           "venueId": "venue-b",
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "rawResult": null,
-          "score": null,
-          "elapsedSeconds": null,
-          "resultStatus": "none",
+          "score": "0",
+          "elapsedSeconds": "360",
+          "resultStatus": "confirmed",
           "judgeNote": null,
-          "confirmedAt": null
+          "confirmedAt": "2026-10-03T02:33:02.479Z"
         },
         {
           "id": "qual-r1-rank19",
