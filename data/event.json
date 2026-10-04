@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T07:29:38.080Z",
+    "contentUpdatedAt": "2026-10-04T07:52:09.360Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1737,7 +1737,7 @@
       "venueId": "venue-main",
       "referenceId": "F-L2A",
       "title": "败者组第二轮 A",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -5026,25 +5026,28 @@
             "seriesId": "F-L1B"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-1",
+          "competitive-4"
+        ],
         "games": [
           {
             "id": "F-L2A-g1",
             "index": 1,
-            "homeTeamId": null,
-            "awayTeamId": null,
-            "homeScore": null,
-            "awayScore": null,
-            "homeReachedSeconds": null,
-            "awayReachedSeconds": null,
-            "winnerId": null,
+            "homeTeamId": "competitive-1",
+            "awayTeamId": "competitive-4",
+            "homeScore": "8",
+            "awayScore": "16",
+            "homeReachedSeconds": "220",
+            "awayReachedSeconds": "305",
+            "winnerId": "competitive-4",
             "resultKind": "normal",
-            "resultStatus": "none",
-            "confirmedAt": null,
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T07:52:09.360Z",
             "note": null
           }
         ],
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-F-L2A",
         "showcaseTeamId": null,
         "note": null
