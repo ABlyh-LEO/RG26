@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T03:02:30.490Z",
+    "contentUpdatedAt": "2026-10-04T03:22:40.788Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1617,7 +1617,7 @@
       "venueId": "venue-main",
       "referenceId": "F-M1",
       "title": "八强双败首轮 · 第 1 名对第 5 名",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -4698,25 +4698,28 @@
             "seed": "L1"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-5",
+          "competitive-21"
+        ],
         "games": [
           {
             "id": "F-M1-g1",
             "index": 1,
-            "homeTeamId": null,
-            "awayTeamId": null,
+            "homeTeamId": "competitive-5",
+            "awayTeamId": "competitive-21",
             "homeScore": null,
             "awayScore": null,
             "homeReachedSeconds": null,
             "awayReachedSeconds": null,
-            "winnerId": null,
-            "resultKind": "normal",
-            "resultStatus": "none",
-            "confirmedAt": null,
+            "winnerId": "competitive-5",
+            "resultKind": "walkover-before-start",
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T03:22:40.788Z",
             "note": null
           }
         ],
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-F-M1",
         "showcaseTeamId": null,
         "note": null
