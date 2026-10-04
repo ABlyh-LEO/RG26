@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "a71cd07b45c77cd37acdf5f9e40b4820",
-  "builtAt": "2026-10-04T05:02:31.597Z",
-  "sourceCommit": "c3a7aa10fb1a41d4e434e5b0afa1f3c8ccef5116",
+  "revision": "d3bb4966324e47e1ddab66cd437b8d76",
+  "builtAt": "2026-10-04T06:39:43.987Z",
+  "sourceCommit": "133fff19d71336ed1001a111ca06b962bd2677ae",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T05:02:26.767Z",
+      "contentUpdatedAt": "2026-10-04T06:39:39.547Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1682,7 +1682,7 @@
         "venueId": "venue-main",
         "referenceId": "F-L1A",
         "title": "八强败者组首轮 A",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -4867,25 +4867,28 @@
               "seriesId": "F-M4"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-21",
+            "competitive-3"
+          ],
           "games": [
             {
               "id": "F-L1A-g1",
               "index": 1,
-              "homeTeamId": null,
-              "awayTeamId": null,
-              "homeScore": null,
-              "awayScore": null,
-              "homeReachedSeconds": null,
-              "awayReachedSeconds": null,
-              "winnerId": null,
+              "homeTeamId": "competitive-21",
+              "awayTeamId": "competitive-3",
+              "homeScore": "10.5",
+              "awayScore": "4",
+              "homeReachedSeconds": "240",
+              "awayReachedSeconds": "97",
+              "winnerId": "competitive-21",
               "resultKind": "normal",
-              "resultStatus": "none",
-              "confirmedAt": null,
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T06:39:39.547Z",
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-F-L1A",
           "showcaseTeamId": null,
           "note": null
