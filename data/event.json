@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T07:59:37.711Z",
+    "contentUpdatedAt": "2026-10-04T08:24:21.332Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1767,7 +1767,7 @@
       "venueId": "venue-main",
       "referenceId": "F-WSF",
       "title": "半决赛胜者组",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -5108,25 +5108,28 @@
             "seriesId": "F-W1B"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-5",
+          "competitive-18"
+        ],
         "games": [
           {
             "id": "F-WSF-g1",
             "index": 1,
-            "homeTeamId": null,
-            "awayTeamId": null,
-            "homeScore": null,
-            "awayScore": null,
-            "homeReachedSeconds": null,
-            "awayReachedSeconds": null,
-            "winnerId": null,
+            "homeTeamId": "competitive-5",
+            "awayTeamId": "competitive-18",
+            "homeScore": "4",
+            "awayScore": "17",
+            "homeReachedSeconds": "63",
+            "awayReachedSeconds": "209",
+            "winnerId": "competitive-18",
             "resultKind": "normal",
-            "resultStatus": "none",
-            "confirmedAt": null,
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T08:24:21.332Z",
             "note": null
           }
         ],
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-F-WSF",
         "showcaseTeamId": null,
         "note": null
