@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "8fa468c626ec3f322a61d38235269756",
-  "builtAt": "2026-10-04T09:34:01.302Z",
-  "sourceCommit": "104b48c6b3d4832791e11c44012c00d33f39ce17",
+  "revision": "581d239285fee8ba3cd8a31843678b1c",
+  "builtAt": "2026-10-04T10:10:45.956Z",
+  "sourceCommit": "24c94e5af03124747480a509cb3f6be33f73ba65",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T09:33:57.383Z",
+      "contentUpdatedAt": "2026-10-04T09:48:46.004Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -347,7 +347,7 @@
         "venueId": "venue-main",
         "referenceId": null,
         "title": "展示组抽签（主席台前，决定决赛上台次序）",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1832,7 +1832,7 @@
         "venueId": "venue-main",
         "referenceId": "showcase-final-1",
         "title": "展示组正式演出（抽签第 1 队）",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1847,7 +1847,7 @@
         "venueId": "venue-main",
         "referenceId": "showcase-final-2",
         "title": "展示组正式演出（抽签第 2 队）",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1862,7 +1862,7 @@
         "venueId": "venue-main",
         "referenceId": "showcase-final-3",
         "title": "展示组正式演出（抽签第 3 队）",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -5361,7 +5361,7 @@
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-showcase-final-1",
           "showcaseTeamId": "showcase-2",
           "note": null
@@ -5405,7 +5405,7 @@
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-showcase-final-2",
           "showcaseTeamId": "showcase-1",
           "note": null
@@ -5449,7 +5449,7 @@
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-showcase-final-3",
           "showcaseTeamId": "showcase-3",
           "note": null

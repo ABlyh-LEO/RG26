@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import type { EventFile, SwissMatch } from '../domain/schema';
+import type { EventFile, ExecutionStatus, ScheduleItem, SwissMatch } from '../domain/schema';
 import { formatTime } from '../data/view-model';
+import { StatusBadge } from '../components/ui';
 import { computeQualificationRanking } from '../domain/qualification-ranking';
 import { assessQualificationCompleteness } from '../domain/qualification-completeness';
 import { useFormField } from './FormDraftContext';
 import { RoundPairingPanel } from './PairingPanel';
 import { addNotice, adjustSchedule, applyQualificationRanking, confirmQualificationRanking,
-  applyShowcaseDraw, confirmRound, generateNextRound, publishFinalsSeeding,
+  applyShowcaseDraw, updateShowcaseStatus, confirmRound, generateNextRound, publishFinalsSeeding,
   type ApplyResult, type PairingOutcome } from './draft';
 
 type PanelResult = ApplyResult & { clearFormKeys?: string[] };
@@ -378,7 +379,7 @@ export function SeedsEntry({
 }
 
 /* ------------------------------------------------------------------ *
- * 展示组抽签
+ * 展示组抽签与演出状态
  * ------------------------------------------------------------------ */
 
 export function ShowcaseEntry({
@@ -394,6 +395,12 @@ export function ShowcaseEntry({
       ? draft.showcase.drawOrder
       : showcase.map((t) => t.id),
   );
+  const performances = draft.scheduleItems.filter((item) => item.stage === 'showcase' && item.kind === 'match');
+  const preparations = draft.scheduleItems.filter((item) => item.stage === 'showcase' && item.kind === 'activity' && item.id !== 'sched-showcase-draw');
+  const completed = draft.finals.series.filter((series) => series.stage === 'showcase' && series.executionStatus === 'finished').length;
+  const drawItem = draft.scheduleItems.find((item) => item.id === 'sched-showcase-draw');
+  const drawLocked = draft.finals.series.some((series) => series.stage === 'showcase' && ['running', 'finished'].includes(series.executionStatus));
+  const displayedOrder = drawLocked ? draft.showcase.drawOrder ?? order : order;
 
   const move = (index: number, delta: number) => {
     const next = [...order];
@@ -408,6 +415,20 @@ export function ShowcaseEntry({
   };
 
   return (
+    <div className="stack">
+      <section className="card operator-draft" aria-label="正式演出状态">
+        <div className="card__head"><h3 className="card__title">正式演出状态</h3><span className="badge badge--info">已完成 {completed}/{performances.length}</span></div>
+        <p className="small muted">演出队伍以已登记的抽签结果为准。按现场情况登记状态，完成后赛程和队伍页面会同步显示演出已完成；保存后请在发布记录中发布。</p>
+        <div className="stack">
+          {performances.map((item) => <ShowcaseStatusEntry key={item.id} item={item} draft={draft} onApply={onApply} />)}
+        </div>
+      </section>
+      <details className="card operator-draft">
+        <summary>资料对接与预演状态</summary>
+        <div className="stack" style={{ marginTop: 'var(--sp-3)' }}>
+          {preparations.map((item) => <ShowcaseStatusEntry key={item.id} item={item} draft={draft} onApply={onApply} />)}
+        </div>
+      </details>
     <div className="card operator-draft">
       <div className="card__head">
         <span className="card__title">展示组抽签顺序</span>
@@ -415,13 +436,14 @@ export function ShowcaseEntry({
       </div>
 
       <p className="small muted">
-        10 月 3 日 12:00 抽签决定决赛上台次序。抽签前页面不会推测演出顺序。
+        {drawItem ? `${drawItem.date.replaceAll('-', '/')} ${formatTime(drawItem.revisedStart ?? drawItem.plannedStart)}` : '现场'}抽签决定决赛上台次序。抽签前页面不会推测演出顺序。
         请按抽签结果从上到下排列（第 1 位最先上台）。
       </p>
+      {drawLocked ? <p className="small muted">演出已开始或完成，已登记的上台队伍保持不变。</p> : null}
 
-      <div className="stack stack--tight" style={{ marginBottom: 'var(--sp-3)' }}>
-        {order.map((teamId, i) => (
-          <div key={teamId} className="row" style={{ justifyContent: 'space-between' }}>
+      <div className="stack stack--tight" role="list" aria-label="抽签上台顺序" style={{ marginBottom: 'var(--sp-3)' }}>
+        {displayedOrder.map((teamId, i) => (
+          <div key={teamId} role="listitem" className="row" style={{ justifyContent: 'space-between' }}>
             <span className="row" style={{ gap: 'var(--sp-2)' }}>
               <strong className="tabular small" style={{ width: '3.5em' }}>
                 第 {i + 1} 队
@@ -429,10 +451,10 @@ export function ShowcaseEntry({
               <span className="small">{draft.teams.find((t) => t.id === teamId)?.name ?? teamId}</span>
             </span>
             <span className="row" style={{ gap: 'var(--sp-1)' }}>
-              <button type="button" className="btn btn--small" onClick={() => move(i, -1)} aria-label="上移">
+              <button type="button" className="btn btn--small" disabled={drawLocked || i === 0} onClick={() => move(i, -1)} aria-label="上移">
                 ↑
               </button>
-              <button type="button" className="btn btn--small" onClick={() => move(i, 1)} aria-label="下移">
+              <button type="button" className="btn btn--small" disabled={drawLocked || i === order.length - 1} onClick={() => move(i, 1)} aria-label="下移">
                 ↓
               </button>
             </span>
@@ -440,11 +462,46 @@ export function ShowcaseEntry({
         ))}
       </div>
 
-      <button type="button" className="btn btn--primary" onClick={() => onApply({ ...applyShowcaseDraw(draft, order), clearFormKeys: ['planning.showcase'] })}>
+      <button type="button" className="btn btn--primary" disabled={drawLocked} onClick={() => onApply({ ...applyShowcaseDraw(draft, order), clearFormKeys: ['planning.showcase'] })}>
         登记抽签顺序
       </button>
     </div>
+    </div>
   );
+}
+
+function ShowcaseStatusEntry({ draft, item, onApply }: {
+  draft: EventFile;
+  item: ScheduleItem;
+  onApply: (result: PanelResult) => void;
+}) {
+  const series = draft.finals.series.find((entry) => entry.stage === 'showcase' && entry.scheduleItemId === item.id);
+  const performer = draft.teams.find((team) => team.id === series?.showcaseTeamId);
+  const current = series?.executionStatus ?? item.executionStatus;
+  const formKey = `planning.showcase.status.${item.id}`;
+  const [status, setStatus] = useFormField<ExecutionStatus>(formKey, 'status', current);
+  const label = series ? performer?.name ?? item.title : item.title;
+  const save = (value: ExecutionStatus) => onApply({
+    ...updateShowcaseStatus(draft, item.id, value),
+    clearFormKeys: [formKey, ...(series && ['running', 'finished'].includes(value) ? ['planning.showcase'] : [])],
+  });
+  const statuses: Array<[ExecutionStatus, string]> = [
+    ['scheduled', '未开始'], ['ready', '已就绪'], ['running', series ? '演出进行中' : '进行中'],
+    ['finished', series ? '演出已完成' : '已完成'], ['delayed', '已延期'], ['cancelled', '已取消'], ['not-needed', '无需进行'],
+  ];
+  return <article className="card stack stack--tight" data-showcase-schedule-id={item.id}>
+    <div className="row" style={{ justifyContent: 'space-between' }}><strong>{label}</strong><StatusBadge status={current} /></div>
+    <p className="xsmall muted">{series ? `${item.title} · ` : ''}{item.date} {formatTime(item.revisedStart ?? item.plannedStart)}</p>
+    {series && !performer ? <p className="small muted">先登记抽签结果，再确认演出开始或完成。</p> : null}
+    <div className="row">
+      <label htmlFor={`showcase-status-${item.id}`} className="small">{series ? '演出状态' : '活动状态'}</label>
+      <select id={`showcase-status-${item.id}`} className="select" aria-label={`${label}状态`} value={status} onChange={(event) => setStatus(event.target.value as ExecutionStatus)}>
+        {statuses.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+      </select>
+      <button type="button" className="btn btn--small" onClick={() => save(status)} disabled={status === current}>保存状态</button>
+      {series ? <button type="button" className="btn btn--primary btn--small" disabled={!performer || current === 'finished'} onClick={() => save('finished')}>标记演出完成</button> : null}
+    </div>
+  </article>;
 }
 
 /* ------------------------------------------------------------------ *

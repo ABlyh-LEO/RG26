@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { ScheduleItem, Team } from '../domain/schema';
 import type { Side } from '../domain/sides';
 import { effectiveStart, formatDate, formatTime, todayInEventTz, type MatchView } from '../data/view-model';
+import { AWARD_LABELS, type AwardKind } from '../data/award-labels';
 import { Icon } from './Icon';
 
 export function SideBadge({ side }: { side: Side }) {
@@ -21,6 +22,10 @@ export function TeamNumberBadge({ team }: { team: Team }) {
 
 export function NameReviewBadge({ team }: { team: Team }) {
   return team.nameVerified ? null : <span className="badge badge--pending" title={team.nameNote ?? '队名待核对'}>队名待核对</span>;
+}
+
+export function AwardBadge({ award }: { award: AwardKind }) {
+  return <span className={`badge badge--award-${award}`} data-award={award}>{AWARD_LABELS[award]}</span>;
 }
 
 export function StatusBadge({ status }: { status: MatchView['executionStatus'] }) {

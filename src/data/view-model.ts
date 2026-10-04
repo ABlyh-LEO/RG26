@@ -8,6 +8,7 @@
  */
 import type {
   EventFile,
+  ExecutionStatus,
   QualificationRun,
   FinalsSeed,
   ScheduleItem,
@@ -458,7 +459,7 @@ export function toSeriesView(
     venueLabel: schedule?.venueId ? (venueLabels.get(schedule.venueId) ?? null) : null,
     format: series.format,
     // 已确认的小局已经决出系列赛时，以实际赛果结束展示，兼容旧数据残留的 running。
-    executionStatus: res?.decided ? 'finished' : series.executionStatus,
+    executionStatus: series.stage !== 'showcase' && res?.decided ? 'finished' : series.executionStatus,
     resultStatus,
     sides,
     /*
@@ -703,7 +704,7 @@ export function deriveNowPlaying(derived: DerivedEvent, now: Date): NowPlaying {
     (v) =>
       Date.parse(effectiveStart(v.schedule!)) <= t &&
       (v.executionStatus === 'scheduled' || v.executionStatus === 'ready') &&
-      v.resultStatus === 'none',
+      (v.stage === 'showcase' || v.resultStatus === 'none'),
   );
 
   const upcoming = withTime.filter((v) => Date.parse(effectiveStart(v.schedule!)) > t && ['scheduled', 'ready', 'delayed'].includes(v.executionStatus));
@@ -737,7 +738,8 @@ export interface TeamJourney {
   /** 该队的排位赛跑图。 */
   qualificationRuns: EventFile['qualification']['runs'];
   /** 当前状态文案。 */
-  status: 'qualification' | 'swiss-active' | 'advanced' | 'eliminated' | 'champion' | 'unknown';
+  status: 'qualification' | 'swiss-active' | 'advanced' | 'eliminated' | 'champion' | 'unknown' |
+    'showcase-unassigned' | `showcase-${ExecutionStatus}`;
   statusLabel: string;
   /** 下一场比赛。 */
   nextMatch: MatchView | null;
@@ -782,7 +784,7 @@ export function deriveTeamJourney(derived: DerivedEvent, teamId: string, now: Da
     .filter((run) => run.teamId === teamId)
     .map((run) => toQualificationRunView(run, event, teamMap, venueLabels));
   const candidates = [...qualificationMatches, ...swissMatches, ...finalsMatches]
-    .filter((m) => m.schedule !== null && !['cancelled', 'finished', 'not-needed'].includes(m.executionStatus) && (m.resultStatus !== 'confirmed' || m.executionStatus === 'running' || m.format === 'BO3'))
+    .filter((m) => m.schedule !== null && !['cancelled', 'finished', 'not-needed'].includes(m.executionStatus) && (m.stage === 'showcase' || m.resultStatus !== 'confirmed' || m.executionStatus === 'running' || m.format === 'BO3'))
     .sort((a, b) => Date.parse(effectiveStart(a.schedule!)) - Date.parse(effectiveStart(b.schedule!)));
   const nextMatch = candidates.find((m) => m.executionStatus === 'running') ?? candidates.find((m) => Date.parse(effectiveStart(m.schedule!)) >= t - 60 * 60 * 1000) ?? candidates[0] ?? null;
 
@@ -809,7 +811,16 @@ function teamStatus(
   isInFinals: boolean,
 ): { status: TeamJourney['status']; statusLabel: string } {
   if (team.division === 'showcase') {
-    return { status: 'qualification', statusLabel: '展示组' };
+    const performance = derived.event.finals.series.find((series) => series.stage === 'showcase' && series.showcaseTeamId === teamId);
+    if (!performance) {
+      return { status: 'showcase-unassigned', statusLabel: derived.event.showcase.drawOrder ? '演出安排待公布' : '等待抽签' };
+    }
+    // 演出没有胜负。完成状态来自现场登记，不由比赛小局或计划时间推断。
+    const labels: Record<ExecutionStatus, string> = {
+      scheduled: '等待演出', ready: '演出准备中', running: '演出进行中', finished: '演出已完成',
+      delayed: '演出延迟', cancelled: '演出已取消', 'not-needed': '无需演出',
+    };
+    return { status: `showcase-${performance.executionStatus}`, statusLabel: labels[performance.executionStatus] };
   }
 
   if (derived.awards.champion === teamId) return { status: 'champion', statusLabel: '冠军' };

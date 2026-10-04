@@ -16,7 +16,8 @@ import {
   effectiveStart,
 } from '../data/view-model';
 import { toSeriesView } from '../data/view-model';
-import { EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
+import { AwardBadge, EmptyState, MatchCard, PublicationBadge, TeamName } from '../components/ui';
+import { AWARD_LABELS, awardForTeam, type AwardKind } from '../data/award-labels';
 import type { BracketNodeContent } from '../components/BracketChart';
 import { FinalsBracket } from '../components/FinalsBracket';
 import { SwissProgress } from '../components/SwissProgress';
@@ -241,6 +242,7 @@ function QualificationView() {
                     const bestLabel = qualification.bestLabelByTeam.get(teamId) ?? '—';
                     const label = `${bestLabel}${marks ? `（${marks}）` : ''}`;
                     const advanced = index < 16;
+                    const award = !advanced && team ? awardForTeam(derived.awards, team) : null;
                     return (
                       <tr key={teamId}>
                         <td className="num tabular">{index + 1}</td>
@@ -250,9 +252,9 @@ function QualificationView() {
                         <td className="num tabular">{team?.number ?? '—'}</td>
                         <td className="tabular">{label}</td>
                         <td>
-                          <span className={`badge ${advanced ? 'badge--advanced' : 'badge--eliminated'}`}>
+                          {award ? <AwardBadge award={award} /> : <span className={`badge ${advanced ? 'badge--advanced' : 'badge--eliminated'}`}>
                             {advanced ? '晋级十六强' : '优秀奖'}
-                          </span>
+                          </span>}
                         </td>
                       </tr>
                     );
@@ -575,9 +577,10 @@ function FinalsView() {
             <span className="card__title">名次结算</span>
           </div>
           <div className="stack stack--tight">
-            <AwardRow label="冠军" teamId={awards.champion} />
-            <AwardRow label="亚军" teamId={awards.runnerUp} />
-            <AwardRow label="季军" teamId={awards.third} />
+            <AwardRow award="champion" />
+            <AwardRow award="runnerUp" />
+            <AwardRow award="third" />
+            {(['topFour', 'topEight', 'topSixteen', 'honorableMention'] as const).map((award) => awards[award].length > 0 ? <AwardRow key={award} award={award} /> : null)}
           </div>
           <p className="xsmall muted" style={{ marginTop: 'var(--sp-2)' }}>
             八强败者组首轮与第二轮败者结算八强；半决赛败者组败者结算四强。
@@ -603,14 +606,16 @@ function FinalsRoundTabs({ selected, onSelect }: { selected: string | null | und
   </div>;
 }
 
-function AwardRow({ label, teamId }: { label: string; teamId: string | null }) {
+function AwardRow({ award }: { award: AwardKind }) {
   const { derived } = useData();
   if (!derived) return null;
+  const members = derived.awards[award];
+  const teamIds = Array.isArray(members) ? members : members ? [members] : [];
   return (
     <div className="row" style={{ justifyContent: 'space-between' }}>
-      <span className="small muted">{label}</span>
-      {teamId ? (
-        <TeamName team={derived.teamMap.get(teamId)?.team ?? null} fallback={teamId} />
+      {teamIds.length > 0 ? <AwardBadge award={award} /> : <span className="small muted">{AWARD_LABELS[award]}</span>}
+      {teamIds.length > 0 ? (
+        <div className="award-group__teams">{teamIds.map((teamId) => <TeamName key={teamId} team={derived.teamMap.get(teamId)?.team ?? null} fallback={teamId} />)}</div>
       ) : (
         <span className="small muted">待产生</span>
       )}

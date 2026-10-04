@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useData } from '../data/DataProvider';
 import { useEventClock } from '../data/clock';
 import { deriveCounts, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, effectiveStart, formatDate, formatTime, toQualificationRunView, toSeriesView, toSwissMatchView, todayInEventTz } from '../data/view-model';
-import { EmptyState, MatchCard, Section, TeamName, useFollowing } from '../components/ui';
+import { AWARD_LABELS, awardForTeam } from '../data/award-labels';
+import { AwardBadge, EmptyState, MatchCard, Section, TeamName, useFollowing } from '../components/ui';
 import { Icon } from '../components/Icon';
 
 export function OverviewPage() {
@@ -24,7 +25,7 @@ export function OverviewPage() {
     ...event.qualification.runs.map((run) => toQualificationRunView(run, event, teamMap, venueLabels)),
     ...event.swiss.matches.map((match) => toSwissMatchView(match, event, teamMap, venueLabels)),
     ...event.finals.series.map((series) => toSeriesView(series, event, teamMap, venueLabels, finals)),
-  ].filter((match) => match.resultStatus === 'confirmed').sort((a, b) => Date.parse(b.schedule ? effectiveStart(b.schedule) : '') - Date.parse(a.schedule ? effectiveStart(a.schedule) : '')).slice(0, 4);
+  ].filter((match) => match.stage === 'showcase' ? match.executionStatus === 'finished' : match.resultStatus === 'confirmed').sort((a, b) => Date.parse(b.schedule ? effectiveStart(b.schedule) : '') - Date.parse(a.schedule ? effectiveStart(a.schedule) : '')).slice(0, 4);
   const featured = playing.running.length > 0 ? playing.running : playing.awaitingConfirmation.length > 0 ? playing.awaitingConfirmation.slice(0, 2) : playing.upcoming.slice(0, 2);
   const featuredTitle = playing.running.length > 0 ? '正在进行' : playing.awaitingConfirmation.length > 0 ? '等待现场确认' : '下一批比赛';
   const notices = [...event.notices].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
@@ -34,6 +35,7 @@ export function OverviewPage() {
     { label: '排位赛', done: counts.qualificationRuns.completed, total: counts.qualificationRuns.total, unit: '次跑图' },
     { label: '瑞士轮', done: counts.swissMatches.completed, total: counts.swissMatches.total, unit: '场对阵' },
     { label: '八强决赛', done: counts.finals.seriesDecided, total: counts.finals.seriesCount, unit: '场系列赛' },
+    { label: '展示组', done: counts.showcase.performed, total: counts.showcase.total, unit: '场演出' },
   ];
 
   return (
@@ -51,7 +53,10 @@ export function OverviewPage() {
             <div className="match-grid">{featured.map((match) => <MatchCard key={match.id} match={match} showStage showDate />)}</div>
           </Section> : phase !== 'after' ? <EmptyState title={awaiting ? '等待正式结果' : '下一场安排待公布'} hint="现场确认后，最新赛程和比赛结果会自动更新。" action={<Link to="/schedule" className="btn btn--small">查看赛程</Link>} /> : null}
 
-          {journeys.length > 0 ? <Section title="我关注的队伍" action={<Link to="/teams?following=1">查看全部<Icon name="arrow" size={15} /></Link>}><div className="card">{journeys.map((journey) => <div className="followed-team" key={journey.team.id}><div className="team-avatar">{journey.team.number.toString().padStart(2, '0')}</div><div className="followed-team__info"><TeamName team={journey.team} fallback={journey.team.id} /><div className="followed-team__next">{journey.nextMatch?.schedule ? `下一场 ${formatDate(effectiveStart(journey.nextMatch.schedule))} ${formatTime(effectiveStart(journey.nextMatch.schedule))} · ${journey.nextMatch.venueLabel ?? '场地待定'}` : journey.statusLabel}</div></div><Link to={`/teams/${journey.team.id}`} className="btn btn--icon" aria-label={`查看${journey.team.name}赛程`}><Icon name="chevron" size={17} /></Link></div>)}</div></Section> : null}
+          {journeys.length > 0 ? <Section title="我关注的队伍" action={<Link to="/teams?following=1">查看全部<Icon name="arrow" size={15} /></Link>}><div className="card">{journeys.map((journey) => {
+            const award = awardForTeam(derived.awards, journey.team);
+            return <div className="followed-team" key={journey.team.id}><div className="team-avatar">{journey.team.number.toString().padStart(2, '0')}</div><div className="followed-team__info"><TeamName team={journey.team} fallback={journey.team.id} /><div className="followed-team__next">{award ? <AwardBadge award={award} /> : journey.nextMatch?.schedule ? `${journey.team.division === 'showcase' ? journey.statusLabel : journey.nextMatch.executionStatus === 'running' ? '正在比赛' : '下一场'} ${formatDate(effectiveStart(journey.nextMatch.schedule))} ${formatTime(effectiveStart(journey.nextMatch.schedule))} · ${journey.nextMatch.venueLabel ?? '场地待定'}` : journey.statusLabel}</div></div><Link to={`/teams/${journey.team.id}`} className="btn btn--icon" aria-label={`查看${journey.team.name}赛程`}><Icon name="chevron" size={17} /></Link></div>;
+          })}</div></Section> : null}
 
           {playing.running.length > 0 && playing.upcoming.length > 0 ? <Section title="接下来"><div className="match-grid">{playing.upcoming.slice(0, 2).map((match) => <MatchCard key={match.id} match={match} showStage showDate />)}</div></Section> : null}
           {recent.length > 0 ? <Section title="最近结果" action={<Link to="/schedule">全部比赛<Icon name="arrow" size={15} /></Link>}><div className="match-grid">{recent.map((match) => <MatchCard key={match.id} match={match} showStage showDate />)}</div></Section> : null}
@@ -71,6 +76,18 @@ function FinalResults() {
   const { derived } = useData();
   if (!derived) return null;
   const { awards, teamMap } = derived;
-  const places = [{ label: '冠军', id: awards.champion }, { label: '亚军', id: awards.runnerUp }, { label: '季军', id: awards.third }];
-  return <Section title="最终结果" action={<Link to="/progress?view=finals">全部名次<Icon name="arrow" size={15} /></Link>}><div className="podium">{places.map((place) => <div className="podium__place" key={place.label}><div className="podium__rank"><Icon name="trophy" size={20} />{place.label}</div>{place.id ? <TeamName team={teamMap.get(place.id)?.team ?? null} fallback="待公布" /> : <span className="muted small">待公布</span>}</div>)}</div>{awards.topFour.length > 0 || awards.topEight.length > 0 ? <details className="disclosure" style={{ marginTop: 16 }}><summary>其余获奖队伍</summary><div className="stack stack--tight small"><p>四强：{awards.topFour.map((id) => teamMap.get(id)?.displayName ?? id).join('、') || '待公布'}</p><p>八强：{awards.topEight.map((id) => teamMap.get(id)?.displayName ?? id).join('、') || '待公布'}</p><p>十六强：{awards.topSixteen.length} 队 · 优秀奖：{awards.honorableMention.length} 队</p></div></details> : null}</Section>;
+  const places = ['champion', 'runnerUp', 'third'] as const;
+  const groups = ['topFour', 'topEight', 'topSixteen', 'honorableMention'] as const;
+  return <Section title="最终结果" action={<Link to="/progress?view=finals">全部名次<Icon name="arrow" size={15} /></Link>}>
+    <div className="podium">{places.map((award) => {
+      const teamId = awards[award];
+      return <div className="podium__place" key={award}><div className="podium__rank"><Icon name="trophy" size={20} />{teamId ? <AwardBadge award={award} /> : AWARD_LABELS[award]}</div>{teamId ? <TeamName team={teamMap.get(teamId)?.team ?? null} fallback="待公布" /> : <span className="muted small">待公布</span>}</div>;
+    })}</div>
+    {groups.some((award) => awards[award].length > 0) ? <details className="disclosure" style={{ marginTop: 16 }}>
+      <summary>其余获奖队伍</summary>
+      <div className="award-groups">{groups.map((award) => awards[award].length > 0 ? <div className="award-group" key={award}>
+        <AwardBadge award={award} /><div className="award-group__teams">{awards[award].map((teamId) => <TeamName key={teamId} team={teamMap.get(teamId)?.team ?? null} fallback={teamId} />)}</div>
+      </div> : null)}</div>
+    </details> : null}
+  </Section>;
 }

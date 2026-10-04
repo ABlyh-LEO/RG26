@@ -151,6 +151,42 @@ test('公告与改期使用北京时间输入，并保存为独立修订字段',
   await expect(page.locator('.operator-changes')).toContainText('现场设备准备延后十分钟');
 });
 
+test('展示组可直接登记演出完成，刷新和观众预览保持同步', async ({ page }) => {
+  const openShowcase = async () => {
+    await page.getByRole('button', { name: '对阵与排名', exact: true }).click();
+    await page.getByRole('button', { name: '展示组管理', exact: true }).click();
+  };
+  await openShowcase();
+  const first = page.locator('[data-showcase-schedule-id="sched-showcase-final-1"]');
+  await expect(first.getByRole('button', { name: '标记演出完成', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: '登记抽签顺序', exact: true }).click();
+  await saved(page);
+  const orderRows = page.getByRole('list', { name: '抽签上台顺序', exact: true }).getByRole('listitem');
+  const officialFirstName = await orderRows.first().locator('span.small').innerText();
+  await orderRows.first().getByRole('button', { name: '下移', exact: true }).click();
+  await saved(page);
+  await expect(orderRows.first()).not.toContainText(officialFirstName);
+  for (const index of [1, 2, 3]) {
+    const row = page.locator(`[data-showcase-schedule-id="sched-showcase-final-${index}"]`);
+    await row.getByRole('button', { name: '标记演出完成', exact: true }).click();
+    await saved(page);
+    await expect(row).toContainText('已结束');
+    await expect(row.getByRole('button', { name: '标记演出完成', exact: true })).toBeDisabled();
+    await expect(orderRows.first()).toContainText(officialFirstName);
+  }
+  await expect(page.getByRole('region', { name: '正式演出状态', exact: true })).toContainText('已完成 3/3');
+  await page.reload();
+  await loaded(page);
+  await openShowcase();
+  await expect(page.getByRole('region', { name: '正式演出状态', exact: true })).toContainText('已完成 3/3');
+  await expect(orderRows.first()).toContainText(officialFirstName);
+  await page.getByRole('button', { name: '预览与发布', exact: true }).click();
+  await page.getByRole('button', { name: '生成观众预览', exact: true }).click();
+  const frame = page.frameLocator('iframe[title="本地草稿观众预览"]');
+  await expect(frame.getByText('本地草稿预览 · 尚未发布')).toBeVisible();
+  await expect(frame.getByRole('progressbar', { name: '展示组', exact: true })).toHaveAttribute('aria-valuenow', '3');
+});
+
 test('旧浏览器草稿导入后必须核对差异，不能直接预览发布', async ({ page, request }) => {
   await page.getByLabel('积分', { exact: true }).fill('5'); await saved(page);
   const clientId = await page.evaluate(() => sessionStorage.getItem('rg26.operator.session'));

@@ -87,7 +87,7 @@ export function OperatorApp() {
           <fieldset className="operator-editable" disabled={state.readOnly || preparingCommit}>
             {tab === 'workbench' && <ResultWorkbench draft={draft.event} formInputs={draft.formInputs} onApply={apply} />}
             {tab === 'planning' && <div className="stack"><header className="operator-page-heading"><h2>对阵与排名</h2><p>从确认原始成绩，到公布下一轮对阵；所有操作先进入本地草稿。</p></header>
-              <div className="segmented" aria-label="对阵与排名功能">{([{ key: 'qualification', label: '排位赛排名' }, { key: 'rounds', label: '瑞士轮配对' }, { key: 'seeds', label: '八强种子' }, { key: 'showcase', label: '展示组抽签' }] as const).map((item) => <button key={item.key} type="button" className="segmented__item" aria-pressed={planning === item.key} onClick={() => setPlanning(item.key)}>{item.label}</button>)}</div>
+              <div className="segmented" aria-label="对阵与排名功能">{([{ key: 'qualification', label: '排位赛排名' }, { key: 'rounds', label: '瑞士轮配对' }, { key: 'seeds', label: '八强种子' }, { key: 'showcase', label: '展示组管理' }] as const).map((item) => <button key={item.key} type="button" className="segmented__item" aria-pressed={planning === item.key} onClick={() => setPlanning(item.key)}>{item.label}</button>)}</div>
               {planning === 'qualification' && <QualificationEntry draft={draft.event} onApply={apply} />}
               {planning === 'rounds' && <RoundsEntry draft={draft.event} onApply={apply} />}
               {planning === 'seeds' && <SeedsEntry draft={draft.event} onApply={apply} />}

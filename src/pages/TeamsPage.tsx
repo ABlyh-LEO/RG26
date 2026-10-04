@@ -4,7 +4,8 @@ import { useQueryParams } from '../app/useQueryParams';
 import { useData } from '../data/DataProvider';
 import { useEventClock } from '../data/clock';
 import { deriveTeamJourney, effectiveStart, formatDate, formatTime } from '../data/view-model';
-import { EmptyState, FollowButton, NameReviewBadge, TeamName, useFollowing } from '../components/ui';
+import { awardForTeam } from '../data/award-labels';
+import { AwardBadge, EmptyState, FollowButton, NameReviewBadge, TeamName, useFollowing } from '../components/ui';
 import { Icon } from '../components/Icon';
 
 export function TeamsPage() {
@@ -36,7 +37,9 @@ export function TeamsPage() {
     <div className="teams-grid">{filtered.map((team) => {
       const journey = deriveTeamJourney(derived, team.id, now);
       const next = journey?.nextMatch;
-      return <article key={team.id} className="card team-card"><div className="team-card__top"><div className="team-card__identity"><span className="team-avatar">{team.number.toString().padStart(2, '0')}</span><div style={{ minWidth: 0 }}><TeamName team={team} fallback={team.id} /><div className="team-card__caption">{team.division === 'showcase' ? '展示组' : '竞技组'}{journey?.standingsEntry ? ` · ${journey.standingsEntry.record}` : ''}</div></div></div><FollowButton teamId={team.id} teamName={team.name} compact /></div><div className="row"><span className={`badge ${journey?.status === 'champion' || journey?.status === 'advanced' ? 'badge--advanced' : 'badge--neutral'}`}>{journey?.statusLabel ?? '等待开赛'}</span><NameReviewBadge team={team} /></div><div className="team-card__next"><span>{next?.schedule ? `${formatDate(effectiveStart(next.schedule))} ${formatTime(effectiveStart(next.schedule))} · ${next.venueLabel ?? '场地待定'}` : team.division === 'showcase' ? '查看预演与演出安排' : '下一场对阵待公布'}</span><Link to={`/teams/${team.id}`} aria-label={`查看${team.name}队伍详情`}><Icon name="arrow" size={17} /></Link></div></article>;
+      const award = awardForTeam(derived.awards, team);
+      const noNextLabel = journey?.status === 'showcase-finished' ? '查看演出记录' : team.division === 'showcase' ? '查看演出安排与状态' : award ? '查看比赛记录' : '下一场对阵待公布';
+      return <article key={team.id} className="card team-card"><div className="team-card__top"><div className="team-card__identity"><span className="team-avatar">{team.number.toString().padStart(2, '0')}</span><div style={{ minWidth: 0 }}><TeamName team={team} fallback={team.id} /><div className="team-card__caption">{team.division === 'showcase' ? '展示组' : '竞技组'}{journey?.standingsEntry ? ` · ${journey.standingsEntry.record}` : ''}</div></div></div><FollowButton teamId={team.id} teamName={team.name} compact /></div><div className="row">{award ? <AwardBadge award={award} /> : <span className={`badge ${journey?.status === 'showcase-running' ? 'badge--live' : journey?.status === 'advanced' || journey?.status === 'showcase-finished' ? 'badge--advanced' : 'badge--neutral'}`}>{journey?.statusLabel ?? '等待开赛'}</span>}<NameReviewBadge team={team} /></div><div className="team-card__next"><span>{next?.schedule ? `${formatDate(effectiveStart(next.schedule))} ${formatTime(effectiveStart(next.schedule))} · ${next.venueLabel ?? '场地待定'}` : noNextLabel}</span><Link to={`/teams/${team.id}`} aria-label={`查看${team.name}队伍详情`}><Icon name="arrow" size={17} /></Link></div></article>;
     })}</div>
   </div>;
 }

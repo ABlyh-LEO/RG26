@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { audienceEvent } from '../fixtures/audience-scenarios';
-import { deriveEvent, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, effectiveStart, pendingOpenItems } from '../../src/data/view-model';
+import { deriveCounts, deriveEvent, deriveEventPhase, deriveNowPlaying, deriveTeamJourney, effectiveStart, pendingOpenItems, toSeriesView } from '../../src/data/view-model';
 import { describeEventUpdate } from '../../src/data/updates';
 import { buildSwissConnections, nodeParticipants } from '../../src/data/bracket-model';
 import { validateEvent } from '../../src/domain/validation';
@@ -100,6 +100,72 @@ describe('观众派生数据', () => {
     const pending = pendingOpenItems(drawn.event);
     expect(pending.some((item) => item.includes('抽签顺序'))).toBe(false);
     expect(pending).toHaveLength(before.event.openItems.length - 1);
+  });
+  it('已完成演出从当前与下一场中退出，保留记录，不需要伪造小局赛果', () => {
+    const event = audienceEvent('after');
+    const teams = event.teams.filter(team => team.division === 'showcase');
+    const drawn = applyShowcaseDraw(event, teams.map(team => team.id)).event;
+    for (const series of drawn.finals.series.filter(series => series.stage === 'showcase')) series.executionStatus = 'finished';
+    const before = structuredClone(drawn);
+    const derived = deriveEvent(drawn);
+    const now = new Date('2026-10-04T19:00:00+08:00');
+    expect(deriveCounts(derived).showcase).toEqual({ total: 3, performed: 3 });
+    const playing = deriveNowPlaying(derived, now);
+    expect([...playing.running, ...playing.awaitingConfirmation, ...playing.upcoming].filter(view => view.stage === 'showcase')).toEqual([]);
+    for (const team of teams) {
+      const journey = deriveTeamJourney(derived, team.id, now)!;
+      expect(journey).toMatchObject({ status: 'showcase-finished', statusLabel: '演出已完成', nextMatch: null });
+      expect(journey.finalsMatches).toHaveLength(1);
+      expect(journey.finalsMatches[0]).toMatchObject({ executionStatus: 'finished', resultStatus: 'none', countsForStandings: false });
+      expect(journey.seeds).toEqual([]);
+      expect(journey.standingsEntry).toBeUndefined();
+    }
+    expect(drawn).toEqual(before);
+    expect(drawn.finals.series.filter(series => series.stage === 'showcase').flatMap(series => series.games).every(game => game.winnerId === null && game.resultStatus === 'none')).toBe(true);
+  });
+  it.each([
+    ['scheduled', '等待演出', true], ['ready', '演出准备中', true], ['running', '演出进行中', true],
+    ['delayed', '演出延迟', true], ['cancelled', '演出已取消', false], ['not-needed', '无需演出', false],
+  ] as const)('展示组 %s 保持真实状态，竞技比赛结束和时间经过不替代演出登记', (status, label, hasNext) => {
+    const event = audienceEvent('after');
+    const teams = event.teams.filter(team => team.division === 'showcase');
+    const drawn = applyShowcaseDraw(event, teams.map(team => team.id)).event;
+    const series = drawn.finals.series.find(series => series.showcaseTeamId === teams[0]!.id)!;
+    series.executionStatus = status;
+    const derived = deriveEvent(drawn);
+    const now = new Date('2026-10-05T19:00:00+08:00');
+    expect(deriveEventPhase(drawn, now)).toBe('after');
+    const journey = deriveTeamJourney(derived, teams[0]!.id, now)!;
+    expect(journey.status).toBe(`showcase-${status}`);
+    expect(journey.statusLabel).toBe(label);
+    expect(journey.nextMatch?.id ?? null).toBe(hasNext ? series.id : null);
+    expect(deriveCounts(derived).showcase.performed).toBe(0);
+    const playing = deriveNowPlaying(derived, now);
+    expect(playing.running.some(view => view.id === series.id)).toBe(status === 'running');
+    expect(playing.awaitingConfirmation.some(view => view.id === series.id)).toBe(status === 'scheduled' || status === 'ready');
+  });
+  it('未抽签的展示队仍等待抽签，不落入竞技组排位状态', () => {
+    const derived = deriveEvent(audienceEvent('after'));
+    const team = derived.event.teams.find(team => team.division === 'showcase')!;
+    expect(deriveTeamJourney(derived, team.id, new Date('2026-10-05'))).toMatchObject({
+      status: 'showcase-unassigned', statusLabel: '等待抽签', nextMatch: null,
+    });
+  });
+  it('演出记录已确认不等于执行已完成，仍按演出状态显示', () => {
+    const event = audienceEvent('after');
+    const teams = event.teams.filter(team => team.division === 'showcase');
+    const drawn = applyShowcaseDraw(event, teams.map(team => team.id)).event;
+    const series = drawn.finals.series.find(series => series.showcaseTeamId === teams[0]!.id)!;
+    for (const game of series.games) {
+      game.resultStatus = 'confirmed'; game.confirmedAt = '2026-10-04T15:00:00+08:00'; game.note = '演出记录';
+    }
+    const derived = deriveEvent(drawn);
+    const now = new Date('2026-10-05');
+    const view = toSeriesView(series, drawn, derived.teamMap, derived.venueLabels, derived.finals);
+    expect(view).toMatchObject({ executionStatus: 'scheduled', resultStatus: 'confirmed' });
+    expect(deriveTeamJourney(derived, teams[0]!.id, now)).toMatchObject({ statusLabel: '等待演出', nextMatch: { id: series.id } });
+    expect(deriveNowPlaying(derived, now).awaitingConfirmation.some(view => view.id === series.id)).toBe(true);
+    expect(deriveCounts(derived).showcase.performed).toBe(0);
   });
   it('未公布的瑞士轮候选不产生确定参赛队伍或晋级线', () => {
     const event = audienceEvent('swiss');

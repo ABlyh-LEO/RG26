@@ -6,6 +6,7 @@
  */
 import type {
   EventFile,
+  ExecutionStatus,
   ResultKind,
   Series,
   SwissMatch,
@@ -1041,6 +1042,49 @@ export function publishFinalsSeeding(event: EventFile): ApplyResult {
 /** 三场正式演出与抽签顺序一一对应。 */
 const SHOWCASE_SERIES_ORDER = ['showcase-final-1', 'showcase-final-2', 'showcase-final-3'];
 
+/** 演出与展示组活动单独记录现场状态，不生成竞技比赛成绩。 */
+export function updateShowcaseStatus(
+  event: EventFile,
+  scheduleItemId: string,
+  executionStatus: ExecutionStatus,
+): ApplyResult {
+  const item = event.scheduleItems.find((s) => s.id === scheduleItemId);
+  if (!item || item.stage !== 'showcase') {
+    return { event, ok: false, messages: ['只能更新存在的展示组日程。'] };
+  }
+  const linked = event.finals.series.filter((s) => s.scheduleItemId === item.id);
+  if (item.kind === 'match') {
+    const series = linked[0];
+    if (linked.length !== 1 || !series || series.stage !== 'showcase' || series.countsForStandings || item.referenceId !== series.id) {
+      return { event, ok: false, messages: ['正式演出的关联记录不完整，不能更新状态。'] };
+    }
+    if (['ready', 'running', 'finished'].includes(executionStatus)) {
+      const drawIndex = SHOWCASE_SERIES_ORDER.indexOf(series.id);
+      const performer = event.teams.find((team) => team.id === series.showcaseTeamId && team.division === 'showcase');
+      if (!performer || drawIndex < 0 || event.showcase.drawOrder?.[drawIndex] !== performer.id) {
+        return { event, ok: false, messages: ['请先登记有效的展示组抽签顺序，确定本场演出队伍。'] };
+      }
+    }
+  } else if (item.kind !== 'activity' || linked.length > 0) {
+    return { event, ok: false, messages: ['展示组日程类型或关联记录不正确，不能更新状态。'] };
+  }
+
+  const now = new Date().toISOString();
+  return {
+    event: {
+      ...event,
+      finals: {
+        ...event.finals,
+        series: event.finals.series.map((s) => s.scheduleItemId === item.id ? { ...s, executionStatus } : s),
+      },
+      scheduleItems: event.scheduleItems.map((s) => s.id === item.id ? { ...s, executionStatus } : s),
+      event: { ...event.event, contentUpdatedAt: now },
+    },
+    ok: true,
+    messages: [`已保存「${item.title}」的现场状态。`],
+  };
+}
+
 export function applyShowcaseDraw(event: EventFile, drawOrder: string[]): ApplyResult {
   const showcaseTeams = event.teams.filter((t) => t.division === 'showcase');
   if (drawOrder.length !== showcaseTeams.length) {
@@ -1051,6 +1095,14 @@ export function applyShowcaseDraw(event: EventFile, drawOrder: string[]): ApplyR
   for (const id of drawOrder) {
     if (!showcaseTeams.some((t) => t.id === id)) {
       return { event, ok: false, messages: [`${id} 不是展示组队伍`] };
+    }
+  }
+  for (const [index, seriesId] of SHOWCASE_SERIES_ORDER.entries()) {
+    const series = event.finals.series.find((s) => s.id === seriesId);
+    const schedule = event.scheduleItems.find((s) => s.id === series?.scheduleItemId);
+    const started = [series?.executionStatus, schedule?.executionStatus].some((status) => status === 'running' || status === 'finished');
+    if (started && series?.showcaseTeamId !== drawOrder[index]) {
+      return { event, ok: false, messages: ['已有演出开始或完成，不能通过重新抽签更换该场队伍。'] };
     }
   }
 
@@ -1081,6 +1133,8 @@ export function applyShowcaseDraw(event: EventFile, drawOrder: string[]): ApplyR
       ...event,
       showcase: { drawOrder, confirmedAt: now, note: null },
       finals: { ...event.finals, series },
+      scheduleItems: event.scheduleItems.map((s) => s.id === 'sched-showcase-draw' && s.stage === 'showcase'
+        ? { ...s, executionStatus: 'finished' as const } : s),
       event: { ...event.event, contentUpdatedAt: now },
     },
     ok: true,

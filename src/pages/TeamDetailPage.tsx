@@ -9,10 +9,12 @@ import { useData } from '../data/DataProvider';
 import { useEventClock } from '../data/clock';
 import { deriveTeamJourney, effectiveStart, formatDate, formatTime } from '../data/view-model';
 import { toSeriesView } from '../data/view-model';
+import { awardForTeam } from '../data/award-labels';
 import { Icon } from '../components/Icon';
 import { finalsSeedLabel } from '../domain/finals';
 import {
   BackButton,
+  AwardBadge,
   CopyLinkButton,
   EmptyState,
   FollowButton,
@@ -47,6 +49,7 @@ export function TeamDetailPage() {
 
   const { team } = journey;
   const isShowcase = team.division === 'showcase';
+  const award = awardForTeam(derived.awards, team);
 
   return (
     <div className="stack">
@@ -56,9 +59,9 @@ export function TeamDetailPage() {
           <span className="team-avatar tabular">{team.number.toString().padStart(2, '0')}</span>
           <div style={{ minWidth: 0 }}><h1>{team.name}</h1>
         <div className="row" style={{ marginTop: 'var(--sp-2)' }}>
-          <span className={`badge ${isShowcase ? 'badge--info' : journey.status === 'eliminated' ? 'badge--eliminated' : journey.status === 'advanced' || journey.status === 'champion' ? 'badge--advanced' : 'badge--neutral'}`}>
+          {award ? <AwardBadge award={award} /> : <span className={`badge ${journey.status === 'showcase-finished' ? 'badge--advanced' : journey.status === 'showcase-running' ? 'badge--live' : isShowcase ? 'badge--info' : journey.status === 'eliminated' ? 'badge--eliminated' : journey.status === 'advanced' ? 'badge--advanced' : 'badge--neutral'}`}>
             {journey.statusLabel}
-          </span>
+          </span>}
           <span className="badge badge--neutral">{isShowcase ? '展示组' : '竞技组'}</span>
           <NameReviewBadge team={team} />
         </div>
@@ -95,44 +98,20 @@ function ShowcaseDetail({ teamId }: { teamId: string }) {
   const drawIndex = drawOrder ? drawOrder.indexOf(teamId) : -1;
   const finalSeriesId = drawIndex >= 0 ? `showcase-final-${drawIndex + 1}` : null;
   const finalSeries = finalSeriesId ? event.finals.series.find((s) => s.id === finalSeriesId) ?? null : null;
+  const completed = finalSeries?.executionStatus === 'finished';
+  const preparation = (
+    <div className="stack stack--tight">
+      {mediaItem ? <ScheduleRow label="资料对接" time={effectiveStart(mediaItem)} end={mediaItem.plannedEnd}
+        detail="将 PPT、视频、动画等媒体资料与赛程组负责人交接" status={mediaItem.executionStatus} /> : null}
+      {previewItem ? <ScheduleRow label="预演彩排" time={effectiveStart(previewItem)} end={previewItem.plannedEnd}
+        detail="15 分钟" status={previewItem.executionStatus} /> : null}
+      {drawItem ? <ScheduleRow label="抽签" time={effectiveStart(drawItem)} end={drawItem.plannedEnd}
+        detail="主席台前，决定决赛上台次序" status={drawItem.executionStatus} /> : null}
+    </div>
+  );
 
   return (
     <div className="stack" style={{ gap: 'var(--sp-3)' }}>
-      <div className="card">
-        <div className="card__head">
-          <span className="card__title">展示组日程</span>
-        </div>
-        <div className="stack stack--tight">
-          {mediaItem ? (
-            <ScheduleRow
-              label="资料对接"
-              time={effectiveStart(mediaItem)}
-              end={mediaItem.plannedEnd}
-              detail="将 PPT、视频、动画等媒体资料与赛程组负责人交接"
-              status={mediaItem.executionStatus}
-            />
-          ) : null}
-          {previewItem ? (
-            <ScheduleRow
-              label="预演彩排"
-              time={effectiveStart(previewItem)}
-              end={previewItem.plannedEnd}
-              detail="15 分钟"
-              status={previewItem.executionStatus}
-            />
-          ) : null}
-          {drawItem ? (
-            <ScheduleRow
-              label="抽签"
-              time={effectiveStart(drawItem)}
-              end={drawItem.plannedEnd}
-              detail="主席台前，决定决赛上台次序"
-              status={drawItem.executionStatus}
-            />
-          ) : null}
-        </div>
-      </div>
-
       <div className="card">
         <div className="card__head">
           <span className="card__title">正式演出</span>
@@ -151,6 +130,15 @@ function ShowcaseDetail({ teamId }: { teamId: string }) {
           <ShowcaseFinal seriesId={finalSeries.id} order={drawIndex + 1} />
         )}
       </div>
+      {completed ? (
+        <details className="card result-history">
+          <summary>赛前安排（存档）<Icon name="chevron" size={17} /></summary>
+          <div className="stack" style={{ marginTop: 18 }}>
+            <p className="small muted">正式演出已完成。以下保留赛前安排的原始登记状态，供回顾查阅。</p>
+            {preparation}
+          </div>
+        </details>
+      ) : <div className="card"><div className="card__head"><span className="card__title">展示组日程</span></div>{preparation}</div>}
     </div>
   );
 }
@@ -224,6 +212,7 @@ function CompetitiveDetail({ journey }: { journey: NonNullable<ReturnType<typeof
   const { derived } = useData();
   if (!derived) return null;
   const { team, swissMatches, finalsMatches, standingsEntry, nextMatch, seeds } = journey;
+  const award = awardForTeam(derived.awards, team);
   // 正式名次只在定榜后成立；未定榜时最多显示"当前第 N 位（未确认）"。
   const qualificationRank = derived.qualification.official
     ? derived.qualification.orderedTeamIds.indexOf(team.id)
@@ -249,7 +238,7 @@ function CompetitiveDetail({ journey }: { journey: NonNullable<ReturnType<typeof
       {finalsMatches.length > 0 ? <Section title="决赛比赛"><div className="stack">{finalsMatches.map((match) => <MatchCard key={match.id} match={match} showDate />)}</div></Section> : null}
     </div>
     <aside className="stack" style={{ gap: 24 }}>
-      <Section title="成绩与状态"><div className="card"><div className="row" style={{ justifyContent: 'space-between' }}><span className="small muted">当前状态</span><strong className="small">{journey.statusLabel}</strong></div>
+      <Section title="成绩与状态"><div className="card"><div className="row" style={{ justifyContent: 'space-between' }}><span className="small muted">当前状态</span>{award ? <AwardBadge award={award} /> : <strong className="small">{journey.statusLabel}</strong>}</div>
         {qualificationRank >= 0 ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">排位赛正式名次</span><strong className="tabular">第 {qualificationRank + 1} 名</strong></div> : livePosition !== null ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">当前排行（未确认）</span><strong className="tabular">当前第 {livePosition} 位</strong></div> : null}
         {standingsEntry ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">瑞士轮战绩</span><strong className="tabular">{standingsEntry.wins} 胜 {standingsEntry.losses} 负</strong></div> : null}
         {seeds.length > 0 ? <div className="row" style={{ justifyContent: 'space-between', marginTop: 14 }}><span className="small muted">八强种子</span><strong>{seeds.map(finalsSeedLabel).join('、')}</strong></div> : null}
