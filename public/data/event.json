@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "2dee1bc9a0164195effb46936966e119",
-  "builtAt": "2026-10-03T13:24:33.969Z",
-  "sourceCommit": "ff848a711e65efa159e27ef154ce3848147e714b",
+  "revision": "1415edc17f4dbb6cbe345a3a4b72e273",
+  "builtAt": "2026-10-04T01:14:07.175Z",
+  "sourceCommit": "77bbbe9d448da3113c68d050880eefdc4cf92ee1",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-03T13:24:24.535Z",
+      "contentUpdatedAt": "2026-10-04T01:12:03.775Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1397,7 +1397,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r4-21-1",
         "title": "瑞士轮 R4 · 2-1 组第 1 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -4252,9 +4252,25 @@
             "competitive-18",
             "competitive-14"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r4-21-1-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-18",
+              "awayTeamId": "competitive-14",
+              "homeScore": "17",
+              "awayScore": "10",
+              "homeReachedSeconds": "198",
+              "awayReachedSeconds": "259",
+              "winnerId": "competitive-18",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T01:12:03.775Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r4-21-1-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r4-21-1",
           "note": null
         },
