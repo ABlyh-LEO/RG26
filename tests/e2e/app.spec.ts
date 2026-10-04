@@ -220,9 +220,26 @@ test.describe('13.2 用户流程', () => {
 
     const games = page.locator('section').filter({ has: page.getByRole('heading', { name: '小局记录', exact: true }) }).locator('article');
     await expect(games).toHaveCount(3);
+    /*
+     * 小局卡只有两种合法形态，断言必须与"现在打到第几局"无关：
+     * 1. 有双方（含尚未对阵的占位文案）：两行颜色齐备 + 两行比分位；
+     * 2. 系列赛已被一方先取 2 胜、本局不需要进行：标「不需要进行」+ 写明原因 + **不得编造红蓝方**。
+     *
+     * 2026-10-03 第 90 场 2:0 结束后第 3 局进入形态 2，原先"三局都有颜色"的断言
+     * 因此变成假红并挡住部署（见 docs/acceptance/2026-10-03-deploy-gate-data-states.md）。
+     * 这里改成"两种形态各自完整"的双向不变量：既不允许标了不需要进行却显示颜色，
+     * 也不允许既没有颜色又没有说明的空卡。
+     */
     for (const game of await games.all()) {
-      await expect(game.getByLabel('红方', { exact: true })).toBeVisible();
-      await expect(game.getByLabel('蓝方', { exact: true })).toBeVisible();
+      const notNeeded = await game.getByText('不需要进行', { exact: true }).count() > 0;
+      const hasRed = await game.getByLabel('红方', { exact: true }).count() > 0;
+      const hasBlue = await game.getByLabel('蓝方', { exact: true }).count() > 0;
+      if (notNeeded) {
+        await expect(game, '不需要进行的局必须说明原因').toContainText('无需进行本局');
+        expect(hasRed || hasBlue, '不需要进行时不得编造红蓝方').toBe(false);
+        continue;
+      }
+      expect(hasRed && hasBlue, '未标注「不需要进行」的局必须给出红蓝方').toBe(true);
       await expect(game.locator('.match-side__result')).toHaveCount(2);
     }
   });

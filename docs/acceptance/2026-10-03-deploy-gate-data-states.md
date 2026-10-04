@@ -64,3 +64,48 @@ git checkout HEAD -- public/data/event.json  # 还原正式数据
   计数、上限时，应注入固定数据（`usePreEventSnapshot` / `page.route`），或写成状态无关的断言。
 - 数据驱动的绝对阈值（高度、条数、时长）几乎注定在赛季推进中失效；改成"相对自身内容"的不变量。
 - 新增或修改这类用例后，至少跑一次**赛季末快照**的完整 e2e。
+
+## 追加：第三处状态依赖（BO3 第 3 局「不需要进行」，2026-10-03 第 90 场之后）
+
+**现象**：第 90 场（名额争夺战）以 **2:0** 结束后部署门禁再次变红，同一处用例（`app.spec.ts` 13.2-2g）：
+
+```
+locator('section').filter({ has: heading 小局记录 }).locator('article').nth(2).getByLabel('红方')
+Error: element(s) not found
+```
+
+**根因**：三局两胜 2–0 结束后第 3 局**不需要进行**，页面按既有设计把该局渲染成
+「不需要进行 + 系列赛已决出胜者，无需进行本局。」而**不给红蓝方**（这是对的：
+没有比赛就不该有颜色）。原断言假设"三局都有双方"，属于"只在系列赛未结束前成立"的状态假设。
+
+**修复**：断言按小局卡的三种合法状态分别成立，且逐条保留原意图：
+
+| 状态 | 断言 |
+| --- | --- |
+| 双方已知 | 红方/蓝方各一个（第一席位蓝、第二席位红）+ 两行比分位 |
+| 系列赛 2–0 已结束 | 标「不需要进行」+ 写明「无需进行本局」+ **不得出现红蓝方**（不编造） |
+| 双方未知（尚未对阵） | 仍给颜色，队伍为占位文案（由 2f 与 `sides.test.ts` 守住） |
+
+**验证**（两个状态各跑完整 4 项目套件，均含用户新增的 `swiss-progress.spec.ts`）：
+
+| 数据状态 | 结果 |
+| --- | --- |
+| 当前正式数据（第 90 场 2:0、瑞士轮 R3 进行中、总决赛未打） | ✅ **408/408** |
+| 赛季末快照（决赛全打完、冠军已产生、F-GF 2:0 第 3 局不需要进行） | ✅ **408/408** |
+
+**本地复现的坑（重要）**：Playwright 的 `webServer` 在 `reuseExistingServer` 下会复用上一次
+遗留的静态服务，而它服务的是**旧 `dist`**——第一次本地跑这条用例因此"通过"，与 CI 结论相反。
+要按指定数据状态验证，必须自己起服务并禁用托管：
+
+```powershell
+node scripts/serve-subpath.mjs --root dist --port 4173      # 另开一个后台服务
+npm run snapshot:full-season                                 # 生成赛季末快照
+Copy-Item tmp-full-season.json dist\data\event.json -Force    # 只改构建产物，不碰 public/
+$env:E2E_NO_WEBSERVER='1'; $env:E2E_BASE_URL='http://127.0.0.1:4173/'
+npx playwright test
+Copy-Item public\data\event.json dist\data\event.json -Force  # 还原产物
+```
+
+用 `dist/data/event.json` 做替换（而不是 `public/data/event.json`）刻意避开了比赛期间的
+正式数据：即使此时有人发布，也不可能把合成快照写进仓库。
+
