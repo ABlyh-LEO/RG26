@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "287e274b3cd187ad26a3e1ca80f98328",
-  "builtAt": "2026-10-04T08:24:43.269Z",
-  "sourceCommit": "5d41a4a67ba5c2f59b965c68b70d367f85b9a168",
+  "revision": "71ccf54ecc1bda3f46190706ba7b7a1a",
+  "builtAt": "2026-10-04T08:37:15.865Z",
+  "sourceCommit": "e7bd781517ac292bcb7a88057ab68996cc294f06",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T08:24:21.332Z",
+      "contentUpdatedAt": "2026-10-04T08:37:12.346Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1787,7 +1787,7 @@
         "venueId": "venue-main",
         "referenceId": "F-LSF",
         "title": "半决赛败者组",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -5154,25 +5154,28 @@
               "seriesId": "F-L2B"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-4",
+            "competitive-35"
+          ],
           "games": [
             {
               "id": "F-LSF-g1",
               "index": 1,
-              "homeTeamId": null,
-              "awayTeamId": null,
-              "homeScore": null,
-              "awayScore": null,
-              "homeReachedSeconds": null,
-              "awayReachedSeconds": null,
-              "winnerId": null,
+              "homeTeamId": "competitive-4",
+              "awayTeamId": "competitive-35",
+              "homeScore": "4",
+              "awayScore": "11",
+              "homeReachedSeconds": "52",
+              "awayReachedSeconds": "294",
+              "winnerId": "competitive-35",
               "resultKind": "normal",
-              "resultStatus": "none",
-              "confirmedAt": null,
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T08:37:12.346Z",
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-F-LSF",
           "showcaseTeamId": null,
           "note": null
