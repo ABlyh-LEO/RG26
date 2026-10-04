@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "59edc1bfe29cd53b1745c44a0488a528",
-  "builtAt": "2026-10-04T03:01:40.981Z",
-  "sourceCommit": "a34748ad05e9b9565ec5d73d25ef7abccdd8aef1",
+  "revision": "42a7249a5578a5a767d0b57c3649ffe7",
+  "builtAt": "2026-10-04T03:04:12.550Z",
+  "sourceCommit": "b30a41634d2c1d7f523cf158f0280a62cfddfe5c",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T03:01:37.022Z",
+      "contentUpdatedAt": "2026-10-04T03:02:30.490Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -3218,7 +3218,7 @@
           "basedOnRevision": null,
           "publicationStatus": "published",
           "publishedAt": "2026-10-04T02:04:57.159Z",
-          "closedAt": null,
+          "closedAt": "2026-10-04T03:02:28.521Z",
           "rankingSnapshot": [
             {
               "teamId": "competitive-3",
@@ -4671,7 +4671,22 @@
       ]
     },
     "finals": {
-      "seeding": null,
+      "seeding": {
+        "seeds": {
+          "W1": "competitive-5",
+          "W2": "competitive-35",
+          "W3": "competitive-18",
+          "W4": "competitive-1",
+          "L1": "competitive-21",
+          "L2": "competitive-4",
+          "L3": "competitive-14",
+          "L4": "competitive-3"
+        },
+        "basisNote": "第五轮瑞士轮最终排名：3-0 前两名 W1/W2；3-1 前两名为 W3/W4、第三名为 L1；3-2 三名为 L2–L4",
+        "version": 1,
+        "publicationStatus": "published",
+        "publishedAt": "2026-10-04T03:02:30.490Z"
+      },
       "series": [
         {
           "id": "F-M1",
