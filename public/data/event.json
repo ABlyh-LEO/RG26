@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "26e4ee04238a607c643b563495c24f53",
-  "builtAt": "2026-10-04T02:42:55.099Z",
-  "sourceCommit": "7efe5cdc3eecbeda53327b261b190f7b53087e6f",
+  "revision": "79dc7059a7ab11d78b5a856ee5adb51b",
+  "builtAt": "2026-10-04T02:51:55.910Z",
+  "sourceCommit": "0a3f828688f9eac12c25319f46c7c185a3b44a1c",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T02:42:52.222Z",
+      "contentUpdatedAt": "2026-10-04T02:51:53.312Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1517,7 +1517,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r5-22-3",
         "title": "瑞士轮 R5 · 2-2 组第 3 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -4630,9 +4630,25 @@
             "competitive-14",
             "competitive-23"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r5-22-3-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-14",
+              "awayTeamId": "competitive-23",
+              "homeScore": "12.5",
+              "awayScore": "4",
+              "homeReachedSeconds": "172",
+              "awayReachedSeconds": "357",
+              "winnerId": "competitive-14",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T02:51:53.312Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r5-22-3-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r5-22-3",
           "note": null
         }
