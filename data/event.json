@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T02:51:53.312Z",
+    "contentUpdatedAt": "2026-10-04T03:01:37.022Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1482,7 +1482,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r5-22-1",
       "title": "瑞士轮 R5 · 2-2 组第 1 场",
-      "executionStatus": "ready",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -4557,9 +4557,25 @@
           "competitive-3",
           "competitive-13"
         ],
-        "attempts": [],
-        "effectiveAttemptId": null,
-        "executionStatus": "ready",
+        "attempts": [
+          {
+            "id": "swiss-r5-22-1-a1",
+            "supersedesId": null,
+            "homeTeamId": "competitive-3",
+            "awayTeamId": "competitive-13",
+            "homeScore": "6",
+            "awayScore": "0",
+            "homeReachedSeconds": "352",
+            "awayReachedSeconds": "360",
+            "winnerId": "competitive-3",
+            "resultKind": "normal",
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T03:01:37.022Z",
+            "note": null
+          }
+        ],
+        "effectiveAttemptId": "swiss-r5-22-1-a1",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-swiss-r5-22-1",
         "note": null
       },
