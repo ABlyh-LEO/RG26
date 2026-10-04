@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T01:32:50.365Z",
+    "contentUpdatedAt": "2026-10-04T01:41:02.489Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1437,7 +1437,7 @@
       "venueId": "venue-main",
       "referenceId": "swiss-r4-12-1",
       "title": "瑞士轮 R4 · 1-2 组第 1 场",
-      "executionStatus": "ready",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -4373,9 +4373,25 @@
           "competitive-23",
           "competitive-10"
         ],
-        "attempts": [],
-        "effectiveAttemptId": null,
-        "executionStatus": "ready",
+        "attempts": [
+          {
+            "id": "swiss-r4-12-1-a1",
+            "supersedesId": null,
+            "homeTeamId": "competitive-23",
+            "awayTeamId": "competitive-10",
+            "homeScore": "6",
+            "awayScore": "1",
+            "homeReachedSeconds": "261",
+            "awayReachedSeconds": "25",
+            "winnerId": "competitive-23",
+            "resultKind": "normal",
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T01:41:02.489Z",
+            "note": null
+          }
+        ],
+        "effectiveAttemptId": "swiss-r4-12-1-a1",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-swiss-r4-12-1",
         "note": null
       },
