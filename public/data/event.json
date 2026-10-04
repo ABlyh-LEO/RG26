@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "71ccf54ecc1bda3f46190706ba7b7a1a",
-  "builtAt": "2026-10-04T08:37:15.865Z",
-  "sourceCommit": "e7bd781517ac292bcb7a88057ab68996cc294f06",
+  "revision": "58b9216e58d5bd98437775cae9fc7199",
+  "builtAt": "2026-10-04T09:01:09.949Z",
+  "sourceCommit": "ff0c533137327c487d1d49bf133bd8f6a827ebb8",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T08:37:12.346Z",
+      "contentUpdatedAt": "2026-10-04T09:01:03.298Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1802,7 +1802,7 @@
         "venueId": "venue-main",
         "referenceId": "F-QUAL",
         "title": "总决赛名额争夺战",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -5195,36 +5195,39 @@
               "seriesId": "F-WSF"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-35",
+            "competitive-5"
+          ],
           "games": [
             {
               "id": "F-QUAL-g1",
               "index": 1,
-              "homeTeamId": null,
-              "awayTeamId": null,
-              "homeScore": null,
-              "awayScore": null,
-              "homeReachedSeconds": null,
-              "awayReachedSeconds": null,
-              "winnerId": null,
+              "homeTeamId": "competitive-35",
+              "awayTeamId": "competitive-5",
+              "homeScore": "8",
+              "awayScore": "2",
+              "homeReachedSeconds": "111",
+              "awayReachedSeconds": "77",
+              "winnerId": "competitive-35",
               "resultKind": "normal",
-              "resultStatus": "none",
-              "confirmedAt": null,
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T09:00:04.532Z",
               "note": null
             },
             {
               "id": "F-QUAL-g2",
               "index": 2,
-              "homeTeamId": null,
-              "awayTeamId": null,
-              "homeScore": null,
-              "awayScore": null,
-              "homeReachedSeconds": null,
-              "awayReachedSeconds": null,
-              "winnerId": null,
+              "homeTeamId": "competitive-35",
+              "awayTeamId": "competitive-5",
+              "homeScore": "11",
+              "awayScore": "7",
+              "homeReachedSeconds": "348",
+              "awayReachedSeconds": "231",
+              "winnerId": "competitive-35",
               "resultKind": "normal",
-              "resultStatus": "none",
-              "confirmedAt": null,
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T09:01:03.298Z",
               "note": null
             },
             {
@@ -5243,7 +5246,7 @@
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-F-QUAL",
           "showcaseTeamId": null,
           "note": null
