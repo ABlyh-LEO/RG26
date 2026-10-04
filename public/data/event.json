@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "7d509fae7e9c16f77ce842f1c8705aff",
-  "builtAt": "2026-10-04T02:05:02.249Z",
-  "sourceCommit": "e3985506fec4d42a8ec39c6571a15f49cca75bb6",
+  "revision": "26e4ee04238a607c643b563495c24f53",
+  "builtAt": "2026-10-04T02:42:55.099Z",
+  "sourceCommit": "7efe5cdc3eecbeda53327b261b190f7b53087e6f",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T02:04:57.159Z",
+      "contentUpdatedAt": "2026-10-04T02:42:52.222Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1502,7 +1502,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r5-22-2",
         "title": "瑞士轮 R5 · 2-2 组第 2 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -4588,9 +4588,25 @@
             "competitive-4",
             "competitive-27"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r5-22-2-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-4",
+              "awayTeamId": "competitive-27",
+              "homeScore": "15.5",
+              "awayScore": "2",
+              "homeReachedSeconds": "326",
+              "awayReachedSeconds": "116",
+              "winnerId": "competitive-4",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T02:42:52.222Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r5-22-2-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r5-22-2",
           "note": null
         },
