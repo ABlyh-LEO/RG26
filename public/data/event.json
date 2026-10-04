@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "9c4d7cf91bb05b28c8f1602eaf349091",
-  "builtAt": "2026-10-04T01:23:57.014Z",
-  "sourceCommit": "3e6d0c27193137858fe9bf44b429a194b05b1338",
+  "revision": "33e9c99402b5e849fa10a732314229af",
+  "builtAt": "2026-10-04T01:33:30.176Z",
+  "sourceCommit": "a2dea103395b6e4f802d14114c6d225f854ae1b6",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T01:23:47.636Z",
+      "contentUpdatedAt": "2026-10-04T01:32:50.365Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1427,7 +1427,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r4-21-3",
         "title": "瑞士轮 R4 · 2-1 组第 3 场",
-        "executionStatus": "ready",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -4336,9 +4336,25 @@
             "competitive-21",
             "competitive-3"
           ],
-          "attempts": [],
-          "effectiveAttemptId": null,
-          "executionStatus": "ready",
+          "attempts": [
+            {
+              "id": "swiss-r4-21-3-a1",
+              "supersedesId": null,
+              "homeTeamId": "competitive-21",
+              "awayTeamId": "competitive-3",
+              "homeScore": "9.5",
+              "awayScore": "6",
+              "homeReachedSeconds": "166",
+              "awayReachedSeconds": "327",
+              "winnerId": "competitive-21",
+              "resultKind": "normal",
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T01:32:50.365Z",
+              "note": null
+            }
+          ],
+          "effectiveAttemptId": "swiss-r4-21-3-a1",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-swiss-r4-21-3",
           "note": null
         },
