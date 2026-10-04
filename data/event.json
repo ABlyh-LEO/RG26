@@ -11,7 +11,7 @@
     "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
     "officialScheduleUrl": null,
     "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-    "contentUpdatedAt": "2026-10-04T07:15:26.171Z",
+    "contentUpdatedAt": "2026-10-04T07:29:38.080Z",
     "openItems": [
       "赛程组共享文档地址（原文声明以其当天安排为准）",
       "是否公开原始 DOCX",
@@ -1722,7 +1722,7 @@
       "venueId": "venue-main",
       "referenceId": "F-W1B",
       "title": "八强胜者组 B",
-      "executionStatus": "scheduled",
+      "executionStatus": "finished",
       "adjustmentNote": null,
       "revisedStart": null
     },
@@ -4985,25 +4985,28 @@
             "seriesId": "F-M3"
           }
         ],
-        "participantSnapshot": null,
+        "participantSnapshot": [
+          "competitive-35",
+          "competitive-18"
+        ],
         "games": [
           {
             "id": "F-W1B-g1",
             "index": 1,
-            "homeTeamId": null,
-            "awayTeamId": null,
-            "homeScore": null,
-            "awayScore": null,
-            "homeReachedSeconds": null,
-            "awayReachedSeconds": null,
-            "winnerId": null,
+            "homeTeamId": "competitive-35",
+            "awayTeamId": "competitive-18",
+            "homeScore": "5",
+            "awayScore": "15.5",
+            "homeReachedSeconds": "132",
+            "awayReachedSeconds": "287",
+            "winnerId": "competitive-18",
             "resultKind": "normal",
-            "resultStatus": "none",
-            "confirmedAt": null,
+            "resultStatus": "confirmed",
+            "confirmedAt": "2026-10-04T07:29:38.080Z",
             "note": null
           }
         ],
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "scheduleItemId": "sched-F-W1B",
         "showcaseTeamId": null,
         "note": null
