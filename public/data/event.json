@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "3241d2a935b21442ac8664fd0c367d46",
-  "builtAt": "2026-10-04T02:01:37.137Z",
-  "sourceCommit": "a2ad83e204c205a5343032fc0439e1e496028e86",
+  "revision": "7d509fae7e9c16f77ce842f1c8705aff",
+  "builtAt": "2026-10-04T02:05:02.249Z",
+  "sourceCommit": "e3985506fec4d42a8ec39c6571a15f49cca75bb6",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T02:01:34.128Z",
+      "contentUpdatedAt": "2026-10-04T02:04:57.159Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1487,7 +1487,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r5-22-1",
         "title": "瑞士轮 R5 · 2-2 组第 1 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1502,7 +1502,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r5-22-2",
         "title": "瑞士轮 R5 · 2-2 组第 2 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -1517,7 +1517,7 @@
         "venueId": "venue-main",
         "referenceId": "swiss-r5-22-3",
         "title": "瑞士轮 R5 · 2-2 组第 3 场",
-        "executionStatus": "scheduled",
+        "executionStatus": "ready",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -3086,7 +3086,7 @@
           "basedOnRevision": null,
           "publicationStatus": "published",
           "publishedAt": "2026-10-03T13:24:24.535Z",
-          "closedAt": null,
+          "closedAt": "2026-10-04T02:04:47.192Z",
           "rankingSnapshot": [
             {
               "teamId": "competitive-18",
@@ -3213,13 +3213,71 @@
             "swiss-r5-22-2",
             "swiss-r5-22-3"
           ],
-          "pairingVersion": 0,
+          "pairingVersion": 1,
           "basedOnRound": 4,
           "basedOnRevision": null,
-          "publicationStatus": "draft",
-          "publishedAt": null,
+          "publicationStatus": "published",
+          "publishedAt": "2026-10-04T02:04:57.159Z",
           "closedAt": null,
-          "rankingSnapshot": null,
+          "rankingSnapshot": [
+            {
+              "teamId": "competitive-3",
+              "record": "2-2",
+              "wins": 2,
+              "losses": 2,
+              "r": {
+                "n": "12759",
+                "d": "256"
+              },
+              "p": {
+                "n": "2845",
+                "d": "64"
+              },
+              "t": {
+                "n": "1281",
+                "d": "4"
+              },
+              "rankWithinGroup": 1
+            },
+            {
+              "teamId": "competitive-4",
+              "record": "2-2",
+              "wins": 2,
+              "losses": 2,
+              "r": {
+                "n": "3103",
+                "d": "64"
+              },
+              "p": {
+                "n": "45",
+                "d": "1"
+              },
+              "t": {
+                "n": "457",
+                "d": "2"
+              },
+              "rankWithinGroup": 2
+            },
+            {
+              "teamId": "competitive-14",
+              "record": "2-2",
+              "wins": 2,
+              "losses": 2,
+              "r": {
+                "n": "1551",
+                "d": "32"
+              },
+              "p": {
+                "n": "345",
+                "d": "8"
+              },
+              "t": {
+                "n": "165",
+                "d": "1"
+              },
+              "rankWithinGroup": 3
+            }
+          ],
           "revisionNote": null
         }
       ],
@@ -4492,18 +4550,21 @@
           "orderInGroup": 1,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-3"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-13"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-3",
+            "competitive-13"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r5-22-1",
           "note": null
         },
@@ -4515,18 +4576,21 @@
           "orderInGroup": 2,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-4"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-27"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-4",
+            "competitive-27"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r5-22-2",
           "note": null
         },
@@ -4538,18 +4602,21 @@
           "orderInGroup": 3,
           "slots": [
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-14"
             },
             {
-              "kind": "pending",
-              "reason": "等待第 4 轮结果确认后公布2-2 组"
+              "kind": "team",
+              "teamId": "competitive-23"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-14",
+            "competitive-23"
+          ],
           "attempts": [],
           "effectiveAttemptId": null,
-          "executionStatus": "scheduled",
+          "executionStatus": "ready",
           "scheduleItemId": "sched-swiss-r5-22-3",
           "note": null
         }
