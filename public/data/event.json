@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "revision": "e04537163da7e665bf927c576790a1e7",
-  "builtAt": "2026-10-04T07:52:13.592Z",
-  "sourceCommit": "f726fb45e6e96502af2a9ffa1449b6fc5312b86e",
+  "revision": "f1daf7cdae1e1eb5914dc9121de87b0e",
+  "builtAt": "2026-10-04T07:59:40.612Z",
+  "sourceCommit": "fa6a3c332206d1b7f0c9213faec700736bf9aecd",
   "data": {
     "schemaVersion": 1,
     "event": {
@@ -16,7 +16,7 @@
       "sourceDocumentSha256": "89c9fb3fd29f13c4daaacba8bd921744df7f5da264b86c3683cc8ca7484e7bf2",
       "officialScheduleUrl": null,
       "scheduleNotice": "以下时间仅供参考，具体情况以赛程组共享文档当天安排为准。",
-      "contentUpdatedAt": "2026-10-04T07:52:09.360Z",
+      "contentUpdatedAt": "2026-10-04T07:59:37.711Z",
       "openItems": [
         "赛程组共享文档地址（原文声明以其当天安排为准）",
         "是否公开原始 DOCX",
@@ -1757,7 +1757,7 @@
         "venueId": "venue-main",
         "referenceId": "F-L2B",
         "title": "败者组第二轮 B",
-        "executionStatus": "scheduled",
+        "executionStatus": "finished",
         "adjustmentNote": null,
         "revisedStart": null
       },
@@ -5072,25 +5072,28 @@
               "seriesId": "F-L1A"
             }
           ],
-          "participantSnapshot": null,
+          "participantSnapshot": [
+            "competitive-35",
+            "competitive-21"
+          ],
           "games": [
             {
               "id": "F-L2B-g1",
               "index": 1,
-              "homeTeamId": null,
-              "awayTeamId": null,
-              "homeScore": null,
-              "awayScore": null,
-              "homeReachedSeconds": null,
-              "awayReachedSeconds": null,
-              "winnerId": null,
+              "homeTeamId": "competitive-35",
+              "awayTeamId": "competitive-21",
+              "homeScore": "11",
+              "awayScore": "6.5",
+              "homeReachedSeconds": "107",
+              "awayReachedSeconds": "176",
+              "winnerId": "competitive-35",
               "resultKind": "normal",
-              "resultStatus": "none",
-              "confirmedAt": null,
+              "resultStatus": "confirmed",
+              "confirmedAt": "2026-10-04T07:59:37.711Z",
               "note": null
             }
           ],
-          "executionStatus": "scheduled",
+          "executionStatus": "finished",
           "scheduleItemId": "sched-F-L2B",
           "showcaseTeamId": null,
           "note": null
